@@ -6,7 +6,7 @@
   "budget_minutes": 40,
   "mode": "fast",
   "started_at": "2026-09-05T15:50:59",
-  "updated_at": "2026-09-05T16:53:51",
+  "updated_at": "2026-09-05T17:09:09",
   "next_stage": "tokens",
   "stages": {
     "interview": {
@@ -16,7 +16,7 @@
       "exit_check": "design/verify/exit_stage0.md RESULT: PASS (15/15). 0-G 재감사 후 entailed 1 / over_generalized 4 / unsupported 1, 0-H ack \"없음\""
     },
     "tokens": {
-      "status": "pending",
+      "status": "in_progress",
       "started_at": "",
       "done_at": "",
       "exit_check": ""
@@ -46,8 +46,8 @@
       "worldcup": 2
     },
     "token_set_choice": {
-      "chosen": "",
-      "ai_pick": "",
+      "chosen": "SET-B",
+      "ai_pick": "SET-A",
       "changed_after_reveal": false
     },
     "draft_approval": {
