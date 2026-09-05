@@ -69,6 +69,7 @@
 - borrow_scope: element    # element = 요소 차용 / whole_style = 특정 앱 전체 스타일 차용(사용자 명시 승인 없으면 proposed)
 - confidence: confirmed    # confirmed / provisional(근거 3건 미만·'애매' 유래) / proposed(감사 미통과·whole_style)
 - audit: entailed          # 인용 정합성 감사 결과: entailed / over_generalized / unsupported
+- narrowed: (감사자가 근거만큼으로 좁힌 문장. over_generalized 면 statement 를 이것으로 교체)
 -->
 
 ### RULE-01
@@ -81,6 +82,7 @@
 - borrow_scope: element
 - confidence: 
 - audit: 
+- narrowed: 
 
 ## 5. 하드 제약 (user_constraint = true)
 

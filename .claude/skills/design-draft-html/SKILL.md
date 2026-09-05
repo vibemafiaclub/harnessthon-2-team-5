@@ -25,7 +25,7 @@ argument-hint: "[--axes 3] [--variants 2]  (fast 모드: 축 ≤1, 2-G 는 grep 
 
 ## 2-A. tokens.css (`design-worker`)
 
-`design/tokens.json` 의 값 leaf 를 `--<경로-하이픈>` CSS 변수로 평탄화해 `design/drafts/tokens.css` 에 쓴다(예: `color.semantic.text.primary` → `--color-semantic-text-primary`, `typography.scale.body.size` → `--typography-scale-body-size`). `{…}` 참조는 `var(--…)` 로 변환. **설명용 키는 건너뛴다**: `rationale`, `_note`, `$schema_note`, `usage`, `concentric_rule`, `meta.*`, `color.wcag.*`. 숫자 leaf 는 px 단위 없이 그대로 두고 소비 측에서 `calc(var(--x) * 1px)` 로 쓴다(단 `lineHeight`·`weight`·`opacity` 는 무단위). 스크립트와 출력 첨부. 모든 초안 HTML 은 이 파일 하나를 `<link>` 하고, **HTML 안에 색·간격·라운딩 리터럴을 쓰지 않는다.**
+`design/tokens.json` 의 값 leaf 를 `--<경로-하이픈>` CSS 변수로 평탄화해 `design/drafts/tokens.css` 에 쓴다(예: `color.semantic.text.primary` → `--color-semantic-text-primary`, `typography.scale.body.size` → `--typography-scale-body-size`). `{…}` 참조는 `var(--…)` 로 변환. **설명용 키는 건너뛴다**: `rationale`, `_note`, `$schema_note`, `usage`, `concentric_rule`, `label`, `meta.*`, `color.wcag.*`. **키는 ASCII 만 허용** — 한글 키가 있으면 변환하지 말고 `BLOCKED: 한글 키 <경로>` 로 되돌린다(tokens.json 은 영문 슬러그 + `label` 규칙). 변환 후 **입력 값 leaf 수 == 출력 변수 수** 를 검사해 출력에 첨부한다(D-9 실측: `[^a-z0-9]` 제거로 상태 9종이 3종으로 충돌, 화면은 정상으로 보여 눈으로도 안 잡힘). 숫자 leaf 는 px 단위 없이 그대로 두고 소비 측에서 `calc(var(--x) * 1px)` 로 쓴다(단 `lineHeight`·`weight`·`opacity` 는 무단위). 스크립트와 출력 첨부. 모든 초안 HTML 은 이 파일 하나를 `<link>` 하고, **HTML 안에 색·간격·라운딩 리터럴을 쓰지 않는다.**
 
 ## 2-B. 열린 축 식별 (`design-judge`)
 
@@ -39,7 +39,7 @@ argument-hint: "[--axes 3] [--variants 2]  (fast 모드: 축 ≤1, 2-G 는 grep 
 
 축마다, 후보마다 **별도 `design-maker` 호출**을 한 메시지에 병렬로 낸다. 브리프에는 **입력 화이트리스트 = `design/design.md`, `design/tokens.json`, `design/drafts/tokens.css`** (그 외 금지), brief §2 의 **대표 화면 1개**(행 내용을 문장으로), 그리고 **이 후보가 취할 축 값 한 줄**만 넘긴다. 다른 후보가 무엇인지 알려 주지 않는다. 상한 문장: "HTML 1파일 ≤{agent_draft_html_lines_max}줄(상태 3종 포함), 인라인 SVG 아이콘 ≤8개".
 
-- 출력: `design/drafts/axis<n>_<a|b>.html`. 모바일 뷰포트(360×780) 기본, PRD 가 데스크톱이면 1280.
+- 출력: `design/drafts/axis<n>_<a|b>.html`. **기기 프레임 규격 고정**: 모바일은 390×844 프레임 안에 상태바(44px)·콘텐츠·하단 탭바(83px, 탭 내비게이션이 있는 흐름이면 필수)를 포함해 그린다. 프레임 높이를 내용에 맞춰 늘리지 않는다(hug 금지) — 긴 내용은 프레임 안에서 스크롤. PRD 가 데스크톱이면 1440×900. 규격은 `design.md` §2 에 한 줄로 기록하고 이후 모든 화면·Figma 프레임이 같은 값을 쓴다(D-11 실측: 프레임이 400~900px 로 제각각이고 상태바·탭바가 없어 앱 화면으로 안 보임).
 - 상태 3종 필수: 같은 파일 안에 `normal / empty / long`(최장 텍스트) 섹션. 빈 상태를 안 만들면 첫 사용 화면이 무너진다.
 - design.md §3 제약·§4 규칙 준수, §6 금지 목록 회피. 위반해야만 축 값을 표현할 수 있으면 `ASSUMPTION:` 주석 대신 `BLOCKED:` 반환.
 - 더미 텍스트·아이콘은 자체 조달(인라인 SVG, 실제 도메인 문장). "Lorem ipsum" 금지.
@@ -62,7 +62,7 @@ argument-hint: "[--axes 3] [--variants 2]  (fast 모드: 축 ≤1, 2-G 는 grep 
 
 ## 2-F. 전체 화면 세트 (`design-maker`)
 
-brief §2 화면 표의 **모든 화면**을 만든다. 화면별로 병렬 호출 가능. 브리프: `design.md`, `tokens.json`, `tokens.css`, `decisions.md`(선택된 축 값), 해당 화면 행, 그 화면의 1등 정보.
+brief §2 화면 표의 **모든 화면**을 만든다. 시간이 부족해도 화면을 골라 빼지 않는다 — 빼야 하면 화면당 상태 변형을 줄이지 화면 수를 줄이지 않는다(D-12 실측: 핵심 3화면만 골라 PRD F1·F2 화면이 통째로 빠졌고 3단계 끝에서야 드러남). 온보딩·첫 진입 화면이 흐름표에 있으면 그것도 포함. 화면별로 병렬 호출 가능, **산출은 화면별 별도 파일**. 브리프: `design.md`, `tokens.json`, `tokens.css`, `decisions.md`(선택된 축 값), 해당 화면 행, 그 화면의 1등 정보.
 - 출력 `design/drafts/screen_<nn>_<slug>.html`, 상태 3종 포함(목록형 화면은 `loading` 추가). **1파일 ≤`agent_draft_html_lines_max`줄.**
 - 화면 간 공통 요소(상단 바, 하단 탭, 상태 칩, 목록 행)는 **같은 마크업 구조·같은 클래스명**을 쓴다. 다음 단계에서 이것이 Figma 컴포넌트가 된다. 공통 요소 목록을 `design/drafts/components.md` 에 적는다(이름 / 어느 화면에서 / variant 가 될 상태들).
 - `design/drafts/index.html` 에 전 화면 링크 + 화면 흐름 순서.
@@ -73,19 +73,23 @@ Figma 로 가기 전 싼 사전 점검. 브리프: **입력 화이트리스트 =
 - §4A 규칙 중 HTML 소스로 판정 가능한 것(토큰 리터럴 0, 간격 값이 scale 안, 공통 요소 구조 일치)을 grep 으로 판정.
 - 스크린샷이 가능하면(`aside-browser` 스킬 사용 가능 시) 화면별 1장을 찍어 §4C 규칙과 §5 1등 정보를 **이미지를 열어** 점검. 불가하면 "C 점검 미실시 — Figma 단계에서" 라고 명시. 추측 판정 금지. **fast 모드에서는 grep 항목만 실행하고 스크린샷 점검은 생략**(가정 로그 기록).
 - §7 핵심 과업 3개를 전체 화면 세트에서 경로 추적: `index.html` 의 흐름 순서대로 과업별 `찾음/헤맴/불가`. `불가` 가 있으면 FAIL.
+- **승인 전 구조 검사 2종(`design-worker`, fast 에서도 생략 불가)**: ①모든 `screen_*.html` 루트 프레임 규격이 `design.md` §2 값과 동일한가 ②PRD 기능 번호 전부가 최소 한 화면에 매핑되는가. 하나라도 FAIL 이면 **2-H 승인 화면을 열지 않는다.** (D-14 실측: 8화면 중 4개가 규격 없이 승인됐고 Figma 만 나중에 일괄 수정되어 "HTML 초안 = 승인 근거" 전제가 깨짐. 종료조건에만 있으면 승인 뒤에 걸린다.)
 - 결과가 FAIL 인 항목은 `design-maker` 에 되돌려 고치고 재점검. 상한 2회. **판정자는 고치지 않는다.**
 
 ## 2-H. 승인 (메인 세션)
 
-1. `open design/drafts/index.html`.
-2. 호출 품질 게이트 4항을 한 화면에: 무엇을 결정하는지(이 초안으로 Figma 구현 진행 여부) / 선택지(승인·수정 요청·방향 재검토) / 하네스 의견(자체 점검 요약 3줄) / 결정 안 하면 뭐가 막히는지.
-3. "이대로 Figma 에 만들어도 될까요? 고치고 싶은 곳이 있으면 화면 번호와 함께 알려 주세요."
-4. 수정 요청 → raw 기록 → 해당 화면만 `design-maker` 재생성 → 2-G 재점검 → 다시 승인. `human_draft_revision_max`(기본 2, fast 1) 초과 시 "방향 자체 재검토" 로 분류해 2-B 로 회귀하거나 사용자가 그대로 진행 결정.
-5. 승인 원문을 decisions.md §3 과 상태 파일 `draft_approval` 에 기록.
+1. 2-G 의 승인 전 구조 검사 2종이 PASS 인지 `design/verify/draft_review.md` 에서 확인한다. FAIL 이면 열지 않고 2-F 로 되돌린다.
+2. `open design/drafts/index.html`.
+3. 호출 품질 게이트 4항을 한 화면에: 무엇을 결정하는지(이 초안으로 Figma 구현 진행 여부) / 선택지(승인·수정 요청·방향 재검토) / 하네스 의견(자체 점검 요약 3줄) / 결정 안 하면 뭐가 막히는지.
+4. "이대로 Figma 에 만들어도 될까요? 고치고 싶은 곳이 있으면 화면 번호와 함께 알려 주세요."
+5. 수정 요청 → raw 기록 → 해당 화면만 `design-maker` 재생성 → 2-G 재점검 → 다시 승인. `human_draft_revision_max`(기본 2, fast 1) 초과 시 "방향 자체 재검토" 로 분류해 2-B 로 회귀하거나 사용자가 그대로 진행 결정.
+6. 승인 원문을 decisions.md §3 과 상태 파일 `draft_approval` 에 기록. **승인 후 화면 파일의 규격·화면 수가 바뀌면 그 승인은 무효**이며 재승인을 받는다.
 
 ## 종료조건 (`design-worker`)
 
 - [ ] `design/decisions.md` §1~§3 채움, §2 각 축에 사용자 선택·이유 원문 존재
+- [ ] **PRD 기능 번호 전부**가 `drafts/screen_*.html` 중 최소 한 화면에 매핑된다 — brief §2 화면표의 기능 매핑 열과 실제 파일 목록을 대조(D-12). 하나라도 빠지면 FAIL
+- [ ] **모든 화면 프레임 규격이 동일**(뷰포트 폭·높이·상태바·탭바 유무) — 각 파일의 루트 프레임 크기를 grep 으로 대조(D-11)
 - [ ] `design/drafts/screen_*.html` 개수 == brief §2 화면 수, 각 파일에 `data-state="normal|empty|long"` 섹션 존재, **각 파일 ≤`agent_draft_html_lines_max`줄**
 - [ ] 모든 `drafts/*.html` 에서 hex·px 리터럴 0건(`tokens.css` 제외) — grep 원문 첨부
 - [ ] `design/drafts/components.md` 존재, 공통 요소 ≥3

@@ -17,6 +17,7 @@
 | `borrow_scope` | ✓ | `element` / `whole_style` | "토스처럼" 은 whole_style. 사용자 명시 승인이 raw 에 없으면 `confidence: proposed` |
 | `confidence` | ✓ | `confirmed` / `provisional` / `proposed` | 구현 강제 대상은 `confirmed` 만. provisional 은 참고, proposed 는 미적용 |
 | `audit` | ✓ (0-G 후) | `entailed` / `over_generalized` / `unsupported` | 인용 정합성 감사 결과 |
+| `narrowed` | ✓ (0-G 후) | 근거가 지지하는 만큼으로 좁힌 statement | over_generalized 면 statement 를 이것으로 교체 |
 
 ## confidence 판정 규칙
 
@@ -35,12 +36,13 @@
 
 ## 인용 정합성 감사 (0-G)
 
-- **입력을 가린다.** 감사 에이전트에게는 `{rule_id, source_quote, statement}` 만 준다. 축·근거 ID·인터뷰 문맥·PRD 를 주지 않는다. 문맥을 주면 감사자가 문맥으로 빈틈을 메워 준다.
-- 질문은 하나: "이 인용문만 읽었을 때, 이 statement 가 그 인용문에서 **따라 나오는가**?"
-  - `entailed`: 인용문이 statement 를 직접 지지한다
-  - `over_generalized`: 인용문은 특정 사례를 말하는데 statement 가 일반 규칙으로 넓혔다
-  - `unsupported`: 인용문에서 statement 가 나오지 않는다
-- 판정마다 한 줄 이유.
+- **입력은 `{rule_id, statement, evidence[]}`.** evidence 종류는 `qa`(질문 원문 + 답변) / `pair`(무엇과 무엇 중 어느 쪽 + 이유) / `tile`(타일의 객관적 속성 + 판정 + 이유). 종류별 증거력을 브리프에 명시한다 — 질문 내용도 합의로 본다, 대비쌍 선택은 이유 없이도 방향 증거다, 이유 없는 애매는 무정보.
+- **가린다**: 축 이름, 근거 ID, confidence, 하네스의 해석. **준다**: 자극의 객관적 속성, 질문 원문. (실측: 3필드만 주면 답변형·타일형 근거가 전건 무근거 판정. 통과 불가능한 감사는 신호가 아니다.)
+- 판정 3택 + `narrowed`: 
+  - `entailed`: 근거가 statement 를 직접 지지
+  - `over_generalized`: 근거는 특정 사례·방향인데 statement 가 수치·범위를 넓혔다 → `narrowed` 로 statement 교체, confidence 유지
+  - `unsupported`: 근거에서 statement 가 나오지 않는다 → `proposed`
+- 판정마다 한 줄 이유. `narrowed` 는 항상 채운다(entailed 면 statement 그대로).
 - **감사 에이전트는 규칙화 에이전트와 다른 호출**이어야 한다. 같은 컨텍스트가 자기 규칙을 감사하면 전부 entailed 가 나온다.
 
 ## 과적합 경고

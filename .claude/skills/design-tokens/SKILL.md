@@ -52,7 +52,9 @@ argument-hint: "[--sets 3]  (fast 모드는 2)"
 - 각 `status.*` 위 텍스트(어떤 텍스트 토큰을 쓰는지 세트에 명시) → 4.5:1 이상
 - `border.default` / `bg.page` → 3:1 이상
 
-계산은 파이썬 한 파일로(상대 휘도 → 대비율), 명령과 출력 원문 첨부. 미달 쌍이 있으면 `design-maker` 에 "이 쌍만 하한선까지 보정, 다른 값 불변" 으로 되돌린다. 보정 후 재검사. **미달 세트는 사용자에게 보여 주지 않는다** — 사용자가 고른 뒤 바꾸면 승인이 무효가 된다.
+계산은 파이썬 한 파일로(상대 휘도 → 대비율), 명령과 출력 원문 첨부. 미달 쌍이 있으면 `design-maker` 에 되돌리되 보정 브리프에 다음을 **문장으로** 넣는다: **"primitive 값을 바꾸지 않는다. 미달 semantic 토큰의 참조를 스케일의 다른 단계로 옮기거나, 단계를 신설해 참조한다. 다른 값 불변."** (D-7 실측: primitive 를 어둡게 만들어 neutral.200 이 300 보다 어두워지고 `border.strong` 이 `default` 보다 연해짐 — 대비 검사는 통과하므로 기계로 안 잡힌다.) 보정 후 재검사에 아래 두 항목을 추가한다:
+- **스케일 단조성**: 각 primitive 스케일(neutral·primary·secondary)이 50→900 으로 갈수록 휘도가 단조 감소한다.
+- **강·약 관계**: `border.strong` 대비 > `border.default` 대비, `text.primary` 대비 > `text.secondary` 대비 > `text.disabled` 대비. **미달 세트는 사용자에게 보여 주지 않는다** — 사용자가 고른 뒤 바꾸면 승인이 무효가 된다.
 
 ## 1-C. 세트 선택 (메인 세션)
 
@@ -67,7 +69,7 @@ argument-hint: "[--sets 3]  (fast 모드는 2)"
 
 - `tokens.json` = 선택 세트 그대로 + `meta.chosen_set`, `meta.platform`, `meta.wcag_checked_at`, `color.wcag` 측정값 기입. `rationale` 유지. 참조 문법 `{color.primitive.…}` 은 유지(소비 측이 해석).
 - `design.md`:
-  - §2 토큰 원칙: semantic 만 직접 사용, primitive 는 참조 전용, scale 타이포만 사용 — 이 셋은 고정. 나머지는 brief 에서.
+  - §2 토큰 원칙: semantic 만 직접 사용, primitive 는 참조 전용, scale 타이포만 사용 — 이 셋은 고정. **화면 규격 한 줄**(모바일 390×844 + 상태바 44 + 탭바 83, 또는 데스크톱 1440×900)을 여기 적는다 — 2단계 HTML 과 3단계 Figma 프레임이 이 값을 읽는다. 나머지는 brief 에서.
   - §2b **결정 근거 요약**(prd-to-design-guide 4단계 채택): "왜 이 primary 인가"(도메인·반응 정본), "왜 이 폰트인가"(사용자층·가독성·한글), "왜 이 스페이싱 체계인가"(정보 밀도·플랫폼), "왜 이 래디어스·그림자인가". 각 항목은 tokens.json 의 `rationale` 을 사용자가 읽을 수 있는 말로 옮긴 것이며, 1-C 에서 선택 뒤 사용자에게 이 요약을 3~5줄로 보여 준다.
   - §3 제약: 하네스 고정 하한선 2개 + brief §5 하드 제약 전부.
   - §4A/§4C: brief §4 의 기준 중 `confidence: confirmed` 와 `provisional` 을 `verdict_method` 로 갈라 표에 옮긴다. RULE-ID 유지. `proposed` 는 §4 에 넣지 않고 §9 가정 아래 "미적용 기준" 으로만 나열. **A 규칙에는 기준값을 tokens.json 토큰 이름으로 적는다**(예: 간격은 `spacing.scale` 값만 허용).
@@ -78,7 +80,7 @@ argument-hint: "[--sets 3]  (fast 모드는 2)"
 ## 종료조건 (`design-worker`)
 
 - [ ] `design/tokens.json` 유효 JSON, 빈 문자열 값 0개(`_note`·`$schema_note` 제외), 6카테고리 `rationale` 전부 비어 있지 않음, `typography.family.fallback` 존재
-- [ ] `design/verify/wcag_tokens.md` 에 선택 세트 전 쌍 PASS
+- [ ] `design/verify/wcag_tokens.md` 에 선택 세트 전 쌍 PASS, 스케일 단조성 PASS, 강·약 관계 PASS
 - [ ] `design/design.md` §1~§9 전부 존재, **전체 ≤`agent_design_md_lines_max`줄**, §2b 결정 근거 4항목, §4A+§4C 행 수 = brief §4 의 confirmed+provisional 기준 수, §7 과업 3개, §8 적합성 ≥2줄
 - [ ] `design.md` 안에 hex 색상값 직접 표기 0건(토큰 이름만) — `grep -c '#[0-9A-Fa-f]\{6\}'` == 0
 - [ ] 상태 파일 `human_gates.token_set_choice.chosen` 기입

@@ -36,12 +36,15 @@ argument-hint: "<figma file url | --new>"
 ## 3-B. 컴포넌트 (`design-maker`)
 
 브리프: **입력 화이트리스트 = `design/drafts/components.md`, 해당 컴포넌트가 쓰인 초안 HTML 1개, `tokens.json`, `figma_nodes.json`**.
-- 컴포넌트마다 별도 호출, 병렬 가능. 페이지 `Components` 에 배치.
+- 컴포넌트마다 별도 호출, 병렬 가능. 페이지 `Components` 에 배치. **배치 좌표는 앞 세트의 `y + height + 여백(64)` 으로 계산**한다 — 고정 간격으로 나열하면 키 큰 세트가 다음 라벨을 덮는다(실측). 각 호출은 자기 산출을 **`design/figma_nodes.<컴포넌트슬러그>.json` 별도 파일**에 쓰고, 병합은 3-B 종료 후 `design-worker` 단일 호출이 한다(D-8: 공유 JSON 동시 쓰기로 파일 무효화 실측).
+- **크기 sanity**: 컴포넌트 크기와 패딩은 초안 HTML 의 대응 요소 ±30% 이내. `spacing.scale` 은 **키가 아니라 값**을 읽는다(실측: 인덱스 20 을 20px 로 착각해 padding 80/64px, 버튼 343×155px).
+- **아이콘**: 벡터 위에 불투명 fill 을 가진 프레임을 두지 않는다. 아이콘 컨테이너 fill 은 없음 또는 투명. 제작 후 **인스턴스를 화면 프레임 안에 넣은 상태**로 스크린샷을 찍어 확인한다 — 마스터에서는 정상으로 보이고 인스턴스에서만 덮이는 사례가 실측됐다(D-10).
 - 모든 fill·stroke·gap·padding·radius 는 **Variables 바인딩**. 하드코딩 색 0.
 - 상태는 variant 로: components.md 에 적힌 상태(default/hover/pressed/disabled, 상태 칩은 상태 N종, 목록 행은 normal/empty-placeholder/long-text). 초안 HTML 의 상태 3종이 그대로 variant 가 된다.
 - 레이어 이름은 semantic(`Card/MeetingRow`, `Chip/Status`), `Frame 123` 류 0.
 - auto-layout 필수. 절대 좌표 배치 금지.
 - 컴포넌트 description 에 "어느 화면에서 쓰이는지" 한 줄.
+- **반환값에 구조 실측치 필수**: 컴포넌트마다 `{id, children_count, vectors_visible, size, container_fill, opacity}`. ID 만 돌아오면 미완료로 간주하고 되돌린다(D-15).
 
 ## 3-C. 화면 조립 (`design-maker`)
 
@@ -50,7 +53,8 @@ argument-hint: "<figma file url | --new>"
 - 3-B 컴포넌트 **인스턴스**로 조립. 새로 그리는 요소는 components.md 에 없는 것만, 그리고 그것도 Variables 바인딩.
 - 프레임 위치는 겹치지 않게(오른쪽으로 순차). 화면 간 이동은 프로토타입 연결(brief §2 진입 경로)까지.
 - 화면별 호출을 병렬로 내되 **한 호출 안에서 페이지 전환은 1회**.
-- 생성 노드 ID → `figma_nodes.json` screens 섹션.
+- 생성 노드 ID → **화면별 별도 파일 `design/figma_nodes.<화면슬러그>.json`**. 병합은 3-C 종료 후 `design-worker` 단일 호출(D-8).
+- 프레임 규격은 `design.md` §2 의 값(모바일 390×844, 상태바·탭바 포함)으로 고정. hug 금지.
 
 ## 3-D. A단계 — 기계 검사 (`design-worker`)
 
@@ -63,6 +67,9 @@ argument-hint: "<figma file url | --new>"
 4. **컴포넌트 재사용률** — Screens 페이지의 시각 요소 중 인스턴스 비율. 기준값 design.md(없으면 ≥70% 를 provisional 기준으로 쓰고 명시).
 5. **레이어 네이밍** — 정규식(기본 `^[A-Z][A-Za-z]+(/[A-Z][A-Za-z0-9 ]+)*`), `Frame \d+|Rectangle \d+|Group \d+` 0건.
 6. **variant 커버리지** — components.md 의 상태가 variant 로 전부 존재.
+7. **아이콘 덮임** — 아이콘 컴포넌트·인스턴스 안에 `visible` 한 VECTOR/BOOLEAN_OPERATION 이 ≥1 이고, 그 벡터의 조상 중 벡터 영역을 덮는 불투명 fill(opacity ≥ 0.9, 크기 ≥ 벡터) 을 가진 FRAME/RECTANGLE 이 없다. 화면 프레임 안의 **인스턴스**를 검사 대상으로 한다(D-10: 마스터는 정상, 인스턴스만 네모).
+8. **크기 sanity** — 각 컴포넌트 인스턴스의 width/height/padding 이 `drafts/components.md` 에 적힌 초안 HTML 대응 요소 값의 ±30% 이내. 토큰에서 왔는지가 아니라 값이 말이 되는지를 본다(실측: 80px 도 scale 에 있으면 PASS 였다).
+9. **프레임 규격** — Screens 페이지의 모든 화면 프레임이 `design.md` §2 규격과 같고 hug 가 아니다.
 
 FAIL 항목은 위반 노드 ID 목록과 함께 3-F 로. 판정자는 고치지 않는다.
 
@@ -98,18 +105,21 @@ FAIL 항목은 위반 노드 ID 목록과 함께 3-F 로. 판정자는 고치지
 | C `direction` | `design-draft-html` 2-B 로 회귀, 그 축만 재발산. 상태 파일에 기록 |
 | C `taste_gap` | 사용자에게 질의(호출 품질 게이트 4항). 답을 raw 에 기록, brief §4 에 RULE 추가(provisional), design.md 갱신 후 재검 |
 | C `repeat: true` (같은 이유 2회) | 요구사항 해석 오류 신호. **0단계로 에스컬레이션** — 사용자에게 "이 부분 해석이 어긋난 것 같습니다" 로 브리핑하고 진행 여부 결정 |
+| **사용자 지적 2회 반복** (같은 화면·같은 요소) | **위임 중단.** 메인이 화면 프레임 스크린샷을 직접 열고 `use_figma` 로 해당 노드 트리(fills·opacity·visible·children)를 직접 읽어 원인을 특정한 뒤에만 수정을 다시 위임. 서브의 "확인했습니다" 는 이 시점부터 무시(D-10: 세 번째 지적에서야 메인이 직접 봄) |
 
 라운드 상한 `human_c_stage_rounds_max`(기본 3, **fast 모드 1 + 국소 수정 1회**). 초과 시 남은 FAIL 목록과 함께 사용자에게 넘긴다. "이 정도면 됐다" 는 항상 사람이 정한다.
 
 ## 3-G. 최종 확인 (메인 세션)
 
-1. `design/figma.md` 작성: 파일 링크, 페이지 구성, 화면 목록, A/C 최종 결과 요약(3축 자체 채점 포함), PRD 대비 변경 사항(brief §10), 미해결 항목(있다면), 사용 모델·에이전트 목록(제출 요건).
-2. 사용자에게: 링크 + "A 검사 N/N 통과, C 판정 요약 3줄, 남은 것 M개. 이대로 마무리할까요?" 승인 원문을 상태 파일 `final_ack` 에 기록.
+1. **메인이 직접 본다.** Screens 페이지의 화면 프레임(마스터·컴포넌트 페이지가 아니라 **화면**) 전부를 `get_screenshot` 으로 찍어 `design/verify/shots/final/` 에 저장하고 **Read 로 직접 열어** 본다. 아이콘·텍스트·상태 칩이 실제로 보이는지, 프레임 규격이 같은지, 겹침이 없는지. 이 단계는 서브에 위임하지 않는다. 문제가 보이면 3-F 로 돌아간다.
+2. `design/figma.md` 작성: 파일 링크, 페이지 구성, 화면 목록, A/C 최종 결과 요약(3축 자체 채점 포함), PRD 대비 변경 사항(brief §10), 미해결 항목(있다면), 사용 모델·에이전트 목록(제출 요건). **수치는 전부 `design/verify/` 검사 파일에서 인용**하고 서브 완료 보고의 수치는 쓰지 않는다.
+3. 사용자에게: 링크 + "A 검사 N/N 통과, C 판정 요약 3줄, 메인이 직접 본 화면 N장, 남은 것 M개. 이대로 마무리할까요?" 승인 원문을 상태 파일 `final_ack` 에 기록.
 
 ## 종료조건 (`design-worker`)
 
 - [ ] `design/figma.md` 에 링크 존재, 상태 파일 `figma_url` 일치
-- [ ] `figma_nodes.json` 에 variables·components·screens 섹션, screens 수 == brief §2 화면 수 × 상태 수
+- [ ] `figma_nodes.json` (병합본) 유효 JSON, variables·components·screens 섹션, screens 수 == brief §2 화면 수 × 상태 수, 화면별 조각 파일 수 == 화면 수
+- [ ] `design/verify/shots/final/` 에 화면 프레임 스크린샷 == 화면 수 × 상태 수, 상태 파일에 메인 직접 확인 기록
 - [ ] `a_report.md` 전건 PASS 또는 사용자 승인된 예외 명시
 - [ ] `c_report.md` 마지막 라운드에 미분류 FAIL 0
 - [ ] `final_ack.approved == true`
