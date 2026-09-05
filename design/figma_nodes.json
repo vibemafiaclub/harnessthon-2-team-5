@@ -144,34 +144,67 @@
   },
   "screens": {
     "page": { "name": "Screens", "id": "14:2" },
+    "mobile_frame_normalization_note": "ASSUMPTION: 12개 프레임 모두 390x844 고정(hug 해제, clipsContent=true), x=0부터 450 간격, y=0. 각 프레임 내부에 원래 padding/itemSpacing 을 그대로 옮긴 'Content' 래퍼 프레임(layoutSizingVertical=FILL, clipsContent=true)을 새로 만들어 기존 자식들을 이관하고, 프레임 자체 padding 은 0 으로 낮춰 Bar/StatusBar·Bar/TabBar 가 폭 390 전체를 채우게 했다. 순서: 00 Onboarding(0/450/900) → 01 Home(1350/1800/2250) → 02 MeetingDetail(2700/3150/3600) → 03 GuestReply(4050/4500/4950). Row/Meeting 등 기존 컴포넌트 key·내용·문구는 변경 없음.",
     "home": {
-      "01 Home / normal": { "frameId": "14:25", "weekendCardId": "14:50", "bannerAlertInstanceId": "14:57", "meetingListCardId": "14:60", "rowMeetingInstanceIds": ["14:61", "14:70", "14:78", "14:86"], "ctaButtonInstanceId": "14:95" },
-      "01 Home / empty": { "frameId": "14:33", "emptyBoxId": "14:155" },
-      "01 Home / loading": { "frameId": "14:41", "skeletonLineIds": ["14:192", "14:203"], "rowMeetingSkeletonInstanceIds": ["14:193", "14:198"] },
-      "_note": "ASSUMPTION: home.html 의 3개 상태를 구분하던 '상태: ...' 라벨은 초안 파일 내부 주석용 구분선이라 판단, 프레임 분리 후에는 옮기지 않았다(각 프레임=단일 상태이므로 중복). weekend-card/list-card 의 box-shadow(elevation 토큰)는 Figma effect style 대응 토큰이 없어(브리프 화이트리스트에 tokens.json 미포함) 적용하지 않았다. card/list-row/button 의 컴포넌트 전용 padding(spacing-component-*)도 같은 이유로 근접한 primitive spacing 값(4/6/2 등)에 바인딩했다."
+      "01 Home / normal": { "frameId": "14:25", "x": 1350, "y": 0, "width": 390, "height": 844, "contentFrameId": "32:111", "statusBarInstanceId": "32:112", "tabBarInstanceId": "32:115", "weekendCardId": "14:50", "bannerAlertInstanceId": "14:57", "meetingListCardId": "14:60", "rowMeetingInstanceIds": ["14:61", "14:70", "14:78", "14:86"], "ctaButtonInstanceId": "14:95" },
+      "01 Home / empty": { "frameId": "14:33", "x": 1800, "y": 0, "width": 390, "height": 844, "contentFrameId": "32:128", "statusBarInstanceId": "32:129", "tabBarInstanceId": "32:132", "emptyBoxId": "14:155" },
+      "01 Home / loading": { "frameId": "14:41", "x": 2250, "y": 0, "width": 390, "height": 844, "contentFrameId": "32:145", "statusBarInstanceId": "32:146", "tabBarInstanceId": "32:149", "skeletonLineIds": ["14:192", "14:203"], "rowMeetingSkeletonInstanceIds": ["14:193", "14:198"] },
+      "_note": "ASSUMPTION: home.html 의 3개 상태를 구분하던 '상태: ...' 라벨은 초안 파일 내부 주석용 구분선이라 판단, 프레임 분리 후에는 옮기지 않았다(각 프레임=단일 상태이므로 중복). weekend-card/list-card 의 box-shadow(elevation 토큰)는 Figma effect style 대응 토큰이 없어(브리프 화이트리스트에 tokens.json 미포함) 적용하지 않았다. card/list-row/button 의 컴포넌트 전용 padding(spacing-component-*)도 같은 이유로 근접한 primitive spacing 값(4/6/2 등)에 바인딩했다. 탭바 active=home 인스턴스 삽입."
     },
     "guest_reply": {
-      "note": "ASSUMPTION: 본문 텍스트는 tokens.json --typography-scale-body-large-size(17px) 대응 style type/body-large 를 h2 이하 모든 본문·배지·리스트에 적용해 다른 화면보다 크게 유지(하드 제약). done-icon(체크마크 원)은 components.md 에 대응 컴포넌트가 없어 신규로 그렸고 fill/radius 는 Variables 바인딩했으나, 지름 56px 은 --layout-touch-target-min 토큰 값이 화이트리스트 파일에 없어 근사치로 하드코딩(색상 아님, 크기값). 하드코딩 색 0건.",
+      "note": "ASSUMPTION: 본문 텍스트는 tokens.json --typography-scale-body-large-size(17px) 대응 style type/body-large 를 h2 이하 모든 본문·배지·리스트에 적용해 다른 화면보다 크게 유지(하드 제약). done-icon(체크마크 원)은 components.md 에 대응 컴포넌트가 없어 신규로 그렸고 fill/radius 는 Variables 바인딩했으나, 지름 56px 은 --layout-touch-target-min 토큰 값이 화이트리스트 파일에 없어 근사치로 하드코딩(색상 아님, 크기값). 하드코딩 색 0건. 지인이 링크로 여는 화면이라 앱 탭이 없어 TabBar 미삽입, StatusBar 만 삽입.",
       "frames": {
-        "03 GuestReply / empty": "14:97",
-        "03 GuestReply / answering": "14:160",
-        "03 GuestReply / submitted": "14:204"
+        "03 GuestReply / empty": { "frameId": "14:97", "x": 4050, "y": 0, "width": 390, "height": 844, "contentFrameId": "32:213", "statusBarInstanceId": "32:214" },
+        "03 GuestReply / answering": { "frameId": "14:160", "x": 4500, "y": 0, "width": 390, "height": 844, "contentFrameId": "32:217", "statusBarInstanceId": "32:218" },
+        "03 GuestReply / submitted": { "frameId": "14:204", "x": 4950, "y": 0, "width": 390, "height": 844, "contentFrameId": "32:221", "statusBarInstanceId": "32:222" }
       }
     },
     "meeting_detail": {
-      "note": "ASSUMPTION: Button/Primary 컴포넌트의 기본 좌우 padding(spacing/20=80px)은 button-row 안에서 절반 너비 슬롯에 맞지 않아, 이 인스턴스에 한해 paddingLeft/Right 를 spacing/3(12px)으로 오버라이드(마스터 컴포넌트·다른 인스턴스는 무영향). btn-secondary(회신 리마인드/조금 더 기다리기)·btn-accent(확정 소식 공유하기)는 components.md 에 대응 variant 가 없어 신규로 그렸고 fill/border/radius/padding 전부 Variables 바인딩. Banner/Alert(Type=Deadline) 인스턴스는 텍스트 슬롯이 1개뿐이라 제목+제안 문구를 한 텍스트 노드에 줄바꿈으로 담아 '미회신자를 빼고 최다 득표일로 확정할까요' 제안을 유지. divider·bar-track/bar 는 components.md 에 없어 신규 rectangle 로 그렸고 stroke/fill/radius 전부 Variables 바인딩(하드코딩 색 0건).",
+      "note": "ASSUMPTION: Button/Primary 컴포넌트의 기본 좌우 padding(spacing/20=80px)은 button-row 안에서 절반 너비 슬롯에 맞지 않아, 이 인스턴스에 한해 paddingLeft/Right 를 spacing/3(12px)으로 오버라이드(마스터 컴포넌트·다른 인스턴스는 무영향). btn-secondary(회신 리마인드/조금 더 기다리기)·btn-accent(확정 소식 공유하기)는 components.md 에 대응 variant 가 없어 신규로 그렸고 fill/border/radius/padding 전부 Variables 바인딩. Banner/Alert(Type=Deadline) 인스턴스는 텍스트 슬롯이 1개뿐이라 제목+제안 문구를 한 텍스트 노드에 줄바꿈으로 담아 '미회신자를 빼고 최다 득표일로 확정할까요' 제안을 유지. divider·bar-track/bar 는 components.md 에 없어 신규 rectangle 로 그렸고 stroke/fill/radius 전부 Variables 바인딩(하드코딩 색 0건). 탭바 active=meeting 인스턴스 삽입.",
       "frames": {
-        "02 MeetingDetail / normal": { "frameId": "14:12", "cardId": "14:13", "chipStatusInstanceId": "14:14", "candidateRowIds": ["14:129", "14:135", "14:140"], "pendingResponseChipInstanceIds": ["14:151", "14:153"] },
-        "02 MeetingDetail / deadline": { "frameId": "14:226", "cardId": "14:227", "chipStatusInstanceId": "14:228", "candidateRowIds": ["14:236", "14:237", "14:238"], "bannerAlertInstanceId": "14:246", "buttonPrimaryInstanceId": "14:261" },
-        "02 MeetingDetail / confirmed": { "frameId": "14:265", "cardId": "14:266", "chipStatusInstanceId": "14:267", "responseChipYesInstanceIds": ["14:274", "14:276", "14:278", "14:280", "14:282", "14:284"] }
+        "02 MeetingDetail / normal": { "frameId": "14:12", "x": 2700, "y": 0, "width": 390, "height": 844, "contentFrameId": "32:162", "statusBarInstanceId": "32:163", "tabBarInstanceId": "32:166", "cardId": "14:13", "chipStatusInstanceId": "14:14", "candidateRowIds": ["14:129", "14:135", "14:140"], "pendingResponseChipInstanceIds": ["14:151", "14:153"] },
+        "02 MeetingDetail / deadline": { "frameId": "14:226", "x": 3150, "y": 0, "width": 390, "height": 844, "contentFrameId": "32:179", "statusBarInstanceId": "32:180", "tabBarInstanceId": "32:183", "cardId": "14:227", "chipStatusInstanceId": "14:228", "candidateRowIds": ["14:236", "14:237", "14:238"], "bannerAlertInstanceId": "14:246", "buttonPrimaryInstanceId": "14:261" },
+        "02 MeetingDetail / confirmed": { "frameId": "14:265", "x": 3600, "y": 0, "width": 390, "height": 844, "contentFrameId": "32:196", "statusBarInstanceId": "32:197", "tabBarInstanceId": "32:200", "cardId": "14:266", "chipStatusInstanceId": "14:267", "responseChipYesInstanceIds": ["14:274", "14:276", "14:278", "14:280", "14:282", "14:284"] }
       }
     },
     "onboarding": {
-      "note": "ASSUMPTION: onboarding.html 의 '.state-label'(01 시작/02 상대 초대/03 연결 완료 dashed divider)은 한 문서 안에서 세 단계를 구분하던 초안 내부 주석용 구분선으로 판단(screens.home._note 의 동일 선례를 따름) — 프레임을 단계별로 분리한 뒤에는 각 프레임=단일 상태이므로 옮기지 않고 h1/h2 섹션 타이틀부터 시작했다. role-card·invite-card·invite-link box·btn-secondary·couple-confirmed tag 는 components.md 에 대응 컴포넌트가 없어 신규로 그렸고 fill/stroke/radius/padding/gap 전부 Variables 바인딩(하드코딩 색 0건, RoleSelect/InviteActions/WaitRow/Tag 컨테이너의 default 흰색 fill 은 감사 후 제거해 투명 처리). 카드류 box-shadow(elevation 토큰)는 다른 화면과 동일한 이유로 화이트리스트에 없어 미적용. 인스턴스: Button/Primary(State=Default) 2개, Chip/Status(Waiting) 1개, Chip/Status(Confirmed) 1개.",
+      "note": "ASSUMPTION: onboarding.html 의 '.state-label'(01 시작/02 상대 초대/03 연결 완료 dashed divider)은 한 문서 안에서 세 단계를 구분하던 초안 내부 주석용 구분선으로 판단(screens.home._note 의 동일 선례를 따름) — 프레임을 단계별로 분리한 뒤에는 각 프레임=단일 상태이므로 옮기지 않고 h1/h2 섹션 타이틀부터 시작했다. role-card·invite-card·invite-link box·btn-secondary·couple-confirmed tag 는 components.md 에 대응 컴포넌트가 없어 신규로 그렸고 fill/stroke/radius/padding/gap 전부 Variables 바인딩(하드코딩 색 0건, RoleSelect/InviteActions/WaitRow/Tag 컨테이너의 default 흰색 fill 은 감사 후 제거해 투명 처리). 카드류 box-shadow(elevation 토큰)는 다른 화면과 동일한 이유로 화이트리스트에 없어 미적용. 인스턴스: Button/Primary(State=Default) 2개, Chip/Status(Waiting) 1개, Chip/Status(Confirmed) 1개. 온보딩은 탭 진입 전이라 TabBar 미삽입, StatusBar 만 삽입.",
       "frames": {
-        "00 Onboarding / start": { "frameId": "14:290", "headerId": "14:291", "titleId": "14:292", "leadId": "14:293", "roleRowId": "14:302", "groomCardId": "14:303", "brideCardId": "14:306", "ctaButtonInstanceId": "14:309" },
-        "00 Onboarding / invite": { "frameId": "14:294", "headerId": "14:295", "titleId": "14:296", "leadId": "14:297", "inviteCardId": "14:311", "linkBoxId": "14:312", "linkTextId": "14:313", "copyBtnId": "14:315", "kakaoBtnId": "14:317", "waitRowId": "14:319", "chipWaitingInstanceId": "14:320", "waitTextId": "14:322" },
-        "00 Onboarding / connected": { "frameId": "14:298", "headerId": "14:299", "titleId": "14:300", "coupleRowId": "14:323", "groomTagId": "14:324", "connectorId": "14:326", "brideTagId": "14:327", "chipConfirmedInstanceId": "14:329", "leadId": "14:301", "ctaButtonInstanceId": "14:331" }
+        "00 Onboarding / start": { "frameId": "14:290", "x": 0, "y": 0, "width": 390, "height": 844, "contentFrameId": "32:99", "statusBarInstanceId": "32:100", "headerId": "14:291", "titleId": "14:292", "leadId": "14:293", "roleRowId": "14:302", "groomCardId": "14:303", "brideCardId": "14:306", "ctaButtonInstanceId": "14:309" },
+        "00 Onboarding / invite": { "frameId": "14:294", "x": 450, "y": 0, "width": 390, "height": 844, "contentFrameId": "32:103", "statusBarInstanceId": "32:104", "headerId": "14:295", "titleId": "14:296", "leadId": "14:297", "inviteCardId": "14:311", "linkBoxId": "14:312", "linkTextId": "14:313", "copyBtnId": "14:315", "kakaoBtnId": "14:317", "waitRowId": "14:319", "chipWaitingInstanceId": "14:320", "waitTextId": "14:322" },
+        "00 Onboarding / connected": { "frameId": "14:298", "x": 900, "y": 0, "width": 390, "height": 844, "contentFrameId": "32:107", "statusBarInstanceId": "32:108", "headerId": "14:299", "titleId": "14:300", "coupleRowId": "14:323", "groomTagId": "14:324", "connectorId": "14:326", "brideTagId": "14:327", "chipConfirmedInstanceId": "14:329", "leadId": "14:301", "ctaButtonInstanceId": "14:331" }
+      }
+    },
+    "contacts": {
+      "note": "ASSUMPTION: contacts_list.html 의 '상태: ...' 라벨은 다른 화면과 동일하게 초안 내부 구분선으로 판단해 프레임에 옮기지 않았다. Row/Meeting 등 기존 컴포넌트는 이 화면 구조와 맞지 않아 재사용하지 않았고, contact-row/avatar/idx-label/dup-tag/empty-box/skeleton 전부 신규 auto-layout 으로 그려 fill/stroke/radius/padding/gap 전부 Variables 바인딩(하드코딩 색 0건). summary-line 의 '17명' 굵은 글씨는 body 텍스트 스타일 위에 Range로 폰트를 Medium 으로, 색만 color/semantic/brand/default 로 오버라이드(스타일 자체는 유지). TabBar(active=contacts) 인스턴스 삽입, StatusBar 인스턴스도 삽입.",
+      "frames": {
+        "04 Contacts / normal": { "frameId": "35:195", "x": 5400, "y": 0, "width": 390, "height": 844, "contentFrameId": "35:199", "statusBarInstanceId": "35:196", "tabBarInstanceId": "35:200", "headerId": "36:209", "summaryId": "36:213", "searchId": "36:214", "chipRowId": "36:216", "contactListId": "36:231" },
+        "04 Contacts / empty": { "frameId": "36:321", "x": 5850, "y": 0, "width": 390, "height": 844, "contentFrameId": "36:325", "statusBarInstanceId": "36:322", "tabBarInstanceId": "36:326", "emptyBoxId": "36:344" },
+        "04 Contacts / loading": { "frameId": "36:352", "x": 6300, "y": 0, "width": 390, "height": 844, "contentFrameId": "36:356", "statusBarInstanceId": "36:353", "tabBarInstanceId": "36:357" }
+      }
+    },
+    "contact_edit": {
+      "note": "ASSUMPTION: 상태 라벨(상태 1/2/3 각주)은 초안 구분선으로 판단해 프레임에 옮기지 않았다. field-input/chip/side-option/dup-notice/bottom-bar 는 components.md 에 대응 컴포넌트가 없어 신규로 그렸고 fill/stroke/radius/padding/gap 전부 Variables 바인딩(하드코딩 색 0건). 'oneonone' 상태의 side-group 은 원본 HTML 그대로 신부/신랑/양가공동 순서를 유지했다. 흐름 안의 화면이라 StatusBar 만 삽입, TabBar 는 미삽입.",
+      "frames": {
+        "05 ContactEdit / edit": { "frameId": "36:395", "x": 6750, "y": 0, "width": 390, "height": 844, "contentFrameId": "36:404", "statusBarInstanceId": "36:396", "summaryId": "41:265", "chipRowId": "41:276", "dupNoticeId": "41:289", "sideGroupId": "41:292", "bottomBarId": "41:300" },
+        "05 ContactEdit / new": { "frameId": "42:239", "x": 7200, "y": 0, "width": 390, "height": 844 },
+        "05 ContactEdit / oneonone": { "frameId": "43:241", "x": 7650, "y": 0, "width": 390, "height": 844 }
+      }
+    },
+    "group_compose": {
+      "note": "ASSUMPTION: 상태 라벨(상태: ... 각주)은 초안 구분선으로 판단해 프레임에 옮기지 않았다. name-input/picked-card/overlap-note/filter-chip/person-list/checkbox/cta-button 은 components.md 에 대응 컴포넌트가 없어 신규로 그렸고 fill/stroke/radius/padding/gap 전부 Variables 바인딩(하드코딩 색 0건). 흐름 안의 화면이라 StatusBar 만 삽입, TabBar 는 미삽입.",
+      "frames": {
+        "06 GroupCompose / selecting": { "frameId": "43:286", "x": 8100, "y": 0, "width": 390, "height": 844, "contentFrameId": "43:295", "statusBarInstanceId": "43:287", "nameInputId": "43:298", "pickedCardId": "43:300", "overlapNoteId": "43:315", "filtersId": "43:317", "personListId": "43:324", "bottomBarId": "43:361" },
+        "06 GroupCompose / none": { "frameId": "44:245", "x": 8550, "y": 0, "width": 390, "height": 844 },
+        "06 GroupCompose / noname": { "frameId": "45:247", "x": 9000, "y": 0, "width": 390, "height": 844 }
+      }
+    },
+    "date_propose": {
+      "note": "ASSUMPTION: 상태 라벨(상태 1/2/3 각주)은 초안 구분선으로 판단해 프레임에 옮기지 않았다. audience-card/cand-row/check/add-date/deadline-row/sent-card/badge-sent 는 components.md 에 대응 컴포넌트가 없어 신규로 그렸고 fill/stroke/radius/padding/gap 전부 Variables 바인딩(하드코딩 색 0건). Field/DateOption 컴포넌트는 guest_reply.html 전용 레이아웃(선택형 예/아니오 버튼)이라 이 화면의 단일 체크형 cand-row 와 구조가 달라 재사용하지 않았다. 흐름 안의 화면이라 StatusBar 만 삽입, TabBar 는 미삽입.",
+      "frames": {
+        "07 DatePropose / selected": { "frameId": "45:441", "x": 9450, "y": 0, "width": 390, "height": 844, "contentFrameId": "45:450", "statusBarInstanceId": "45:442", "candidatesId": "45:467", "footerId": "45:493" },
+        "07 DatePropose / empty": { "frameId": "46:306", "x": 9900, "y": 0, "width": 390, "height": 844 },
+        "07 DatePropose / sent": { "frameId": "46:356", "x": 10350, "y": 0, "width": 390, "height": 844 }
       }
     }
   },
@@ -239,6 +272,24 @@
         },
         "usedIn": ["home.html (list-card list-row, skeleton loading state)"],
         "note": "Layout=Normal/Long-text 는 Chip/Status(Status=Waiting) 인스턴스를 내부에 포함. 각 variant 높이는 179/196/160px → 67/67/48px 로 축소(padding 을 spacing/4·spacing/2 로 재바인딩, hug contents 유지)."
+      },
+      "Bar/StatusBar": {
+        "componentId": "30:100",
+        "position": { "x": 1200, "y": 0, "width": 390, "height": 44 },
+        "note": "단일 컴포넌트(variant 없음). 좌측 9:41, 우측 LTE 100%. fill=color/semantic/bg/page, text fill=color/semantic/text/primary, 폰트 Noto Sans KR Medium 12px(caption 크기). 12개 프레임 전부의 맨 위에 인스턴스 삽입.",
+        "usedIn": ["00 Onboarding / *", "01 Home / *", "02 MeetingDetail / *", "03 GuestReply / *"]
+      },
+      "Bar/TabBar": {
+        "componentSetId": "30:155",
+        "position": { "x": 1200, "y": 100, "width": 390, "height": 424 },
+        "variants": {
+          "active=home": "30:103",
+          "active=meeting": "30:116",
+          "active=calendar": "30:129",
+          "active=contacts": "30:142"
+        },
+        "note": "홈·모임·캘린더·지인 4탭. 활성 탭은 dot·label 색이 color/semantic/brand/default, 비활성은 color/semantic/text/secondary. 배경 color/semantic/bg/elevated, 상단 보더 color/semantic/border/default. 01 Home/* 에는 active=home, 02 MeetingDetail/* 에는 active=meeting 인스턴스를 프레임 맨 아래에 삽입(00 Onboarding/*, 03 GuestReply/* 에는 미삽입).",
+        "usedIn": ["01 Home / *", "02 MeetingDetail / *"]
       }
     }
   }
