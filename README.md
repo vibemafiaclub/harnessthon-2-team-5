@@ -31,10 +31,18 @@ C단계에서 탈락하면 원인에 따라 세 갈래로 라우팅한다 — �
 ## 구조
 
 ```
-.claude/skills/oss-design-harness/SKILL.md   # 하네스 본체 — 4단계 프롬프트 뼈대
-templates/brief.md                            # 0단계 산출물 양식
-templates/decisions.md                        # B단계 산출물 양식
-docs/concept.md                               # 컨셉 스펙 전문 (배경·경쟁 포지셔닝·논리 검증 과정)
+CLAUDE.md                                     # 전체 규칙 요약 — 여기부터 읽는다
+.claude/skills/oss-design-harness/            # 하네스 본체 (오케스트레이터 + C게이트 판정 기준)
+.claude/skills/prd-to-design-guide/           # PRD → 디자인 토큰 + Figma 가이드 캔버스
+guide/core.rules.json                         # L1 규칙 · guide/README.md 스키마 명세
+guide/reference/toss.design.md                # 참조 디자인 시스템
+templates/design-guide.md                     # 디자인 가이드 스키마 (design-md v1)
+templates/project.rules.json                  # L2/L3 규칙 빈 템플릿
+templates/brief.md · decisions.md             # 0단계 · B단계 산출물 양식
+scripts/audit.js                              # A게이트 결정론 검사기
+scripts/extract-nodes.js                      # use_figma 안에서 실행하는 노드 덤프 추출기
+scripts/eval.sh · evals/                      # 고정 픽스처 3종 평가 루프
+docs/concept.md · docs/plan.md                # 컨셉 스펙 · 작업 계획
 ```
 
 ## 사용법 (참가자용)

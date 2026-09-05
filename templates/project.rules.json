@@ -1,0 +1,174 @@
+{
+  "layer": "project",
+  "version": "0.1.0",
+  "_note": "L2/L3 — 항목(카테고리)은 고정, 값은 프로젝트마다 0단계에서 캘리브레이션한다. 이 파일은 빈 템플릿이다. 프로젝트 폴더로 복사한 뒤 design-guide-compile 스킬로 채운다. status가 'unfilled'인 blocker 규칙이 하나라도 남아 있으면 파이프라인은 W단계 진입을 거부한다(fail-closed).",
+  "tokens": {
+    "_note": "규칙은 여기를 $tokens.<경로>로 참조한다. 값 중복을 만들지 않는다.",
+    "color": {
+      "background": null,
+      "surface": null,
+      "text": null,
+      "text_muted": null,
+      "border": null,
+      "accent": null,
+      "status": "unfilled",
+      "source": null,
+      "_note": "PRD·클라이언트 반응에서 도출한다. 참조 팔레트를 옮겨 적지 않는다. 각 값의 source에 어느 PRD 문장에서 나왔는지 남긴다."
+    },
+    "spacing": {
+      "unit": null,
+      "scale": null,
+      "status": "unfilled",
+      "source": null
+    },
+    "typography": {
+      "family": null,
+      "scale": null,
+      "status": "unfilled",
+      "source": null
+    },
+    "radius": {
+      "scale": null,
+      "status": "unfilled",
+      "source": null
+    },
+    "_reference_palette": {
+      "_note": "참조 시스템에서 가져오면 안 되는 색 목록. core.rules.json의 no-reference-color-copy가 이 배열을 금지 목록으로 쓴다. 참조를 선언했는데 이 배열이 비어 있으면 파이프라인이 W단계 진입을 거부한다 (guide/README.md fail-closed 5번).",
+      "source_system": null,
+      "values": [],
+      "status": "unfilled"
+    }
+  },
+  "rules": [
+    {
+      "id": "color-palette-allowlist",
+      "title": "컬러 팔레트 일관성",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {},
+      "check": {
+        "type": "color_allowlist",
+        "allowed": "$tokens.color"
+      },
+      "autofix": false,
+      "status": "unfilled",
+      "source": null,
+      "fix_hint": "팔레트 밖 색은 가장 가까운 토큰으로 교체한다. 새 색을 만들지 않는다. 교체가 부적절하면 0단계로 되돌려 토큰 자체를 추가할지 사람에게 묻는다."
+    },
+    {
+      "id": "type-style-reuse",
+      "title": "타이포 스타일 재사용",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "node_types": [
+          "TEXT"
+        ]
+      },
+      "check": {
+        "type": "style_bound",
+        "style_kind": "text",
+        "allowed": "$tokens.typography.scale"
+      },
+      "autofix": false,
+      "status": "unfilled",
+      "source": null,
+      "fix_hint": "인라인 폰트 설정을 스케일 내 텍스트 스타일 바인딩으로 바꾼다."
+    },
+    {
+      "id": "spacing-grid",
+      "title": "Spacing 그리드 준수",
+      "stage": [
+        "wireframe",
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "has_auto_layout": true
+      },
+      "check": {
+        "type": "multiple_of",
+        "unit": "$tokens.spacing.unit",
+        "properties": [
+          "itemSpacing",
+          "paddingTop",
+          "paddingRight",
+          "paddingBottom",
+          "paddingLeft"
+        ]
+      },
+      "autofix": true,
+      "status": "unfilled",
+      "source": null,
+      "fix_hint": "가장 가까운 그리드 배수로 반올림한다. 두 배수의 중간이면 작은 쪽으로 내린다."
+    },
+    {
+      "id": "component-reuse-rate",
+      "title": "컴포넌트 재사용률",
+      "stage": [
+        "wireframe",
+        "design"
+      ],
+      "severity": "warning",
+      "applies_to": {},
+      "check": {
+        "type": "reuse_ratio",
+        "min": null
+      },
+      "autofix": false,
+      "status": "unfilled",
+      "source": null,
+      "fix_hint": "신규 생성한 노드 중 기존 컴포넌트로 대체 가능한 것을 인스턴스로 바꾼다."
+    },
+    {
+      "id": "layer-naming-semantic",
+      "title": "레이어 네이밍 semantic 여부",
+      "stage": [
+        "wireframe",
+        "design"
+      ],
+      "severity": "warning",
+      "applies_to": {},
+      "check": {
+        "type": "name_pattern",
+        "deny": [
+          "^(Frame|Group|Rectangle|Ellipse|Vector|Line)\\s*\\d*$"
+        ],
+        "allow": null
+      },
+      "autofix": true,
+      "status": "unfilled",
+      "source": null,
+      "fix_hint": "역할 기반 이름으로 바꾼다. 자동 수정은 부모 맥락에서 역할을 추론해 제안만 하고, 확신이 없으면 warning으로 남긴다."
+    },
+    {
+      "id": "variant-state-coverage",
+      "title": "Variant 상태 커버리지",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "node_types": [
+          "COMPONENT_SET"
+        ]
+      },
+      "check": {
+        "type": "variant_states_present",
+        "required": null
+      },
+      "autofix": false,
+      "status": "unfilled",
+      "source": null,
+      "fix_hint": "누락 상태의 variant를 추가한다. 존재 여부만 검사하며, 그 상태의 품질은 C단계가 판단한다."
+    }
+  ],
+  "project_specific": {
+    "_note": "L3 — 이 도메인에만 존재하는 기준. 0단계에서 새로 정의된다. 없으면 빈 배열로 둔다. 예: 사진 기록 앱의 프라이버시 마스킹 자연스러움.",
+    "rules": []
+  }
+}

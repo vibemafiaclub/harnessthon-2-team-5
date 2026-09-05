@@ -1,0 +1,361 @@
+<title>컴포넌트 라이브러리</title>
+<style>
+/* 자동 생성 — 직접 수정하지 마세요.
+ * 출처: docs/wedding-scheduler/design.md → docs/wedding-scheduler/project.rules.json
+ * 재생성: node src/tokens/build-tokens.js
+ */
+:root {
+  --c-primary: #1F6F63;
+  --c-primary-strong: #17564D;
+  --c-on-primary: #FCFBF9;
+  --c-canvas: #FCFBF9;
+  --c-surface: #F3F1EC;
+  --c-border: #E2DED7;
+  --c-border-strong: #94897B;
+  --c-foreground: #1C1A17;
+  --c-body: #4A453E;
+  --c-muted: #736C61;
+  --c-danger: #B3261E;
+  --sp-4: 4px;
+  --sp-6: 6px;
+  --sp-8: 8px;
+  --sp-16: 16px;
+  --sp-24: 24px;
+  --sp-32: 32px;
+  --r-4: 4px;
+  --r-6: 6px;
+  --r-8: 8px;
+  --r-10: 10px;
+  --r-14: 14px;
+  --r-16: 16px;
+  --r-9999: 9999px;
+  --btn-h-small: 32px;
+  --btn-h-medium: 38px;
+  --btn-h-large: 48px;
+  --btn-h-xlarge: 56px;
+  --btn-r-small: 8px;
+  --btn-r-medium: 10px;
+  --btn-r-large: 14px;
+  --btn-r-xlarge: 16px;
+  --btn-px: 20px;
+  --row-min-h: 56px;
+  --f-ui: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --fs-h4: 22px;
+  --fw-h4: 600;
+  --lh-h4: 33px;
+  --fs-body: 16px;
+  --fw-body: 400;
+  --lh-body: 24px;
+  --fs-bodystrong: 16px;
+  --fw-bodystrong: 600;
+  --lh-bodystrong: 24px;
+  --fs-bodysmall: 14px;
+  --fw-bodysmall: 400;
+  --lh-bodysmall: 21px;
+  --fs-button: 17px;
+  --fw-button: 600;
+  --lh-button: 24px;
+  --vw: 393px;
+  --vh: 825px;
+  --tap-min: 44px;
+  --icon-16: 16px;
+  --icon-20: 20px;
+  --icon-24: 24px;
+  --icon-stroke: 1.5;
+}
+
+.t-h4 {
+  font-family: var(--f-ui);
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-h4);
+  line-height: var(--lh-h4);
+}
+.t-body {
+  font-family: var(--f-ui);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-body);
+  line-height: var(--lh-body);
+}
+.t-bodystrong {
+  font-family: var(--f-ui);
+  font-size: var(--fs-bodystrong);
+  font-weight: var(--fw-bodystrong);
+  line-height: var(--lh-bodystrong);
+}
+.t-bodysmall {
+  font-family: var(--f-ui);
+  font-size: var(--fs-bodysmall);
+  font-weight: var(--fw-bodysmall);
+  line-height: var(--lh-bodysmall);
+}
+.t-button {
+  font-family: var(--f-ui);
+  font-size: var(--fs-button);
+  font-weight: var(--fw-button);
+  line-height: var(--lh-button);
+}
+
+/* 컴포넌트 스타일. 값은 전부 var(). hex·px 리터럴 금지.
+ * (구조적 상수만 예외: 1px 헤어라인, 2px 포커스링, 0, 100%, 9999px)
+ * design.md §4 Components & States와 1:1로 대응한다. */
+
+*, *::before, *::after { box-sizing: border-box; }
+/* 한글은 어절 단위로 끊는다. 기본값은 글자 단위라 '…입니다.'의 '다.'만 다음 줄로 넘어간다
+   (design.md §6 Locale) */
+.screen, .screen * { word-break: keep-all; overflow-wrap: break-word; }
+
+/* ===== 화면 셸 ===== */
+.screen {
+  width: var(--vw); height: var(--vh);
+  background: var(--c-canvas); color: var(--c-foreground);
+  font-family: var(--f-ui);
+  display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid var(--c-border);
+}
+.statusbar {
+  flex: none; height: var(--sp-32);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--sp-16);
+  font-size: var(--fs-bodysmall); font-weight: var(--fw-bodystrong);
+  color: var(--c-foreground); font-variant-numeric: tabular-nums;
+}
+.statusbar .dots { display: flex; gap: var(--sp-4); }
+.statusbar .dots i { width: var(--sp-4); height: var(--sp-4); border-radius: 9999px; background: var(--c-muted); }
+
+.appbar { flex: none; display: flex; align-items: center; gap: var(--sp-8); padding: var(--sp-8) var(--sp-16) var(--sp-16); }
+.appbar .title { flex: 1; min-width: 0; }
+.appbar .lead { width: var(--btn-h-small); height: var(--btn-h-small); margin-left: calc(-1 * var(--sp-8));
+  display: grid; place-items: center; color: var(--c-foreground); background: none; border: 0; }
+.body { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 var(--sp-16) var(--sp-16);
+  display: flex; flex-direction: column; gap: var(--sp-24); }
+/* 주(週) 묶음 — 안쪽 날짜들은 구분선으로만 나뉘고, 묶음 사이 간격은 .body가 소유한다 */
+.group { display: flex; flex-direction: column; }
+.group > .sec { padding-bottom: var(--sp-8); }
+.actionbar { flex: none; display: flex; gap: var(--sp-8); padding: var(--sp-16); border-top: 1px solid var(--c-border); }
+/* 보조 행동은 콘텐츠 폭, 주 행동이 남은 폭을 갖는다.
+   균등 분할(flex:1)은 긴 한글 라벨을 접히게 만든다 — 이것이 버튼이 깨지던 원인이다. */
+.actionbar .btn { flex: 0 1 auto; }
+.actionbar .btn[data-fill="fill"] { flex: 1 1 auto; }
+.tabbar { flex: none; display: flex; border-top: 1px solid var(--c-border); padding-bottom: var(--sp-16); }
+.tabbar a { flex: 1; min-height: var(--tap-min); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: var(--sp-4);
+  color: var(--c-muted); font-size: var(--fs-bodysmall); }
+.tabbar a[aria-current="page"] { color: var(--c-primary); }
+
+/* ===== Button — design.md §4 Mobile Primary Button (reference) ===== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-8);
+  font-family: var(--f-ui); font-size: var(--fs-button); font-weight: var(--fw-button);
+  padding: 0 var(--btn-px); border: 1px solid transparent; cursor: default;
+  height: var(--btn-h-xlarge); border-radius: var(--btn-r-xlarge);
+  white-space: nowrap; min-width: 0; position: relative;
+}
+/* 라벨은 절대 접히지 않는다. 넘치면 말줄임으로 드러나 결함이 보이게 한다 */
+.btn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn[data-size="small"]  { height: var(--btn-h-small);  border-radius: var(--btn-r-small);  font-size: var(--fs-bodysmall); padding: 0 var(--sp-8); }
+.btn[data-size="medium"] { height: var(--btn-h-medium); border-radius: var(--btn-r-medium); font-size: var(--fs-body); padding: 0 var(--sp-16); }
+/* 시각 높이는 유지하고 히트영역만 44로 (core touch-target-min) */
+.btn[data-size="small"]::after,
+.btn[data-size="medium"]::after { content: ""; position: absolute; left: 0; right: 0;
+  top: 50%; height: var(--tap-min); transform: translateY(-50%); }
+.btn[data-size="large"]  { height: var(--btn-h-large);  border-radius: var(--btn-r-large); }
+/* fill × primary */
+.btn[data-fill="fill"][data-tone="primary"] { background: var(--c-primary); color: var(--c-on-primary); }
+.btn[data-fill="fill"][data-tone="primary"]:hover,
+.btn[data-fill="fill"][data-tone="primary"][data-state="pressed"] { background: var(--c-primary-strong); }
+/* fill × danger */
+.btn[data-fill="fill"][data-tone="danger"] { background: var(--c-danger); color: var(--c-on-primary); }
+/* weak — 중성 표면. semantic 색을 만들지 않는다 */
+.btn[data-fill="weak"] { background: var(--c-surface); color: var(--c-foreground); }
+.btn[data-fill="weak"][data-tone="danger"] { color: var(--c-danger); }
+.btn[data-fill="weak"]:hover, .btn[data-fill="weak"][data-state="pressed"] { background: var(--c-border); }
+/* light — 테두리만 */
+.btn[data-fill="light"] { background: var(--c-canvas); color: var(--c-body); border-color: var(--c-border-strong); }
+.btn[data-fill="light"]:hover, .btn[data-fill="light"][data-state="pressed"] { background: var(--c-surface); }
+.btn[disabled] { background: var(--c-surface); color: var(--c-muted); border-color: transparent; }
+.btn[aria-busy] { position: relative; }
+.btn[aria-busy] > span:not(.spin) { visibility: hidden; }
+.btn[aria-busy] .spin { position: absolute; inset: 0; display: grid; place-items: center; color: var(--c-on-primary); }
+.btn[data-fill="weak"][aria-busy] .spin, .btn[data-fill="light"][aria-busy] .spin { color: var(--c-body); }
+.btn:focus-visible, .btn[data-state="focus"] { outline: 2px solid var(--c-primary); outline-offset: 2px; }
+
+/* ===== Text Field — design.md §4 (reference) ===== */
+.field { display: flex; flex-direction: column; gap: var(--sp-6); }
+.field .label { font-size: var(--fs-bodysmall); color: var(--c-body); }
+.field .box {
+  display: flex; align-items: center; gap: var(--sp-8);
+  min-height: var(--btn-h-xlarge); padding: 0 var(--sp-16);
+  background: var(--c-surface); border: 1px solid transparent; border-radius: var(--r-14);
+  font-size: var(--fs-body); color: var(--c-foreground);
+}
+.field .box .ph { color: var(--c-muted); }
+.field[data-variant="line"] .box { background: none; border: 0; border-bottom: 1px solid var(--c-border-strong);
+  border-radius: 0; padding-left: 0; padding-right: 0; }
+.field[data-state="focus"] .box { border-color: var(--c-primary); background: var(--c-canvas); }
+.field[data-state="error"] .box { border-color: var(--c-danger); background: var(--c-canvas); }
+.field[data-state="disabled"] .box { color: var(--c-muted); }
+.field[data-state="readonly"] .box { background: none; border-color: var(--c-border-strong); }
+.field .help { font-size: var(--fs-bodysmall); color: var(--c-muted); }
+.field .error { display: flex; align-items: center; gap: var(--sp-4); font-size: var(--fs-bodysmall); color: var(--c-danger); }
+
+/* ===== Badge — design.md §4 (reference geometry) + Status Badge (extension) ===== */
+.badge {
+  line-height: var(--lh-bodysmall);
+  display: inline-flex; align-items: center; gap: var(--sp-4);
+  padding: 0 var(--sp-8); border-radius: var(--r-6);
+  font-size: var(--fs-bodysmall); font-weight: var(--fw-bodystrong);
+  white-space: nowrap; flex: none;
+}
+.badge[data-size="xsmall"] { height: var(--sp-24); padding: 0 var(--sp-6); border-radius: var(--r-4); }
+.badge[data-size="small"]  { height: var(--sp-24); }
+.badge[data-size="medium"] { height: var(--sp-32); padding: 0 var(--sp-16); }
+/* 상태 배정 — 색을 늘리지 않는다 (no-invented-semantic-color) */
+.badge[data-status="confirmed"] { background: var(--c-surface); color: var(--c-foreground); }
+.badge[data-status="due"]       { background: var(--c-foreground); color: var(--c-canvas); font-variant-numeric: tabular-nums; }
+.badge[data-status="conflict"]  { background: var(--c-surface); color: var(--c-danger); }
+.badge[data-status="done"]      { background: var(--c-surface); color: var(--c-muted); }
+.badge[data-status="both"]      { background: var(--c-surface); color: var(--c-body); }
+
+/* ===== Check (Agreement 컨트롤 전용) — design.md §4 ===== */
+.check { width: var(--sp-24); height: var(--sp-24); flex: none; border-radius: var(--r-8);
+  border: 1px solid var(--c-border-strong); background: var(--c-canvas);
+  display: grid; place-items: center; position: relative; }
+/* 시각 크기는 24로 두고 히트영역만 44로 넓힌다 (core touch-target-min fix_hint) */
+.check::after { content: ""; position: absolute; inset: calc((var(--tap-min) - var(--sp-24)) / -2); }
+.check[data-on] { background: var(--c-primary); border-color: var(--c-primary); color: var(--c-on-primary); }
+.check[data-disabled] { background: var(--c-surface); border-color: transparent; }
+
+/* ===== List Row (extension) — 카드가 아니다 ===== */
+.row { display: flex; align-items: center; gap: var(--sp-16);
+  min-height: var(--row-min-h); padding: var(--sp-8) 0; }
+.row:has(.alert) { align-items: flex-start; }
+.row .alert { margin: var(--sp-4) 0 0; }
+.row + .row { border-top: 1px solid var(--c-border); }
+.row .main { flex: 1 1 auto; min-width: 0; }
+.row .name, .row .sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .trail { flex: 0 1 auto; max-width: 45%; min-width: 0; margin-left: auto; display: flex;
+  align-items: center; gap: var(--sp-8); justify-content: flex-end; color: var(--c-muted); font-size: var(--fs-bodysmall);
+  font-variant-numeric: tabular-nums; }
+.row[data-state="selected"] .name { color: var(--c-primary); }
+.row[data-state="disabled"] { color: var(--c-muted); }
+.row[data-state="disabled"] .name { color: var(--c-muted); }
+.row .name { font-size: var(--fs-body); font-weight: var(--fw-bodystrong); color: var(--c-foreground); }
+.row .sub { font-size: var(--fs-bodysmall); color: var(--c-muted); font-variant-numeric: tabular-nums; }
+.row[data-tone="danger"] .sub { color: var(--c-danger); }
+
+/* ===== Day Gutter (extension) ===== */
+.day { display: grid; grid-template-columns: var(--btn-h-large) minmax(0, 1fr); gap: var(--sp-16); }
+.day + .day { border-top: 1px solid var(--c-border); }
+.day .gut { padding-top: var(--sp-8); color: var(--c-muted); font-variant-numeric: tabular-nums; }
+.day[data-weekend] .gut { color: var(--c-foreground); }
+.day .gut .d { display: block; font-size: var(--fs-h4); font-weight: var(--fw-h4); line-height: var(--lh-body); }
+.day .gut .w { display: block; font-size: var(--fs-bodysmall); }
+.day .items { display: flex; flex-direction: column; }
+.day .items > .row:first-child { border-top: 0; }
+
+/* ===== Owner Mark (extension) — 색이 아니라 형태 ===== */
+.person { display: inline-flex; align-items: center; gap: var(--sp-4);
+  padding: 0 var(--sp-8) 0 var(--sp-4); min-height: var(--sp-32);
+  border: 1px solid var(--c-border-strong); border-radius: var(--r-16);
+  white-space: nowrap; max-width: 100%;
+  font-size: var(--fs-bodysmall); color: var(--c-foreground); background: var(--c-canvas); }
+.person[data-owner="bride"] { border-style: dashed; }
+.person[data-muted] { color: var(--c-muted); }
+.person .ini, .avatar { width: var(--sp-24); height: var(--sp-24); border-radius: 9999px; flex: none;
+  display: grid; place-items: center; background: var(--c-surface); color: var(--c-body);
+  font-size: var(--fs-bodysmall); border: 1px solid var(--c-border); }
+.avatar { width: var(--sp-32); height: var(--sp-32); }
+.avatar[data-owner="bride"], .person[data-owner="bride"] .ini { border-style: dashed; }
+.person .own { color: var(--c-muted); }
+.people { display: flex; flex-wrap: wrap; gap: var(--sp-6); }
+
+/* ===== 배치 유틸 ===== */
+.stack { display: flex; flex-direction: column; gap: var(--sp-8); }
+.stack[data-gap="16"] { gap: var(--sp-16); }
+.stack[data-gap="24"] { gap: var(--sp-24); }
+.stack[data-gap="32"] { gap: var(--sp-32); }
+.sec { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-8); }
+.sec .t { font-size: var(--fs-body); font-weight: var(--fw-bodystrong); color: var(--c-foreground); }
+.sec .r { font-size: var(--fs-bodysmall); color: var(--c-muted); font-variant-numeric: tabular-nums; }
+.note { font-size: var(--fs-bodysmall); color: var(--c-muted); line-height: var(--lh-bodysmall); }
+.note b { color: var(--c-foreground); font-weight: var(--fw-bodystrong); }
+.alert { display: flex; gap: var(--sp-8); align-items: flex-start;
+  font-size: var(--fs-bodysmall); line-height: var(--lh-bodysmall); color: var(--c-danger); }
+.alert svg { flex: none; }
+.empty { display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: var(--sp-8); padding: var(--sp-32) 0 var(--sp-24); }
+.empty p { margin: 0; color: var(--c-muted); font-size: var(--fs-bodysmall);
+  line-height: var(--lh-bodysmall); max-width: 28ch; }
+.meter { height: var(--sp-4); border-radius: 9999px; background: var(--c-border); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--c-primary); }
+.tally { display: flex; gap: var(--sp-4); }
+/* 세 상태를 색이 아니라 '채움 정도'로 가른다 — 흑백·색각이상에서도 구분된다.
+   가능=채운 원 / 불가=굵은 링 / 무응답=헤어라인 링.
+   각 점은 서로 닿지 않고(gap 4) canvas를 배경으로 하므로 대비는 canvas 기준으로 만족한다. */
+.tally i { width: var(--sp-8); height: var(--sp-8); border-radius: 9999px; box-sizing: border-box;
+  background: var(--c-canvas); border: 1px solid var(--c-border-strong); }
+.tally i[data-y] { background: var(--c-primary); border-color: var(--c-primary); }
+.tally i[data-n] { background: var(--c-canvas); border: 2px solid var(--c-danger); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* 집계 숫자 — 색 단독 전달을 막는 텍스트 대체 (no-color-only) */
+.tally-num { font-size: var(--fs-bodysmall); color: var(--c-muted);
+  font-variant-numeric: tabular-nums; margin-left: var(--sp-4); white-space: nowrap; }
+button.row { width: 100%; text-align: left; background: none; border: 0;
+  border-top: 1px solid var(--c-border); font-family: var(--f-ui); }
+button.row:first-child { border-top: 0; }
+button.row:focus-visible, .check:focus-visible, .tabbar a:focus-visible {
+  outline: 2px solid var(--c-primary); outline-offset: 2px; }
+
+/* 집계가 6건을 넘으면 점 대신 숫자로 (레이아웃.md L-4) */
+.tally-text { font-size: var(--fs-bodysmall); color: var(--c-muted);
+  font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+
+body { background: var(--c-surface); color: var(--c-foreground); font-family: var(--f-ui); }
+.page { max-width: 1400px; margin: 0 auto; padding: var(--sp-32) var(--sp-24); }
+h1 { font-size: var(--fs-h4); font-weight: var(--fw-h4); line-height: var(--lh-h4); margin: var(--sp-8) 0; }
+.eyebrow { font-size: var(--fs-bodysmall); color: var(--c-muted); }
+.lede { color: var(--c-body); font-size: var(--fs-bodysmall); line-height: var(--lh-bodysmall); max-width: 74ch; margin: 0; }
+.board { display: flex; flex-wrap: wrap; gap: var(--sp-32); margin-top: var(--sp-32); align-items: flex-start; }
+.art { width: var(--vw); }
+.cap { display: flex; flex-direction: column; gap: var(--sp-4); padding-bottom: var(--sp-8); }
+.cap .h { display: flex; align-items: baseline; gap: var(--sp-8); }
+.cap .n { font-size: var(--fs-bodysmall); color: var(--c-primary); font-variant-numeric: tabular-nums; }
+.cap .t { font-size: var(--fs-body); font-weight: var(--fw-bodystrong); }
+.cap .p { margin-left: auto; font-size: var(--fs-bodysmall); color: var(--c-muted); }
+.cap .d { font-size: var(--fs-bodysmall); color: var(--c-muted); line-height: var(--lh-bodysmall); }
+.gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--sp-16); margin-top: var(--sp-16); }
+.cell { background: var(--c-canvas); border: 1px solid var(--c-border); border-radius: var(--r-8);
+  padding: var(--sp-16); display: flex; flex-direction: column; gap: var(--sp-8); align-items: flex-start; }
+.cell .k { font-size: var(--fs-bodysmall); color: var(--c-muted); }
+.cell.wide { grid-column: 1 / -1; }
+.grade { font-size: var(--fs-bodysmall); color: var(--c-muted); }
+.grade b { color: var(--c-foreground); font-weight: var(--fw-bodystrong); }
+footer { margin-top: var(--sp-32); padding-top: var(--sp-24); border-top: 1px solid var(--c-border);
+  color: var(--c-muted); font-size: var(--fs-bodysmall); line-height: var(--lh-bodysmall); max-width: 74ch; }
+code { font-family: ui-monospace, Menlo, monospace; }
+
+</style>
+<div class="page">
+<div class="eyebrow">Component Library · design.md §4</div>
+<h1>컴포넌트</h1>
+<p class="lede">각 컴포넌트에 증거 등급을 붙였습니다. <b>reference</b>는 참조 시스템에서 검증된 것,
+<b>extension</b>은 PRD를 충족하려고 새로 만든 것입니다. 두 가지를 섞어 표시하지 않습니다.</p>
+
+<div class="sec" style="padding-top:var(--sp-32)"><span class="t">Button</span><span class="r">reference</span></div><p class="lede">documented 4단계 크기만. 로딩 중 너비 유지. 마케팅 표면 높이(40·46)는 코드가 거부합니다.</p><div class="gal"><div class="cell"><span class="k">xlarge 56 / r16</span><button class="btn" data-size="xlarge" data-fill="fill" data-tone="primary" data-name="Button/fill/primary"><span>11월 8일로 확정</span></button></div><div class="cell"><span class="k">large 48 / r14</span><button class="btn" data-size="large" data-fill="fill" data-tone="primary" data-name="Button/fill/primary"><span>확정</span></button></div><div class="cell"><span class="k">medium 38 / r10</span><button class="btn" data-size="medium" data-fill="fill" data-tone="primary" data-name="Button/fill/primary"><span>알림</span></button></div><div class="cell"><span class="k">small 32 / r8</span><button class="btn" data-size="small" data-fill="fill" data-tone="primary" data-name="Button/fill/primary"><span>알림</span></button></div><div class="cell"><span class="k">pressed</span><button class="btn" data-size="xlarge" data-fill="fill" data-tone="primary" data-state="pressed" data-name="Button/fill/primary"><span>확정</span></button></div><div class="cell"><span class="k">disabled</span><button class="btn" data-size="xlarge" data-fill="fill" data-tone="primary" disabled data-name="Button/fill/primary"><span>확정</span></button></div><div class="cell"><span class="k">loading — 너비 유지</span><button class="btn" data-size="xlarge" data-fill="fill" data-tone="primary" disabled aria-busy="true" data-name="Button/fill/primary"><span>확정하는 중</span><span class="spin"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3a9 9 0 019 9"/><circle cx="12" cy="12" r="9" opacity=".3"/></svg></span></button></div><div class="cell"><span class="k">focus</span><button class="btn" data-size="xlarge" data-fill="fill" data-tone="primary" data-state="focus" data-name="Button/fill/primary"><span>확정</span></button></div><div class="cell"><span class="k">weak</span><button class="btn" data-size="xlarge" data-fill="weak" data-tone="primary" data-name="Button/weak/primary"><span>더 기다리기</span></button></div><div class="cell"><span class="k">light</span><button class="btn" data-size="xlarge" data-fill="light" data-tone="primary" data-name="Button/light/primary"><span>그대로 두기</span></button></div><div class="cell"><span class="k">fill · danger</span><button class="btn" data-size="xlarge" data-fill="fill" data-tone="danger" data-name="Button/fill/danger"><span>모임 삭제</span></button></div><div class="cell"><span class="k">weak · danger</span><button class="btn" data-size="xlarge" data-fill="weak" data-tone="danger" data-name="Button/weak/danger"><span>모임 삭제</span></button></div></div>
+
+<div class="sec" style="padding-top:var(--sp-32)"><span class="t">Text Field</span><span class="r">reference</span></div><p class="lede">box·line 변형과 focus·error·disabled·read-only 상태.</p><div class="gal"><div class="cell wide"><span class="k">box / default</span><label class="field" data-variant="box" data-name="Field/box"><span class="label">이름</span><span class="box">이현우</span></label></div><div class="cell wide"><span class="k">box / focus</span><label class="field" data-variant="box" data-state="focus" data-name="Field/box"><span class="label">이름</span><span class="box">이현우</span></label></div><div class="cell wide"><span class="k">box / error</span><label class="field" data-variant="box" data-state="error" data-name="Field/box"><span class="label">연락처</span><span class="box"><span class="ph">010-0000-0000</span></span><span class="error"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.4v.4"/></svg>이미 등록된 번호예요. 강태호님과 같은 번호입니다.</span></label></div><div class="cell wide"><span class="k">box / disabled</span><label class="field" data-variant="box" data-state="disabled" data-name="Field/box"><span class="label">연락처</span><span class="box">010-2431-8890</span></label></div><div class="cell wide"><span class="k">box / read-only</span><label class="field" data-variant="box" data-state="readonly" data-name="Field/box"><span class="label">등록일</span><span class="box">2026년 9월 5일</span></label></div><div class="cell wide"><span class="k">line</span><label class="field" data-variant="line" data-name="Field/line"><span class="label">검색</span><span class="box"><span class="ph">이름 또는 관계</span></span></label></div></div>
+
+<div class="sec" style="padding-top:var(--sp-32)"><span class="t">Badge</span><span class="r">reference geometry + extension 배정</span></div><p class="lede">danger 외 semantic 색 값이 문서화되어 있지 않아, 상태를 fill/weak와 중성 명도로 구분합니다.</p><div class="gal"><div class="cell"><span class="k">확정 — weak · Surface</span><span class="badge" data-status="confirmed" data-size="small" data-name="Badge/confirmed">확정</span></div><div class="cell"><span class="k">마감 임박 — fill · Foreground</span><span class="badge" data-status="due" data-size="small" data-name="Badge/due">D-2</span></div><div class="cell"><span class="k">겹침 — weak · Danger + 아이콘</span><span class="badge" data-status="conflict" data-size="small" data-name="Badge/conflict"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.4v.4"/></svg>겹침</span></div><div class="cell"><span class="k">다녀옴 — weak · Muted</span><span class="badge" data-status="done" data-size="small" data-name="Badge/done">다녀옴</span></div><div class="cell"><span class="k">양가 — weak · Body</span><span class="badge" data-status="both" data-size="small" data-name="Badge/both">양가</span></div><div class="cell"><span class="k">회신 대기 — 뱃지 없음</span><span class="grade">문장으로만 표시합니다</span></div><div class="cell"><span class="k">xsmall / small / medium</span><span class="badge" data-status="confirmed" data-size="xsmall" data-name="Badge/confirmed">확정</span> <span class="badge" data-status="confirmed" data-size="small" data-name="Badge/confirmed">확정</span> <span class="badge" data-status="confirmed" data-size="medium" data-name="Badge/confirmed">확정</span></div></div>
+
+<div class="sec" style="padding-top:var(--sp-32)"><span class="t">Agreement / Check</span><span class="r">reference</span></div><p class="lede">checked·unchecked·disabled. 이 프로젝트에서는 다중 선택에도 같은 컨트롤을 씁니다(extension 용도).</p><div class="gal"><div class="cell"><span class="k">unchecked</span><span class="check" role="checkbox" aria-checked="false" tabindex="0" data-name="Check"></span></div><div class="cell"><span class="k">checked</span><span class="check" role="checkbox" aria-checked="true" tabindex="0" data-on data-name="Check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span></div><div class="cell"><span class="k">disabled</span><span class="check" role="checkbox" aria-checked="false" aria-disabled="true" data-disabled data-name="Check"></span></div></div>
+
+<div class="sec" style="padding-top:var(--sp-32)"><span class="t">List Row</span><span class="r">extension</span></div><p class="lede">카드가 아닙니다. Border 1px 구분선과 정렬로 구조를 만들고 최소 높이 56px.</p><div class="gal"><div class="cell wide"><span class="k">person</span><div class="row" data-name="Row/person"><span class="avatar" data-owner="groom" data-name="Avatar/groom">현우</span><div class="main"><div class="name">이현우</div><div class="sub">직장 · 대학 · 신랑 쪽</div></div><div class="trail">모임 2</div></div></div><div class="cell wide"><span class="k">person / selected</span><div class="row" data-state="selected" data-name="Row/person"><span class="check" role="checkbox" aria-checked="true" tabindex="0" data-on data-name="Check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span><div class="main"><div class="name">최유진</div><div class="sub">대학</div></div></div></div><div class="cell wide"><span class="k">person / disabled</span><div class="row" data-state="disabled" data-name="Row/person"><span class="check" role="checkbox" aria-checked="false" aria-disabled="true" data-disabled data-name="Check"></span><div class="main"><div class="name">김 부장</div><div class="sub">직장 · 1:1</div></div><div class="trail">따로 뵙기</div></div></div><div class="cell wide"><span class="k">event / confirmed</span><div class="row" data-name="Row/event"><div class="main"><div class="name">동네 친구들</div><div class="sub">낮 12:00 · 5명</div></div><div class="trail"><span class="badge" data-status="confirmed" data-size="small" data-name="Badge/confirmed">확정</span></div></div></div><div class="cell wide"><span class="k">event / conflict</span><div class="row" data-tone="danger" data-name="Row/event/conflict"><div class="main"><div class="name">회사 팀 저녁</div><div class="sub">오후 7:00 · 김 부장님 1:1</div></div><div class="trail"><span class="badge" data-status="conflict" data-size="small" data-name="Badge/conflict"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.4v.4"/></svg>겹침</span></div></div></div><div class="cell wide"><span class="k">date</span><div class="row" data-name="Row/date"><div class="main"><div class="name">11월 8일 토</div><div class="sub">오후 6:00</div></div><div class="trail"><span class="tally" data-name="Bar/tally" role="img" aria-label="가능 3명, 불가 0명, 무응답 2명"><i data-y></i><i data-y></i><i data-y></i><i></i><i></i></span><span class="tally-num" data-name="Text/count">가능 3</span></div></div></div></div>
+
+<div class="sec" style="padding-top:var(--sp-32)"><span class="t">Day Gutter</span><span class="r">extension</span></div><p class="lede">PRD §4-5 "특정 날짜에 겹치는지"를 축으로 만든 구조입니다.</p><div class="gal"><div class="cell wide"><span class="k">weekend / weekday</span><div class="day" data-weekend data-name="Gutter/day"><div class="gut"><span class="d">8</span><span class="w">토</span></div><div class="items"><div class="row" data-name="Row/event"><div class="main"><div class="name">양가 상견례</div><div class="sub">오후 6:00</div></div><div class="trail"><span class="badge" data-status="confirmed" data-size="small" data-name="Badge/confirmed">확정</span></div></div></div></div><div class="day" data-name="Gutter/day"><div class="gut"><span class="d">18</span><span class="w">화</span></div><div class="items"><div class="row" data-name="Row/event"><div class="main"><div class="name">전 직장 선배</div><div class="sub">오후 7:30 · 1:1</div></div><div class="trail">3일째</div></div></div></div></div></div>
+
+<div class="sec" style="padding-top:var(--sp-32)"><span class="t">Owner Mark</span><span class="r">extension</span></div><p class="lede">신랑/신부를 색이 아니라 테두리 스타일과 라벨로 구분합니다. 검증된 색이 부족해 색 구분은 애초에 불가능합니다.</p><div class="gal"><div class="cell"><span class="k">groom — 실선</span><span class="person" data-owner="groom" data-name="Person/groom"><span class="ini">현우</span>이현우<span class="own">신랑</span></span></div><div class="cell"><span class="k">bride — 파선</span><span class="person" data-owner="bride" data-name="Person/bride"><span class="ini">지현</span>박지현<span class="own">신부</span></span></div><div class="cell"><span class="k">note 지정</span><span class="person" data-owner="groom" data-name="Person/groom"><span class="ini">부장</span>김 부장<span class="own">신랑 · 1:1</span></span></div><div class="cell"><span class="k">muted</span><span class="person" data-owner="bride" data-muted data-name="Person/bride"><span class="ini">서연</span>한서연<span class="own">무응답</span></span></div><div class="cell"><span class="k">Avatar groom / bride</span><span class="avatar" data-owner="groom" data-name="Avatar/groom">현우</span> <span class="avatar" data-owner="bride" data-name="Avatar/bride">지현</span></div></div>
+
+<footer>이 갤러리는 화면과 같은 코드에서 렌더됩니다. <code>variant-state-coverage</code>는 blocker이지만
+v0 검사기가 미구현이라 <code>guide/README.md</code> 규약에 따라 사람 게이트로 승격되며, 이 페이지가 그 육안 확인 대상입니다.</footer></div>
