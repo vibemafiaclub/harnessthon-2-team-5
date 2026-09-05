@@ -6,8 +6,8 @@
   "budget_minutes": 40,
   "mode": "fast",
   "started_at": "2026-09-05T15:50:59",
-  "updated_at": "2026-09-05T17:20:10",
-  "next_stage": "figma",
+  "updated_at": "2026-09-05T18:33:11",
+  "next_stage": "done",
   "stages": {
     "interview": {
       "status": "done",
@@ -29,11 +29,11 @@
       "revision_rounds": 0
     },
     "figma": {
-      "status": "in_progress",
+      "status": "done",
       "started_at": "2026-09-05T17:20:10",
-      "done_at": "",
-      "exit_check": "",
-      "c_rounds": 0,
+      "done_at": "2026-09-05T18:33:11",
+      "exit_check": "design/verify/a_report_final.md 9/10 PASS → 타이포 스타일 보정 후 전항 PASS. 재사용률 12.7%는 사용자 승인 예외",
+      "c_rounds": 1,
       "c_fail_reasons": []
     }
   },
