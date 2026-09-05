@@ -2,12 +2,12 @@
   "$note": "하네스 진행 상태. 오케스트레이터가 시작할 때 읽어 next_stage 부터 이어간다. 사람이 손으로 고치지 않는다.",
   "version": 1,
   "prd": "docs/prd.md",
-  "figma_url": "",
+  "figma_url": "https://www.figma.com/design/sbkAu7Vvampc2WR1CozIWb",
   "budget_minutes": 40,
   "mode": "fast",
   "started_at": "2026-09-05T15:50:59",
-  "updated_at": "2026-09-05T17:09:09",
-  "next_stage": "tokens",
+  "updated_at": "2026-09-05T17:20:10",
+  "next_stage": "figma",
   "stages": {
     "interview": {
       "status": "done",
@@ -16,21 +16,21 @@
       "exit_check": "design/verify/exit_stage0.md RESULT: PASS (15/15). 0-G 재감사 후 entailed 1 / over_generalized 4 / unsupported 1, 0-H ack \"없음\""
     },
     "tokens": {
-      "status": "in_progress",
+      "status": "done",
       "started_at": "",
-      "done_at": "",
-      "exit_check": ""
+      "done_at": "2026-09-05T17:19:42",
+      "exit_check": "design/verify/exit_stage1.md RESULT: PASS (14/14)"
     },
     "draft": {
-      "status": "pending",
+      "status": "done",
       "started_at": "",
-      "done_at": "",
-      "exit_check": "",
+      "done_at": "2026-09-05T17:19:42",
+      "exit_check": "2-B~2-E 생략(사용자 시간 제약). 화면 3종 병렬 생성, 상태 토큰 18종 적용, 미정의 var 0건",
       "revision_rounds": 0
     },
     "figma": {
-      "status": "pending",
-      "started_at": "",
+      "status": "in_progress",
+      "started_at": "2026-09-05T17:20:10",
       "done_at": "",
       "exit_check": "",
       "c_rounds": 0,
@@ -51,9 +51,9 @@
       "changed_after_reveal": false
     },
     "draft_approval": {
-      "approved": false,
-      "at": "",
-      "quote": ""
+      "approved": true,
+      "at": "2026-09-05T17:19:42",
+      "quote": "피그마로 ㄱㄱ"
     },
     "final_ack": {
       "approved": false,

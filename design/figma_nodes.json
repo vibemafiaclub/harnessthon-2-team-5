@@ -1,0 +1,245 @@
+{
+  "meta": {
+    "figma_file_key": "sbkAu7Vvampc2WR1CozIWb",
+    "source": "design/tokens.json",
+    "stage": "variables_and_text_styles"
+  },
+  "variables": {
+    "collections": {
+      "primitive": {
+        "collectionId": "VariableCollectionId:1:2",
+        "modeId": "1:0"
+      },
+      "semantic": {
+        "collectionId": "VariableCollectionId:1:58",
+        "modeId": "1:1"
+      }
+    },
+    "primitive": {
+      "color": {
+        "primary": {
+          "50": "VariableID:1:3",
+          "100": "VariableID:1:4",
+          "300": "VariableID:1:5",
+          "500": "VariableID:1:6",
+          "700": "VariableID:1:7",
+          "900": "VariableID:1:8"
+        },
+        "secondary": {
+          "100": "VariableID:1:9",
+          "500": "VariableID:1:10",
+          "700": "VariableID:1:11"
+        },
+        "neutral": {
+          "0": "VariableID:1:12",
+          "50": "VariableID:1:13",
+          "100": "VariableID:1:14",
+          "200": "VariableID:1:15",
+          "300": "VariableID:1:16",
+          "400": "VariableID:1:17",
+          "500": "VariableID:1:18",
+          "700": "VariableID:1:19",
+          "900": "VariableID:1:20"
+        }
+      },
+      "spacing": {
+        "_note": "ASSUMPTION: brief 는 spacing/radius 를 만들라고만 하고 소속 컬렉션을 지정하지 않아 primitive 컬렉션에 raw 값으로 배치. 이름의 '.' 는 Figma variable 이름에서 허용되지 않아 '-' 로 치환(예: 0.5 -> spacing/0-5).",
+        "0": "VariableID:1:37",
+        "0.5": "VariableID:1:50",
+        "1": "VariableID:1:38",
+        "2": "VariableID:1:39",
+        "3": "VariableID:1:40",
+        "4": "VariableID:1:41",
+        "5": "VariableID:1:42",
+        "6": "VariableID:1:43",
+        "8": "VariableID:1:44",
+        "10": "VariableID:1:45",
+        "12": "VariableID:1:46",
+        "16": "VariableID:1:47",
+        "20": "VariableID:1:48",
+        "24": "VariableID:1:49"
+      },
+      "radius": {
+        "none": "VariableID:1:51",
+        "sm": "VariableID:1:52",
+        "md": "VariableID:1:53",
+        "lg": "VariableID:1:54",
+        "xl": "VariableID:1:55",
+        "2xl": "VariableID:1:56",
+        "full": "VariableID:1:57"
+      }
+    },
+    "semantic": {
+      "_note": "bg/text/border/brand/accent 는 primitive 를 VARIABLE_ALIAS 로 참조. feedback/status/response/alert 는 tokens.json 원본이 직접 hex 값(primitive 참조 문법 아님)이라 ASSUMPTION: alias 없이 리터럴 값으로 생성. 한글 키는 영문 슬러그 사용, description 에 원 한글 이름 기록.",
+      "bg": {
+        "page": "VariableID:1:59",
+        "surface": "VariableID:1:60",
+        "elevated": "VariableID:1:61"
+      },
+      "text": {
+        "primary": "VariableID:1:62",
+        "secondary": "VariableID:1:63",
+        "disabled": "VariableID:1:64",
+        "on-primary": "VariableID:1:65",
+        "link": "VariableID:1:66"
+      },
+      "border": {
+        "default": "VariableID:1:67",
+        "strong": "VariableID:1:68",
+        "focus": "VariableID:1:69"
+      },
+      "brand": {
+        "default": "VariableID:1:70",
+        "hover": "VariableID:1:71",
+        "subtle": "VariableID:1:72"
+      },
+      "accent": {
+        "default": "VariableID:1:73",
+        "subtle": "VariableID:1:74"
+      },
+      "feedback": {
+        "success": { "bg": "VariableID:1:75", "text": "VariableID:1:76" },
+        "warning": { "bg": "VariableID:1:77", "text": "VariableID:1:78" },
+        "error": { "bg": "VariableID:1:79", "text": "VariableID:1:80" },
+        "info": { "bg": "VariableID:1:81", "text": "VariableID:1:82" }
+      },
+      "status": {
+        "_slug_map": "대기=waiting, 확정임박=closing, 확정=confirmed, 완료=done",
+        "waiting": { "bg": "VariableID:1:83", "text": "VariableID:1:84" },
+        "closing": { "bg": "VariableID:1:85", "text": "VariableID:1:86" },
+        "confirmed": { "bg": "VariableID:1:87", "text": "VariableID:1:88" },
+        "done": { "bg": "VariableID:1:89", "text": "VariableID:1:90" }
+      },
+      "response": {
+        "_slug_map": "가능=yes, 불가능=no, 미회신=pending",
+        "yes": { "bg": "VariableID:1:91", "text": "VariableID:1:92" },
+        "no": { "bg": "VariableID:1:93", "text": "VariableID:1:94" },
+        "pending": { "bg": "VariableID:1:95", "text": "VariableID:1:96" }
+      },
+      "alert": {
+        "_slug_map": "겹침경고=overlap, 마감임박=deadline",
+        "overlap": { "bg": "VariableID:1:97", "text": "VariableID:1:98" },
+        "deadline": { "bg": "VariableID:1:99", "text": "VariableID:1:100" }
+      }
+    },
+    "text_styles": {
+      "display": "S:716aeee0341f5ff316c5a9b9f73e1714622205eb,",
+      "heading-1": "S:4aca95c3108160b6930bdfca5e2e20e186550fc4,",
+      "heading-2": "S:a5b38bd0b75e883dc7b7f942e8815e644726efe9,",
+      "heading-3": "S:f26abe7e69c40fb14473e494c64f1e27784aabb9,",
+      "body-large": "S:548bec82fcc3794e396f71d512ededddcb3f00b9,",
+      "body": "S:ac1e833ddafc76c20bfa803aeed5474e037e7193,",
+      "body-small": "S:a5933343bd81a7ea9a3afb800b60688ac9d97048,",
+      "caption": "S:393475b800b37992da6dd057e77ca81b92e07862,",
+      "overline": "S:71f8abe0290fa5ac2c09917303ead8e5c75e37f6,"
+    },
+    "font_substitution": {
+      "family": "none — Noto Sans KR loaded successfully, no fallback needed",
+      "weight_substitutions": [
+        { "step": "heading-2", "requestedWeight": 600, "usedStyle": "Medium (500)", "reason": "Noto Sans KR has no SemiBold style available in Figma; Medium is nearest." },
+        { "step": "heading-3", "requestedWeight": 600, "usedStyle": "Medium (500)", "reason": "same as above" },
+        { "step": "overline", "requestedWeight": 600, "usedStyle": "Medium (500)", "reason": "same as above" }
+      ]
+    }
+  },
+  "screens": {
+    "page": { "name": "Screens", "id": "14:2" },
+    "home": {
+      "01 Home / normal": { "frameId": "14:25", "weekendCardId": "14:50", "bannerAlertInstanceId": "14:57", "meetingListCardId": "14:60", "rowMeetingInstanceIds": ["14:61", "14:70", "14:78", "14:86"], "ctaButtonInstanceId": "14:95" },
+      "01 Home / empty": { "frameId": "14:33", "emptyBoxId": "14:155" },
+      "01 Home / loading": { "frameId": "14:41", "skeletonLineIds": ["14:192", "14:203"], "rowMeetingSkeletonInstanceIds": ["14:193", "14:198"] },
+      "_note": "ASSUMPTION: home.html 의 3개 상태를 구분하던 '상태: ...' 라벨은 초안 파일 내부 주석용 구분선이라 판단, 프레임 분리 후에는 옮기지 않았다(각 프레임=단일 상태이므로 중복). weekend-card/list-card 의 box-shadow(elevation 토큰)는 Figma effect style 대응 토큰이 없어(브리프 화이트리스트에 tokens.json 미포함) 적용하지 않았다. card/list-row/button 의 컴포넌트 전용 padding(spacing-component-*)도 같은 이유로 근접한 primitive spacing 값(4/6/2 등)에 바인딩했다."
+    },
+    "guest_reply": {
+      "note": "ASSUMPTION: 본문 텍스트는 tokens.json --typography-scale-body-large-size(17px) 대응 style type/body-large 를 h2 이하 모든 본문·배지·리스트에 적용해 다른 화면보다 크게 유지(하드 제약). done-icon(체크마크 원)은 components.md 에 대응 컴포넌트가 없어 신규로 그렸고 fill/radius 는 Variables 바인딩했으나, 지름 56px 은 --layout-touch-target-min 토큰 값이 화이트리스트 파일에 없어 근사치로 하드코딩(색상 아님, 크기값). 하드코딩 색 0건.",
+      "frames": {
+        "03 GuestReply / empty": "14:97",
+        "03 GuestReply / answering": "14:160",
+        "03 GuestReply / submitted": "14:204"
+      }
+    },
+    "meeting_detail": {
+      "note": "ASSUMPTION: Button/Primary 컴포넌트의 기본 좌우 padding(spacing/20=80px)은 button-row 안에서 절반 너비 슬롯에 맞지 않아, 이 인스턴스에 한해 paddingLeft/Right 를 spacing/3(12px)으로 오버라이드(마스터 컴포넌트·다른 인스턴스는 무영향). btn-secondary(회신 리마인드/조금 더 기다리기)·btn-accent(확정 소식 공유하기)는 components.md 에 대응 variant 가 없어 신규로 그렸고 fill/border/radius/padding 전부 Variables 바인딩. Banner/Alert(Type=Deadline) 인스턴스는 텍스트 슬롯이 1개뿐이라 제목+제안 문구를 한 텍스트 노드에 줄바꿈으로 담아 '미회신자를 빼고 최다 득표일로 확정할까요' 제안을 유지. divider·bar-track/bar 는 components.md 에 없어 신규 rectangle 로 그렸고 stroke/fill/radius 전부 Variables 바인딩(하드코딩 색 0건).",
+      "frames": {
+        "02 MeetingDetail / normal": { "frameId": "14:12", "cardId": "14:13", "chipStatusInstanceId": "14:14", "candidateRowIds": ["14:129", "14:135", "14:140"], "pendingResponseChipInstanceIds": ["14:151", "14:153"] },
+        "02 MeetingDetail / deadline": { "frameId": "14:226", "cardId": "14:227", "chipStatusInstanceId": "14:228", "candidateRowIds": ["14:236", "14:237", "14:238"], "bannerAlertInstanceId": "14:246", "buttonPrimaryInstanceId": "14:261" },
+        "02 MeetingDetail / confirmed": { "frameId": "14:265", "cardId": "14:266", "chipStatusInstanceId": "14:267", "responseChipYesInstanceIds": ["14:274", "14:276", "14:278", "14:280", "14:282", "14:284"] }
+      }
+    },
+    "onboarding": {
+      "note": "ASSUMPTION: onboarding.html 의 '.state-label'(01 시작/02 상대 초대/03 연결 완료 dashed divider)은 한 문서 안에서 세 단계를 구분하던 초안 내부 주석용 구분선으로 판단(screens.home._note 의 동일 선례를 따름) — 프레임을 단계별로 분리한 뒤에는 각 프레임=단일 상태이므로 옮기지 않고 h1/h2 섹션 타이틀부터 시작했다. role-card·invite-card·invite-link box·btn-secondary·couple-confirmed tag 는 components.md 에 대응 컴포넌트가 없어 신규로 그렸고 fill/stroke/radius/padding/gap 전부 Variables 바인딩(하드코딩 색 0건, RoleSelect/InviteActions/WaitRow/Tag 컨테이너의 default 흰색 fill 은 감사 후 제거해 투명 처리). 카드류 box-shadow(elevation 토큰)는 다른 화면과 동일한 이유로 화이트리스트에 없어 미적용. 인스턴스: Button/Primary(State=Default) 2개, Chip/Status(Waiting) 1개, Chip/Status(Confirmed) 1개.",
+      "frames": {
+        "00 Onboarding / start": { "frameId": "14:290", "headerId": "14:291", "titleId": "14:292", "leadId": "14:293", "roleRowId": "14:302", "groomCardId": "14:303", "brideCardId": "14:306", "ctaButtonInstanceId": "14:309" },
+        "00 Onboarding / invite": { "frameId": "14:294", "headerId": "14:295", "titleId": "14:296", "leadId": "14:297", "inviteCardId": "14:311", "linkBoxId": "14:312", "linkTextId": "14:313", "copyBtnId": "14:315", "kakaoBtnId": "14:317", "waitRowId": "14:319", "chipWaitingInstanceId": "14:320", "waitTextId": "14:322" },
+        "00 Onboarding / connected": { "frameId": "14:298", "headerId": "14:299", "titleId": "14:300", "coupleRowId": "14:323", "groomTagId": "14:324", "connectorId": "14:326", "brideTagId": "14:327", "chipConfirmedInstanceId": "14:329", "leadId": "14:301", "ctaButtonInstanceId": "14:331" }
+      }
+    }
+  },
+  "components": {
+    "_note": "ASSUMPTION: Field/DateOption 의 날짜 텍스트·버튼 라벨은 초안 HTML 에서 굵게(bold) 표시되지만, 별도 bold 텍스트 스타일이 정의돼 있지 않아 기존 body-large/body 텍스트 스타일을 그대로 적용(굵기는 스타일 원래 값 400 유지). 스타일 미적용 0건 규칙을 우선했다.",
+    "_layout_fix_note": "결함 수정(세로 배치 겹침 0건): 각 세트를 실제 높이(y+height) 기준으로 최소 80px 여백을 두고 재배치. Row/Meeting 은 padding 을 spacing/20(80px)+spacing/16(64px) 에서 spacing/4(16px, 좌우)+spacing/2(8px, 상하) 로 줄여 hug 높이를 179px→67px(Normal/Long-text), 160px→48px(Skeleton) 로 축소. Button/Primary default variant 텍스트는 검사 결과 이미 color/semantic/text/on-primary(흰색) 로 정상 바인딩되어 있었고 스크린샷상 대비 정상 확인(추가 수정 없음).",
+    "page": { "name": "Components", "id": "4:2" },
+    "sets": {
+      "Chip/Status": {
+        "componentSetId": "4:12",
+        "position": { "x": 0, "y": 0, "width": 226, "height": 26 },
+        "variants": {
+          "Status=Waiting": "4:4",
+          "Status=Closing": "4:6",
+          "Status=Confirmed": "4:8",
+          "Status=Done": "4:10"
+        },
+        "usedIn": ["home.html (list-row badge, weekend-card)", "meeting_detail.html (card badge)"]
+      },
+      "Chip/Response": {
+        "componentSetId": "4:19",
+        "position": { "x": 0, "y": 106, "width": 171, "height": 22 },
+        "variants": {
+          "Response=Yes": "4:13",
+          "Response=No": "4:15",
+          "Response=Pending": "4:17"
+        },
+        "usedIn": ["meeting_detail.html (pending-names / chip ok / chip pending)"]
+      },
+      "Button/Primary": {
+        "componentSetId": "4:24",
+        "position": { "x": 0, "y": 208, "width": 260, "height": 59 },
+        "variants": {
+          "State=Default": "4:20",
+          "State=Disabled": "4:22"
+        },
+        "usedIn": ["home.html (cta-button)", "guest_reply.html (submit-btn)"]
+      },
+      "Banner/Alert": {
+        "componentSetId": "4:29",
+        "position": { "x": 0, "y": 443, "width": 350, "height": 106 },
+        "variants": {
+          "Type=Overlap": "4:25",
+          "Type=Deadline": "4:27"
+        },
+        "usedIn": ["home.html (alert-banner)", "meeting_detail.html (alert-box)"]
+      },
+      "Field/DateOption": {
+        "componentSetId": "4:51",
+        "position": { "x": 0, "y": 629, "width": 1082, "height": 135 },
+        "variants": {
+          "State=Unselected": "4:30",
+          "State=Selected-Yes": "4:37",
+          "State=Selected-No": "4:44"
+        },
+        "usedIn": ["guest_reply.html (date-card + choice-btn)"]
+      },
+      "Row/Meeting": {
+        "componentSetId": "10:23",
+        "position": { "x": 0, "y": 844, "width": 390, "height": 214 },
+        "variants": {
+          "Layout=Normal": "10:2",
+          "Layout=Long-text": "10:10",
+          "Layout=Skeleton": "10:18"
+        },
+        "usedIn": ["home.html (list-card list-row, skeleton loading state)"],
+        "note": "Layout=Normal/Long-text 는 Chip/Status(Status=Waiting) 인스턴스를 내부에 포함. 각 variant 높이는 179/196/160px → 67/67/48px 로 축소(padding 을 spacing/4·spacing/2 로 재바인딩, hug contents 유지)."
+      }
+    }
+  }
+}
