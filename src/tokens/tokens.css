@@ -1,0 +1,94 @@
+/* 자동 생성 — 직접 수정하지 마세요.
+ * 출처: docs/wedding-scheduler/design.md → docs/wedding-scheduler/project.rules.json
+ * 재생성: node src/tokens/build-tokens.js
+ */
+:root {
+  --c-primary: #1F6F63;
+  --c-primary-strong: #17564D;
+  --c-on-primary: #FCFBF9;
+  --c-canvas: #FCFBF9;
+  --c-surface: #F3F1EC;
+  --c-border: #E2DED7;
+  --c-border-strong: #94897B;
+  --c-foreground: #1C1A17;
+  --c-body: #4A453E;
+  --c-muted: #736C61;
+  --c-danger: #B3261E;
+  --sp-4: 4px;
+  --sp-6: 6px;
+  --sp-8: 8px;
+  --sp-16: 16px;
+  --sp-24: 24px;
+  --sp-32: 32px;
+  --r-4: 4px;
+  --r-6: 6px;
+  --r-8: 8px;
+  --r-10: 10px;
+  --r-14: 14px;
+  --r-16: 16px;
+  --r-9999: 9999px;
+  --btn-h-small: 32px;
+  --btn-h-medium: 38px;
+  --btn-h-large: 48px;
+  --btn-h-xlarge: 56px;
+  --btn-r-small: 8px;
+  --btn-r-medium: 10px;
+  --btn-r-large: 14px;
+  --btn-r-xlarge: 16px;
+  --btn-px: 20px;
+  --row-min-h: 56px;
+  --f-ui: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --fs-h4: 22px;
+  --fw-h4: 600;
+  --lh-h4: 33px;
+  --fs-body: 16px;
+  --fw-body: 400;
+  --lh-body: 24px;
+  --fs-bodystrong: 16px;
+  --fw-bodystrong: 600;
+  --lh-bodystrong: 24px;
+  --fs-bodysmall: 14px;
+  --fw-bodysmall: 400;
+  --lh-bodysmall: 21px;
+  --fs-button: 17px;
+  --fw-button: 600;
+  --lh-button: 24px;
+  --vw: 393px;
+  --vh: 825px;
+  --tap-min: 44px;
+  --icon-16: 16px;
+  --icon-20: 20px;
+  --icon-24: 24px;
+  --icon-stroke: 1.5;
+}
+
+.t-h4 {
+  font-family: var(--f-ui);
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-h4);
+  line-height: var(--lh-h4);
+}
+.t-body {
+  font-family: var(--f-ui);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-body);
+  line-height: var(--lh-body);
+}
+.t-bodystrong {
+  font-family: var(--f-ui);
+  font-size: var(--fs-bodystrong);
+  font-weight: var(--fw-bodystrong);
+  line-height: var(--lh-bodystrong);
+}
+.t-bodysmall {
+  font-family: var(--f-ui);
+  font-size: var(--fs-bodysmall);
+  font-weight: var(--fw-bodysmall);
+  line-height: var(--lh-bodysmall);
+}
+.t-button {
+  font-family: var(--f-ui);
+  font-size: var(--fs-button);
+  font-weight: var(--fw-button);
+  line-height: var(--lh-button);
+}

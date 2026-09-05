@@ -1,0 +1,559 @@
+{
+  "layer": "project",
+  "version": "1.0.0",
+  "project": "wedding-scheduler",
+  "surface": "mobile-product",
+  "design_guide": "docs/wedding-scheduler/design.md",
+  "reference": "guide/reference/toss.design.md",
+  "source_prd": "docs/wedding-schedular-PRD.md",
+  "_note": "값의 출처는 design.md 하나다. 이 파일을 직접 고치지 않고 design.md를 고친 뒤 반영한다.",
+  "tokens": {
+    "color": {
+      "background": "#FCFBF9",
+      "surface": "#F3F1EC",
+      "text": "#1C1A17",
+      "text_muted": "#736C61",
+      "border": "#94897B",
+      "accent": "#1F6F63",
+      "_roles": {
+        "primary": "#1F6F63",
+        "primary_strong": "#17564D",
+        "on_primary": "#FCFBF9",
+        "canvas": "#FCFBF9",
+        "surface": "#F3F1EC",
+        "border": "#E2DED7",
+        "border_strong": "#94897B",
+        "foreground": "#1C1A17",
+        "body": "#4A453E",
+        "muted": "#736C61",
+        "danger": "#B3261E"
+      },
+      "status": "filled",
+      "source": "design.md §2 — PRD에서 도출. 참조 시스템에서는 역할 구성과 상태 계약만 가져왔고 hex는 하나도 옮기지 않았다. 전 조합 WCAG 계산 검증 17/17.",
+      "_derivation": {
+        "primary": "prd §5 두 사람이 함께 쓰는 도구 → 어느 한쪽 성별 코드로 기울지 않는 색. prd §3 3개월간 주말마다 반복되는 노동 → 채도를 낮춰 피로를 만들지 않는다.",
+        "primary_strong": "pressed. primary에서 명도만 낮춤.",
+        "on_primary": "canvas와 동일. 순백(#ffffff)은 참조 팔레트와 겹쳐 no-reference-color-copy에 걸린다.",
+        "canvas": "prd §1 청첩장을 직접 건네는 문화 → 종이의 온기. 순백이 아닌 옅은 크림.",
+        "surface": "prd §4-6 '이미 다녀온 모임'을 담는 조용한 층.",
+        "border": "장식 구분선. 비인터랙티브.",
+        "border_strong": "입력 필드·체크박스의 인터랙티브 외곽선. core contrast-nontext-aa 3.0을 만족해야 해서 border와 분리했다.",
+        "foreground": "가장 강한 텍스트.",
+        "body": "본문.",
+        "muted": "prd §3 '며칠씩 답이 없는 사람'은 정상 상태 → 조용하되 AA는 지킨다.",
+        "danger": "prd §4-5 겹침. primary와 hue 168° 분리."
+      }
+    },
+    "spacing": {
+      "scale": [
+        4,
+        6,
+        8,
+        16,
+        24,
+        32
+      ],
+      "status": "filled",
+      "source": "design.md §5 Spacing System — reference. 12와 20은 이 시스템에 없어 등차가 아니다.",
+      "_note": "레이아웃 간격 축. 컴포넌트 내부 치수(버튼 패딩·아이콘 크기·컨트롤 높이)는 control/icon 토큰이 소유하며 이 스케일의 적용 대상이 아니다. 두 축을 한 스케일로 합치면 레퍼런스의 Button 스펙(padding 20)과 Spacing 스케일(20 없음)이 서로를 위반한다."
+    },
+    "typography": {
+      "family": {
+        "ui": "Pretendard Variable",
+        "display": null
+      },
+      "fallback": {
+        "ui": [
+          "Pretendard",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Apple SD Gothic Neo",
+          "Malgun Gothic",
+          "sans-serif"
+        ]
+      },
+      "scale": {
+        "H4": {
+          "size": 22,
+          "weight": 600,
+          "lh": 33,
+          "use": "화면 제목"
+        },
+        "Body": {
+          "size": 16,
+          "weight": 400,
+          "lh": 24,
+          "use": "본문"
+        },
+        "BodyStrong": {
+          "size": 16,
+          "weight": 600,
+          "lh": 24,
+          "use": "행 제목"
+        },
+        "BodySmall": {
+          "size": 14,
+          "weight": 400,
+          "lh": 21,
+          "use": "보조"
+        },
+        "Button": {
+          "size": 17,
+          "weight": 600,
+          "lh": 24,
+          "use": "버튼 라벨"
+        }
+      },
+      "_unused_doc_surface": {
+        "note": "TDS 문서 사이트 계산치. 네이티브 실측치가 아니라 이 프로젝트는 쓰지 않는다 (design.md §3 표면 경고)",
+        "H1": {
+          "size": 36,
+          "weight": 700,
+          "lh": 54
+        },
+        "H2": {
+          "size": 30,
+          "weight": 600,
+          "lh": 45
+        },
+        "H3": {
+          "size": 24,
+          "weight": 600,
+          "lh": 36
+        }
+      },
+      "status": "filled",
+      "source": "design.md §3 Font Family — UI 패밀리는 client-quote(사용자 직접 지시)로 Pretendard Variable 고정. 레퍼런스의 Toss Product Sans를 덮은 이유는 design.md에 기록. 타입 스케일 수치는 reference 유지."
+    },
+    "radius": {
+      "scale": [
+        4,
+        6,
+        8,
+        10,
+        14,
+        16,
+        9999
+      ],
+      "surface_small": [
+        4,
+        6
+      ],
+      "button": {
+        "small": 8,
+        "medium": 10,
+        "large": 14,
+        "xlarge": 16
+      },
+      "status": "filled",
+      "source": "design.md §5 Border Radius Scale — reference. 12·20 없음. 마케팅 7px 금지. full(9999)은 아바타·pill·미터바용으로 extension 등록. 레퍼런스에 pill 값이 없으나 Badge/Person이 알약 형태를 요구하므로 그럴듯한 근사값 대신 명시적으로 추가한다.",
+      "full": 9999
+    },
+    "control": {
+      "button_height": {
+        "small": 32,
+        "medium": 38,
+        "large": 48,
+        "xlarge": 56
+      },
+      "button_padding_x": 20,
+      "row_min_height": 56,
+      "_forbidden_surface": {
+        "note": "toss.im 마케팅 버튼 높이. 제품 화면 사용 금지",
+        "heights": [
+          40,
+          46
+        ]
+      },
+      "status": "filled",
+      "source": "design.md §4 Mobile Primary Button — reference.",
+      "_note": "컴포넌트 내부 치수 축. spacing.scale과 별개다. 값은 레퍼런스 Button 스펙에서 왔다."
+    },
+    "elevation": {
+      "scale": [],
+      "status": "filled",
+      "source": "design.md §2 Depth & Elevation — reference가 그림자 토큰을 승격하지 않았다. 빈 배열은 미기입이 아니라 '없음'이다."
+    },
+    "viewport": {
+      "mobile": {
+        "width": 393,
+        "height": 825
+      },
+      "status": "filled",
+      "source": "사용자 직접 지시 (design.md §5 Grid & Container)"
+    },
+    "_reference_palette": {
+      "_note": "참조 시스템 팔레트. core.rules.json의 no-reference-color-copy가 이 배열을 금지 목록으로 쓴다. 여기 있는 값이 tokens.color에 나타나면 blocker.",
+      "source_system": "guide/reference/toss.design.md (Toss TDS + toss.im)",
+      "values": [
+        "#3182f6",
+        "#2272eb",
+        "#ffffff",
+        "#191f28",
+        "#4e5968",
+        "#8b95a1",
+        "#f2f4f6",
+        "#e5e8eb",
+        "#e42939",
+        "#e8f3ff",
+        "#1b64da"
+      ],
+      "status": "filled"
+    },
+    "icon": {
+      "style": "outlined",
+      "sizes": [
+        16,
+        20,
+        24
+      ],
+      "stroke": 1.5,
+      "status": "filled",
+      "source": "design.md §5 Control tokens. 레퍼런스에 아이콘 토큰이 없어 extension으로 등록한다. 크기는 레이아웃 spacing이 아니라 control 치수라 spacing.scale과 별개 축이다."
+    }
+  },
+  "rules": [
+    {
+      "id": "color-palette-allowlist",
+      "title": "컬러 팔레트 일관성",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {},
+      "check": {
+        "type": "color_allowlist",
+        "allowed": "$tokens.color._roles"
+      },
+      "autofix": false,
+      "status": "filled",
+      "source": "design.md §2 — 이 표에 없는 색은 만들지 않는다.",
+      "fix_hint": "팔레트 밖 색은 가장 가까운 역할 토큰으로 교체한다. 새 색을 만들려면 design.md §2를 먼저 고친다."
+    },
+    {
+      "id": "font-family-allowlist",
+      "title": "폰트 패밀리 고정",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "node_types": [
+          "TEXT"
+        ]
+      },
+      "check": {
+        "type": "style_bound",
+        "style_kind": "text",
+        "allowed": "$tokens.typography.family"
+      },
+      "autofix": false,
+      "status": "filled",
+      "source": "design.md §3 — 디스플레이 서체 없음. Tossface 사용 금지.",
+      "fix_hint": "UI 패밀리로 교체한다. 위계는 크기·굵기로 만든다."
+    },
+    {
+      "id": "type-style-reuse",
+      "title": "타이포 스타일 재사용",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "node_types": [
+          "TEXT"
+        ]
+      },
+      "check": {
+        "type": "style_bound",
+        "style_kind": "text",
+        "allowed": "$tokens.typography.scale"
+      },
+      "autofix": false,
+      "status": "filled",
+      "source": "design.md §3 — 5단계. H1~H3은 문서 표면 값이라 쓰지 않는다.",
+      "fix_hint": "인라인 폰트 설정을 스케일 내 텍스트 스타일 바인딩으로 바꾼다."
+    },
+    {
+      "id": "spacing-scale",
+      "title": "Spacing 스케일 준수",
+      "stage": [
+        "wireframe",
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "has_auto_layout": true,
+        "exclude_name_matches": "^(Button|Field|Check|Badge)(/|$)"
+      },
+      "check": {
+        "type": "scale_allowlist",
+        "scale": "$tokens.spacing.scale",
+        "properties": [
+          "itemSpacing",
+          "paddingTop",
+          "paddingRight",
+          "paddingBottom",
+          "paddingLeft"
+        ]
+      },
+      "autofix": true,
+      "status": "filled",
+      "source": "design.md §5 — 레이아웃 간격만 검사한다. 컴포넌트 내부 치수는 control 토큰이 소유하므로 Button·Field·Check·Badge는 제외한다(두 blocker 토큰의 충돌 해소).",
+      "fix_hint": "스케일 안의 가장 가까운 값으로 바꾼다. 두 값의 중간이면 작은 쪽으로 내린다. 12·20을 쓰지 않는다."
+    },
+    {
+      "id": "radius-scale",
+      "title": "Radius 스케일 준수",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {},
+      "check": {
+        "type": "scale_allowlist",
+        "scale": "$tokens.radius.scale",
+        "properties": [
+          "cornerRadius"
+        ]
+      },
+      "autofix": true,
+      "status": "filled",
+      "source": "design.md §5 — 마케팅 표면 7px과 절충하지 않는다.",
+      "fix_hint": "스케일 안의 값으로 바꾼다. 16px과 7px를 11px로 평균내지 않는다."
+    },
+    {
+      "id": "no-elevation-token",
+      "title": "그림자 사용 금지",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {},
+      "check": {
+        "type": "style_bound",
+        "style_kind": "effect",
+        "allowed": "$tokens.elevation.scale"
+      },
+      "autofix": true,
+      "status": "filled",
+      "source": "design.md §2 Depth & Elevation — reference가 그림자를 승격하지 않았다.",
+      "fix_hint": "그림자를 제거하고 Canvas/Surface/Border 평면 레이어링으로 층을 만든다."
+    },
+    {
+      "id": "component-reuse-rate",
+      "title": "컴포넌트 재사용률",
+      "stage": [
+        "wireframe",
+        "design"
+      ],
+      "severity": "warning",
+      "applies_to": {},
+      "check": {
+        "type": "reuse_ratio",
+        "min": 0.6
+      },
+      "autofix": false,
+      "status": "filled",
+      "source": "가정: Button·Badge·List Row가 화면 대부분을 채우는 구조라 0.6을 하한으로 둠.",
+      "fix_hint": "기존 컴포넌트로 대체 가능한 노드를 인스턴스로 바꾼다."
+    },
+    {
+      "id": "layer-naming-semantic",
+      "title": "레이어 네이밍 semantic 여부",
+      "stage": [
+        "wireframe",
+        "design"
+      ],
+      "severity": "warning",
+      "applies_to": {},
+      "check": {
+        "type": "name_pattern",
+        "deny": [
+          "^(Frame|Group|Rectangle|Ellipse|Vector|Line)\\s*\\d*$"
+        ],
+        "allow": "^(Screen|Section|Row|Chip|Badge|Button|Field|Check|Avatar|Icon|Bar|State|Empty|Person|Gutter|Text)(\\/[A-Za-z0-9가-힣_\\-]+)*$"
+      },
+      "autofix": true,
+      "status": "filled",
+      "source": "가정: 슬래시 계층 네이밍. 어휘는 design.md §4 컴포넌트명에서 왔다.",
+      "fix_hint": "역할 기반 이름으로 바꾼다."
+    },
+    {
+      "id": "variant-state-coverage",
+      "title": "Variant 상태 커버리지",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "node_types": [
+          "COMPONENT_SET"
+        ]
+      },
+      "check": {
+        "type": "variant_states_present",
+        "required": [
+          "default",
+          "pressed",
+          "disabled",
+          "loading",
+          "focus"
+        ]
+      },
+      "autofix": false,
+      "status": "filled",
+      "source": "design.md §4 State contract — Button 기준. 컴포넌트별 필수 상태는 같은 표를 따른다.",
+      "fix_hint": "누락 상태 variant를 추가한다. 존재 여부만 검사하며 품질은 C단계가 판단한다."
+    }
+  ],
+  "project_specific": {
+    "_note": "L3 — 이 프로젝트에만 존재하는 기준. design.md §4의 extension 컴포넌트와 §1 Don't에서 왔다.",
+    "rules": [
+      {
+        "id": "no-invented-semantic-color",
+        "title": "semantic 색 발명 금지",
+        "rationale": "TDS Badge의 danger 외 semantic 색 값이 문서화되어 있지 않다(design.md §7 Unknowns). 그럴듯한 초록·주황을 채우면 검증되지 않은 값이 시스템에 들어온다.",
+        "stage": [
+          "design"
+        ],
+        "severity": "blocker",
+        "applies_to": {
+          "name_matches": "^Badge\\/.*"
+        },
+        "check": {
+          "type": "color_allowlist",
+          "allowed": [
+            "#F3F1EC",
+            "#1C1A17",
+            "#4A453E",
+            "#736C61",
+            "#FCFBF9",
+            "#E2DED7",
+            "#B3261E"
+          ]
+        },
+        "autofix": false,
+        "status": "filled",
+        "source": "design.md §2 + §4 Status Badge (팔레트 개정 반영)",
+        "fix_hint": "상태는 뱃지 variant(fill/weak)와 중성 명도, 문장으로 구분한다. danger 외 색을 만들지 않는다."
+      },
+      {
+        "id": "owner-not-color-only",
+        "title": "소유자를 색만으로 구분하지 않는다",
+        "rationale": "신랑/신부 축(prd §2-3·§5)과 진행 상태 축(§4-6)이 같은 행에 겹친다. 게다가 검증된 색이 부족해 색 구분은 애초에 불가능하다.",
+        "stage": [
+          "wireframe",
+          "design"
+        ],
+        "severity": "blocker",
+        "applies_to": {
+          "name_matches": "^(Person|Avatar)\\/.*"
+        },
+        "check": {
+          "type": "name_pattern",
+          "allow": ".*(groom|bride|both).*"
+        },
+        "autofix": false,
+        "status": "filled",
+        "source": "prd §2-3, §5 + design.md §4 Owner Mark",
+        "fix_hint": "테두리 스타일(실선=신랑/파선=신부) + 이니셜 + 라벨을 병기한다."
+      },
+      {
+        "id": "conflict-needs-text",
+        "title": "겹침 경고는 색 단독으로 전달하지 않는다",
+        "rationale": "prd §4-5가 명시 요구한 유일한 경고다. 색각 이상 사용자에게 색만으로는 전달되지 않는다.",
+        "stage": [
+          "design"
+        ],
+        "severity": "blocker",
+        "applies_to": {
+          "name_matches": "^.*\\/(conflict|overlap).*"
+        },
+        "check": {
+          "type": "variant_states_present",
+          "required": [
+            "icon",
+            "reason_text"
+          ]
+        },
+        "autofix": false,
+        "status": "filled",
+        "source": "prd §4-5 + design.md §6 Voice & Tone (나쁜 예/좋은 예 1행)",
+        "fix_hint": "danger 색과 함께 아이콘 + 무엇이 무엇과 어떻게 겹치는지 명시한 문장을 동반한다."
+      },
+      {
+        "id": "no-response-is-muted",
+        "title": "무응답에 danger를 쓰지 않는다",
+        "rationale": "'며칠씩 답이 없는 사람'(prd §3)은 정상 상태다. danger로 칠하면 화면 절반이 경고가 되어 실제 겹침 경고가 안 읽힌다.",
+        "stage": [
+          "design"
+        ],
+        "severity": "blocker",
+        "applies_to": {
+          "name_matches": "^.*\\/(no_response|pending).*"
+        },
+        "check": {
+          "type": "color_allowlist",
+          "allowed": [
+            "#736C61",
+            "#4A453E",
+            "#F3F1EC",
+            "#E2DED7"
+          ]
+        },
+        "autofix": false,
+        "status": "filled",
+        "source": "prd §3 (팔레트 개정 반영)",
+        "fix_hint": "Muted로 표현한다. 마감 임박은 danger가 아니라 fill 뱃지 + D-day 숫자로 승격한다."
+      },
+      {
+        "id": "no-marketing-geometry",
+        "title": "마케팅 표면 지오메트리 금지",
+        "rationale": "toss.im 마케팅 버튼(7px radius / 40·46px 높이)을 모바일 제품 화면에 상속시키면 표면이 섞인다. 두 값을 평균내는 것도 금지다.",
+        "stage": [
+          "design"
+        ],
+        "severity": "blocker",
+        "applies_to": {
+          "name_matches": "^Button\\/.*"
+        },
+        "check": {
+          "type": "scale_allowlist",
+          "scale": [
+            32,
+            38,
+            48,
+            56
+          ],
+          "properties": [
+            "height"
+          ]
+        },
+        "autofix": false,
+        "status": "filled",
+        "source": "design.md §5 Responsive Behavior + §1 Don't",
+        "fix_hint": "documented 4단계 중 하나로 바꾼다. 40이나 46이 필요하면 그것은 마케팅 표면이며 이 프로젝트가 아니다."
+      },
+      {
+        "id": "extension-registered",
+        "title": "extension 컴포넌트는 등록 후에만 사용",
+        "rationale": "레퍼런스에 없는 컴포넌트를 업계 관행으로 채우면 검증된 것과 지어낸 것이 구분되지 않는다.",
+        "stage": [
+          "wireframe",
+          "design"
+        ],
+        "severity": "warning",
+        "applies_to": {},
+        "check": {
+          "type": "name_pattern",
+          "allow": "^(Button|Field|Badge|Check|Row|Gutter|Person|Avatar|Icon|Bar|Screen|Section|State|Empty|Chip|Text|Group)(\\/[A-Za-z0-9가-힣_\\-]+)*$"
+        },
+        "autofix": false,
+        "status": "filled",
+        "source": "design.md §4 — Button·Field·Badge·Check는 reference, 나머지는 등록된 extension",
+        "fix_hint": "design.md §4에 extension으로 등록한 뒤 그 이름을 쓴다."
+      }
+    ]
+  }
+}
