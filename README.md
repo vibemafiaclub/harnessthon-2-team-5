@@ -7,7 +7,7 @@ VIBE MAFIA CLUB 하네스톤 2회차(2026-09-05)를 계기로 이너서클 코�
 
 ## 이 레포의 상태
 
-**완전 빈 템플릿입니다.** 뼈대(A/B/C/0 4단계 구조, 파일 포맷)만 있고, 실제 판단 기준 내용은 비어 있습니다.
+**절차는 있고 취향은 비어 있습니다.** 4단계 파이프라인·서브에이전트·산출물 양식은 실행 가능한 형태로 갖춰져 있지만, "무엇이 좋은 디자인인가" 에 해당하는 판단 기준 값은 한 줄도 미리 채우지 않았습니다. 전부 사용자 반응에서 나옵니다.
 
 - 판단 기준의 실제 내용(예: "무엇을 보고 고급스럽다고 판단하는가")은 **하네스톤 참가자·코파운더가 실제로 채워야** 의미가 있습니다.
 - 미리 채워서 예시로 주면, 참가자가 자기 안목을 꺼내는 대신 이미 있는 답을 검토하는 일이 되어 버려 원래 목적(다양한 디자이너의 독립적 안목 수집)이 오염됩니다.
@@ -31,18 +31,88 @@ C단계에서 탈락하면 원인에 따라 세 갈래로 라우팅한다 — �
 ## 구조
 
 ```
-.claude/skills/oss-design-harness/SKILL.md   # 하네스 본체 — 4단계 프롬프트 뼈대
-templates/brief.md                            # 0단계 산출물 양식
-templates/decisions.md                        # B단계 산출물 양식
-docs/concept.md                               # 컨셉 스펙 전문 (배경·경쟁 포지셔닝·논리 검증 과정)
+.claude/skills/design-harness/SKILL.md        # ★ 진입점(오케스트레이터) — 명령 하나로 0→3단계, state.json 으로 재시작
+.claude/skills/design-interview/SKILL.md      # 0단계: PRD 기반 인터뷰 → 자극(갤러리·월드컵·시나리오) 반응 → 판단기준 역추출 → brief.md
+.claude/skills/design-interview/references/   #   인터뷰 원문 프롬프트·질문 뼈대 / 8필드 규칙 스키마·감사 절차
+.claude/skills/design-tokens/SKILL.md         # 1단계: 토큰 세트 후보 → 스와치로 선택 → tokens.json + design.md
+.claude/skills/design-draft-html/SKILL.md     # 2단계(B): HTML 후보 병렬 발산·교차 비평·선택·승인 → decisions.md, drafts/
+.claude/skills/design-figma-build/SKILL.md    # 3단계(A/C): Figma MCP 구현 → A 기계 검사 → C 육안 판정(2콜 블라인드) → 라우팅 → 링크
+.claude/skills/oss-design-harness/SKILL.md    # 4단계 판단 원칙 요약(참가자용 뼈대)
+.claude/agents/design-judge.md                # 판단형 서브에이전트 — Opus 5 · high
+.claude/agents/design-maker.md                # 생성형 서브에이전트 — Sonnet 5 · medium
+.claude/agents/design-worker.md               # 기계형 서브에이전트 — Haiku · low
+templates/brief.md · design.md · tokens.json · decisions.md · state.json   # 산출물 양식
+docs/concept.md                               # 컨셉 스펙 전문
+docs/prd.md                                   # 예시 PRD (청첩장모임 스케줄러)
 ```
 
-## 사용법 (참가자용)
+## 파이프라인 (명령 하나)
 
-1. Figma 파일을 열고, 이 레포를 프로젝트 루트로 해서 Claude Code(또는 다른 코딩 에이전트)를 실행한다.
-2. `.claude/skills/oss-design-harness/SKILL.md`의 각 단계 `TODO`를 채워 넣는다 — 이게 당신의 판단기준을 코드화하는 작업이다.
-3. 0단계 결과는 `brief.md`, B단계 결과는 `decisions.md`에 남긴다 (템플릿을 프로젝트 폴더로 복사해서 사용).
-4. 완성된 SKILL.md는 팀/코파운더와 공유해 비교한다.
+```
+/design-harness docs/prd.md [figma-url]
+```
+
+```
+PRD ─▶ 0 인터뷰 ─▶ brief.md ─▶ 1 토큰·가이드 ─▶ tokens.json + design.md
+   ─▶ 2 HTML 초안 (병렬 발산 → 선택 → 승인) ─▶ decisions.md, drafts/
+   ─▶ 3 Figma MCP 구현 ─▶ A 기계 검사 ─▶ C 육안 판정 ─▶ 라우팅 ─▶ Figma 링크
+```
+
+- **인터뷰 대상은 디자인 비전문가.** 사용자는 보여 주는 것에 반응(좋다/싫다/애매 + 왜)만 하고, 기준은 하네스가 역추출한다. 라벨형 질문("모던한 게 좋으세요?") 금지.
+- **HTML 먼저, Figma 는 승인된 것만.** Figma MCP 직접 구현은 비싸고 느려서, HTML 로 싸게 발산·승인한 뒤 한 번만 구현한다. 둘은 같은 `tokens.json` 을 읽는다.
+- **사람 개입 지점 5개 고정**: 인터뷰 답변 · 갤러리/월드컵 반응 · 토큰 세트 선택 · 초안 승인 · 최종 확인. 그 밖에서 사용자를 부르면 하네스 결함.
+- **메인 세션 = 사용자와 대화하는 것만.** 나머지는 파일 기반 브리프로 서브에이전트에 위임. 만든 쪽 ≠ 판정하는 쪽.
+- **재시작 가능**: `design/state.json` 을 읽어 중단된 단계부터 이어간다. 사용자 발화는 1건마다 `design/interview_raw.md` 에 즉시 기록.
+
+## 모델·effort 정책
+
+| 역할 | 모델 | effort | 예 |
+|---|---|---|---|
+| 메인 세션 | Opus 5 (권장) | medium | 인터뷰, 반응 수집, 승인 게이트 |
+| design-judge | Opus 5 | high | 규칙화, 인용 감사, 교차 비평, C단계 판정 |
+| design-maker | Sonnet 5 | medium | 갤러리·토큰 세트·HTML 초안·Figma 구현 |
+| design-worker | Haiku | low | 변환, 종료조건 검사, WCAG, A단계 노드 검사 |
+
+메인 세션의 모델·effort 는 `/model`, `/effort` 로 사용자가 정한다. 서브에이전트는 `.claude/agents/*.md` frontmatter 로 고정된다.
+
+## 사용법
+
+1. Figma MCP 를 연결하고(플러그인 `figma`), 이 레포를 프로젝트 루트로 Claude Code 를 실행한다.
+2. `/design-harness docs/prd.md` (Figma 파일 URL 이 있으면 뒤에 붙인다. 없으면 하네스가 새 파일을 만든다.)
+3. 하네스가 보여 주는 것에 반응만 한다. 약 30분 인터뷰 후 나머지는 승인 2회와 최종 확인.
+4. 산출물은 `design/` 폴더. 제출은 `design/figma.md` 의 링크와 사용 모델 목록.
+
+단계를 따로 돌릴 수도 있다: `/design-interview docs/prd.md`, `/design-tokens`, `/design-draft-html`, `/design-figma-build <url>`.
+
+### 심사 모드 (처음 보는 PRD 를 비전문가가 한 번에)
+
+```
+/design-harness <심사용 PRD 경로> --budget 40m
+```
+
+- 상한이 자동으로 줄어든다(질문 ≤6, 갤러리 ≤12, 열린 축 ≤1, C 라운드 1). 생략된 것은 전부 가정 로그에 남는다.
+- 사용자는 **답하고 고르기만** 한다. 파일을 열거나 자료를 찾아오는 일은 없다.
+- 답이 짧거나 "모르겠음" 이 이어지면 하네스가 질문을 줄이고 고르기(갤러리·대비쌍)로 바꾼다.
+- 채점 3축 — UI 심미 · UX 직관 · 적합성(그 회사의 서비스 같은가) — 을 C단계가 자체 채점(1/3/5)해 `design/figma.md` 에 적는다.
+- PRD 는 그대로 따르지 않는다. 하네스가 반박하고 사용자에게 쉬운 말로 확인받은 결정이 `design/brief.md` §10 에 남는다.
+
+## 확장 지점 (조별 하네스를 팀 하네스로 합칠 때)
+
+다른 조의 내용을 끼울 자리. 여기만 건드리면 파이프라인은 그대로 돈다.
+
+| 끼울 것 | 파일 | 위치 |
+|---|---|---|
+| 인터뷰 질문 뱅크 | `.claude/skills/design-interview/references/interview_prompts.md` | §6 표에 행 추가 (캐내는 것 · 질문 형태 · 태그) |
+| 자극 갤러리 축 | `.claude/skills/design-interview/SKILL.md` | 0-C "축 6개" 목록 |
+| 판단기준 스키마 필드 | `.claude/skills/design-interview/references/rule_schema.md` | 필드 표 |
+| 비평 페르소나 | `.claude/skills/design-draft-html/SKILL.md` | 2-D 페르소나 목록 |
+| A단계 기계 검사 항목 | `.claude/skills/design-figma-build/SKILL.md` | 3-D 내장 6항목 |
+| C단계 육안 판정 항목 | `.claude/skills/design-figma-build/SKILL.md` | 3-E 2콜 대조 목록 |
+| 토큰 분류 체계(6카테고리) | `templates/tokens.json` | 그룹 추가 시 `rationale` 필드 유지 — 출처: 팀 디자이너 `prd-to-design-guide` 스킬 |
+| 하네스 고정 하한선(접근성 등) | `templates/design.md` | §3 제약사항 |
+| 서브에이전트 모델·effort | `.claude/agents/*.md` | frontmatter |
+
+**넣지 말 것**: 특정 취향 값("카드는 라운딩 12", "파란 보더 금지"). 그것은 사용자 반응에서 나와야 하며, 미리 넣으면 심사자의 안목 대신 우리 답을 검토하게 된다. 항목(카테고리)은 넣되 값은 비운다.
 
 ## 라이선스
 

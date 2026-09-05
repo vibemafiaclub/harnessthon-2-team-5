@@ -1,0 +1,113 @@
+{
+  "$note": "하네스 진행 상태. 오케스트레이터가 시작할 때 읽어 next_stage 부터 이어간다. 사람이 손으로 고치지 않는다.",
+  "version": 1,
+  "prd": "docs/prd.md",
+  "figma_url": "",
+  "budget_minutes": 40,
+  "mode": "fast",
+  "started_at": "2026-09-05T15:50:59",
+  "updated_at": "2026-09-05T15:54:53",
+  "next_stage": "interview",
+  "stages": {
+    "interview": {
+      "status": "in_progress",
+      "started_at": "2026-09-05T15:50:59",
+      "done_at": "",
+      "exit_check": "design/verify/exit_0A.md: 0-A PASS (48줄/반박4/미확정3), 0-B 미착수"
+    },
+    "tokens": {
+      "status": "pending",
+      "started_at": "",
+      "done_at": "",
+      "exit_check": ""
+    },
+    "draft": {
+      "status": "pending",
+      "started_at": "",
+      "done_at": "",
+      "exit_check": "",
+      "revision_rounds": 0
+    },
+    "figma": {
+      "status": "pending",
+      "started_at": "",
+      "done_at": "",
+      "exit_check": "",
+      "c_rounds": 0,
+      "c_fail_reasons": []
+    }
+  },
+  "human_gates": {
+    "interview_answers": {
+      "count": 0
+    },
+    "stimulus_reactions": {
+      "gallery": 0,
+      "worldcup": 0
+    },
+    "token_set_choice": {
+      "chosen": "",
+      "ai_pick": "",
+      "changed_after_reveal": false
+    },
+    "draft_approval": {
+      "approved": false,
+      "at": "",
+      "quote": ""
+    },
+    "final_ack": {
+      "approved": false,
+      "at": "",
+      "quote": ""
+    }
+  },
+  "caps": {
+    "_note": "사람 개입 상한(human_*)과 에이전트 산출 상한(agent_*)을 분리한다. 오케스트레이터가 fast 모드면 caps_fast 로 덮어쓴다. 서브 브리프에는 해당 상한을 숫자 문장으로 넣는다.",
+    "human_interview_questions_max": 6,
+    "human_gallery_tiles_max": 12,
+    "human_worldcup_rounds_max": 2,
+    "human_token_sets": 2,
+    "human_open_axes_max": 1,
+    "human_draft_revision_max": 1,
+    "human_c_stage_rounds_max": 1,
+    "human_stage0_minutes_max": 12,
+    "agent_prd_analysis_lines_max": 60,
+    "agent_prd_pushback_max": 4,
+    "agent_prd_open_questions_max": 3,
+    "agent_flow_candidates_max": 1,
+    "agent_scenarios_max": 2,
+    "agent_emotion_keywords_max": 3,
+    "agent_gallery_tile_elements_max": 5,
+    "agent_gallery_html_kb_max": 120,
+    "agent_rules_min": 6,
+    "agent_rules_max": 12,
+    "agent_brief_lines_max": 140,
+    "agent_design_md_lines_max": 100,
+    "agent_draft_html_lines_max": 300,
+    "agent_report_lines_max": 50
+  },
+  "caps_fast": {
+    "human_interview_questions_max": 6,
+    "human_gallery_tiles_max": 12,
+    "human_worldcup_rounds_max": 2,
+    "human_token_sets": 2,
+    "human_open_axes_max": 1,
+    "human_draft_revision_max": 1,
+    "human_c_stage_rounds_max": 1,
+    "human_stage0_minutes_max": 12,
+    "agent_prd_analysis_lines_max": 60,
+    "agent_prd_pushback_max": 4,
+    "agent_prd_open_questions_max": 3,
+    "agent_flow_candidates_max": 1,
+    "agent_scenarios_max": 2,
+    "agent_emotion_keywords_max": 3,
+    "agent_gallery_tile_elements_max": 5,
+    "agent_gallery_html_kb_max": 120,
+    "agent_rules_min": 6,
+    "agent_rules_max": 12,
+    "agent_brief_lines_max": 140,
+    "agent_design_md_lines_max": 100,
+    "agent_draft_html_lines_max": 300,
+    "agent_report_lines_max": 50
+  }
+}
