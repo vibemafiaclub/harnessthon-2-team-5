@@ -6,14 +6,14 @@
   "budget_minutes": 40,
   "mode": "fast",
   "started_at": "2026-09-05T15:50:59",
-  "updated_at": "2026-09-05T15:54:53",
-  "next_stage": "interview",
+  "updated_at": "2026-09-05T16:53:51",
+  "next_stage": "tokens",
   "stages": {
     "interview": {
-      "status": "in_progress",
+      "status": "done",
       "started_at": "2026-09-05T15:50:59",
-      "done_at": "",
-      "exit_check": "design/verify/exit_0A.md: 0-A PASS (48줄/반박4/미확정3), 0-B 미착수"
+      "done_at": "2026-09-05T16:53:51",
+      "exit_check": "design/verify/exit_stage0.md RESULT: PASS (15/15). 0-G 재감사 후 entailed 1 / over_generalized 4 / unsupported 1, 0-H ack \"없음\""
     },
     "tokens": {
       "status": "pending",
@@ -39,11 +39,11 @@
   },
   "human_gates": {
     "interview_answers": {
-      "count": 0
+      "count": 9
     },
     "stimulus_reactions": {
-      "gallery": 0,
-      "worldcup": 0
+      "gallery": 12,
+      "worldcup": 2
     },
     "token_set_choice": {
       "chosen": "",
