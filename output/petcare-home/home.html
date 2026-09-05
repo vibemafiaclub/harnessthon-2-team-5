@@ -1,0 +1,296 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>보리케어 · 오늘</title>
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<style>
+/* ==========================================================================
+   DESIGN.md 토큰 — 실제 색상값·간격값은 여기서 단 한 번만 선언한다.
+   컴포넌트 규칙은 var(--…)만 참조한다.
+   ========================================================================== */
+:root{
+  /* 표면 3층 : 배경 / 카드 / 강조 */
+  --surface:#F3F4F5;            --surface-raised:#FFFFFF;      --surface-alert:#FDF0F0;
+  --border:#DCDEE3;             --border-alert:#F5B7B1;
+  --fg-primary:#1A1C20;         --fg-secondary:#555D6D;        --fg-inverted:#FFFFFF;
+  --action-primary:#B93901;     --action-primary-pressed:#862B00;
+  --status-overdue:#921708;     --status-upcoming:#555D6D;
+  --status-done:#075445;        --status-skipped:#4F3E1F;      --status-skipped-surface:#FFF7DE;
+  --status-done-surface:#EDFAF6;
+
+  /* spacing */
+  --x1:4px; --x1-5:6px; --x2:8px; --x3:12px; --x4:16px;
+  --x5:20px; --x6:24px; --x7:28px; --x8:32px; --x14:56px;
+  --gutter:var(--x4);
+  --gap-in-group:var(--x2);
+  --gap-between-groups:var(--x3);
+  --gap-between-sections:var(--x7);
+  --pad-card:var(--x4);
+  --pad-card-alert:var(--x5);
+  --screen-bottom:var(--x14);
+
+  /* 시각 축 : 이 서비스의 형태 장치 */
+  --rail-time-w:44px;
+  --rail-mark-w:12px;
+  --rail-gap:var(--x2);
+  --rail-indent:72px;          /* time + gap + mark + gap */
+
+  /* radius */
+  --r-badge:6px; --r-action:16px; --r-card:20px; --r-full:9999px;
+
+  /* type */
+  --font:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
+  --t-count:48px;  --lh-count:52px;
+  --t-unit:20px;   --lh-unit:24px;
+  --t-card:18px;   --lh-card:24px;
+  --t-body:16px;   --lh-body:24px;
+  --t-read:14px;   --lh-read:20px;
+  --t-cap:12px;    --lh-cap:16px;
+  --t-capS:11px;   --lh-capS:15px;
+
+  --icon-badge:16px; --icon-action:20px; --icon-nav:24px;
+  --elevation-alert:0 2px 6px rgba(146,23,8,.10);
+
+  --screen-w:375px; --screen-h:812px; --tap-min:44px;
+  --board-backdrop:#C9CFD6;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--board-backdrop);font-family:var(--font);color:var(--fg-primary);
+  padding:var(--x8);display:flex;gap:var(--x8);align-items:flex-start;flex-wrap:wrap}
+i.ph{line-height:1;display:inline-block}
+.ic-badge{font-size:var(--icon-badge)} .ic-action{font-size:var(--icon-action)} .ic-nav{font-size:var(--icon-nav)}
+
+.screen{width:var(--screen-w);height:var(--screen-h);background:var(--surface);
+  border-radius:var(--r-card);overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 2px 16px rgba(26,28,32,.18)}
+.statusbar{display:flex;justify-content:space-between;align-items:center;
+  padding:var(--x4) var(--gutter) var(--x2)}
+.statusbar b{font:700 var(--t-cap)/var(--lh-cap) var(--font)}
+.statusbar time{font:700 var(--t-capS)/var(--lh-capS) var(--font);color:var(--fg-secondary);
+  font-variant-numeric:tabular-nums}
+.scroll{flex:1;overflow:hidden;padding:0 var(--gutter) var(--screen-bottom);
+  display:flex;flex-direction:column;gap:var(--gap-between-sections)}
+.section{display:flex;flex-direction:column;gap:var(--gap-between-groups)}
+
+/* 시각 표기는 전부 탭룰러 — "복약 시간표"라는 성격을 타이포로 말한다 */
+.tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+
+.t-card{font:700 var(--t-card)/var(--lh-card) var(--font);letter-spacing:-.01em}
+.t-body{font:400 var(--t-body)/var(--lh-body) var(--font)}
+.t-read{font:400 var(--t-read)/var(--lh-read) var(--font)}
+.t-cap{font:500 var(--t-cap)/var(--lh-cap) var(--font)}
+.c-sec{color:var(--fg-secondary)}
+
+/* ---------- 반려동물 전환 ---------- */
+.pets{display:flex;align-items:center;gap:var(--x2)}
+.pet{display:flex;align-items:center;gap:var(--x2);min-height:var(--tap-min);
+  padding:var(--x1) var(--x3) var(--x1) var(--x1);border-radius:var(--r-full);
+  background:var(--surface-raised);border:1px solid var(--border);text-decoration:none;
+  font:700 var(--t-read)/var(--lh-read) var(--font);color:var(--fg-secondary)}
+.pet .ini{width:32px;height:32px;border-radius:var(--r-full);display:grid;place-items:center;
+  background:var(--surface);color:var(--fg-secondary);font:700 var(--t-capS)/var(--lh-capS) var(--font)}
+.pet[aria-current="true"]{background:var(--fg-primary);border-color:var(--fg-primary);color:var(--fg-inverted)}
+.pet[aria-current="true"] .ini{background:var(--surface-raised);color:var(--fg-primary)}
+.pets .date{margin-left:auto;font:500 var(--t-cap)/var(--lh-cap) var(--font);color:var(--fg-secondary)}
+
+/* ---------- 핵심 수치 : 라벨 16 · 숫자 48 · 단위 20 ---------- */
+.headline{display:flex;align-items:baseline;gap:var(--x2)}
+.headline .label{font:700 var(--t-body)/var(--lh-body) var(--font)}
+.headline .count{font:700 var(--t-count)/var(--lh-count) var(--font);
+  letter-spacing:-.04em;color:var(--status-overdue)}
+.headline .unit{font:700 var(--t-unit)/var(--lh-unit) var(--font);color:var(--status-overdue);
+  margin-left:calc(var(--x1) * -1)}
+
+/* ---------- 시각 축 ---------- */
+.rail{display:flex;flex-direction:column;gap:var(--gap-between-groups)}
+.slot{display:flex;gap:var(--rail-gap);align-items:stretch}
+.slot .time{width:var(--rail-time-w);flex:none;text-align:right;padding-top:var(--x5);
+  font:700 var(--t-read)/var(--lh-read) var(--font);color:var(--fg-secondary)}
+.slot .mark{width:var(--rail-mark-w);flex:none;display:flex;flex-direction:column;align-items:center;
+  padding-top:var(--x5)}
+.slot .dot{width:12px;height:12px;border-radius:var(--r-full);flex:none;
+  background:var(--surface-raised);border:3px solid var(--border)}
+.slot--overdue .dot{background:var(--status-overdue);border-color:var(--status-overdue)}
+.slot .stem{flex:1;width:2px;background:var(--border);margin-top:var(--x1)}
+.slot .card{flex:1;min-width:0}
+
+/* 지금 시각 라인 — 이 화면에만 있는 장치 */
+.nowline{display:flex;align-items:center;gap:var(--x2);margin-left:var(--rail-indent)}
+.nowline .bar{flex:1;height:2px;background:var(--border);border-radius:var(--r-full)}
+.nowline .lab{font:700 var(--t-capS)/var(--lh-capS) var(--font);color:var(--fg-secondary)}
+
+/* ---------- 형태 1 : 지남 = 강조 표면 ---------- */
+.card{border-radius:var(--r-card);padding:var(--pad-card);
+  background:var(--surface-raised);border:1px solid var(--border);
+  display:flex;flex-direction:column;gap:var(--gap-in-group)}
+.card--alert{background:var(--surface-alert);border-color:var(--border-alert);
+  padding:var(--pad-card-alert);gap:var(--x3);box-shadow:var(--elevation-alert)}
+.cta{display:flex;align-items:center;justify-content:center;gap:var(--x2);width:100%;
+  min-height:var(--x14);border:none;cursor:pointer;border-radius:var(--r-action);
+  background:var(--action-primary);color:var(--fg-inverted);
+  font:700 var(--t-card)/var(--lh-card) var(--font)}
+.cta:active{background:var(--action-primary-pressed)}
+
+/* ---------- 형태 2 : 끝난 것 = 카드가 아니라 배경 위 행 ---------- */
+.donelist{list-style:none;display:flex;flex-direction:column}
+.donelist li{display:flex;align-items:center;gap:var(--rail-gap);
+  padding:var(--x3) 0;border-bottom:1px solid var(--border)}
+.donelist li:last-child{border-bottom:none}
+.donelist .time{width:var(--rail-time-w);flex:none;text-align:right;
+  font:700 var(--t-read)/var(--lh-read) var(--font);color:var(--fg-secondary)}
+.donelist .st{width:var(--rail-mark-w);flex:none;display:grid;place-items:center}
+.donelist .st .ph{font-size:var(--icon-badge)}
+.donelist .st--done{color:var(--status-done)}
+.donelist .st--skip{color:var(--status-skipped)}
+.donelist .body{flex:1;min-width:0;display:flex;flex-direction:column}
+.donelist .nm{font:700 var(--t-read)/var(--lh-read) var(--font);color:var(--fg-secondary)}
+.donelist .sub{font:400 var(--t-cap)/var(--lh-cap) var(--font);color:var(--fg-secondary)}
+.donelist .tag{flex:none;padding:2px var(--x2);border-radius:var(--r-badge);
+  font:700 var(--t-capS)/var(--lh-capS) var(--font);
+  background:var(--status-skipped-surface);color:var(--status-skipped)}
+
+.quick{display:flex;gap:var(--x2)}
+.ghost{flex:1;min-height:var(--tap-min);border-radius:var(--r-action);cursor:pointer;
+  background:var(--surface-raised);border:1px solid var(--border);color:var(--fg-primary);
+  font:700 var(--t-read)/var(--lh-read) var(--font)}
+
+.nav{display:flex;background:var(--surface-raised);border-top:1px solid var(--border);
+  padding:var(--x2) 0 var(--x6)}
+.nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:var(--x1);
+  min-height:var(--tap-min);padding:var(--x2) 0;text-decoration:none;
+  color:var(--fg-secondary);font:500 var(--t-cap)/var(--lh-cap) var(--font)}
+.nav a[aria-current="page"]{color:var(--fg-primary);font-weight:700}
+
+/* 검수 패널 */
+.panel{width:440px;background:var(--surface-raised);border-radius:var(--r-card);
+  padding:var(--x6);display:flex;flex-direction:column;gap:var(--x4)}
+.panel h2{font:700 var(--t-unit)/var(--lh-unit) var(--font)}
+.panel h3{font:700 var(--t-read)/var(--lh-read) var(--font);color:var(--fg-secondary);margin-top:var(--x2)}
+.panel table{width:100%;border-collapse:collapse;font:400 var(--t-read)/var(--lh-read) var(--font)}
+.panel td{padding:var(--x2) 0;border-bottom:1px solid var(--border);vertical-align:top}
+.panel td:first-child{width:110px;font-weight:700}
+.was{color:var(--status-overdue)} .now{color:var(--status-done)}
+</style></head><body>
+
+<main class="screen">
+  <div class="statusbar"><b>9:41</b><time class="tnum">LTE 100%</time></div>
+
+  <div class="scroll">
+
+    <nav class="pets" aria-label="반려동물 선택">
+      <a class="pet" href="#" aria-current="true"><span class="ini">보</span>보리</a>
+      <a class="pet" href="#"><span class="ini">나</span>나비</a>
+      <span class="date">9월 5일 금</span>
+    </nav>
+
+    <section class="section" aria-labelledby="h-todo">
+      <h1 class="headline" id="h-todo">
+        <span class="label">아직 안 준 약</span>
+        <span class="count tnum">2</span><span class="unit">개</span>
+      </h1>
+
+      <div class="rail">
+        <div class="slot slot--overdue">
+          <div class="time tnum">08:00</div>
+          <div class="mark"><span class="dot"></span><span class="stem"></span></div>
+          <article class="card card--alert">
+            <div class="t-card">인산염 결합제</div>
+            <div class="t-read c-sec">1정 · 밥에 섞어서</div>
+            <div class="t-body" style="color:var(--status-overdue)">1시간 41분 지났고, 아무도 안 남겼어요</div>
+            <button class="cta" aria-label="인산염 결합제 지금 줬다고 기록하기">
+              <i class="ph ph-pill ic-action" aria-hidden="true"></i>지금 줬어요
+            </button>
+          </article>
+        </div>
+
+        <div class="nowline" aria-label="현재 시각 9시 41분">
+          <span class="bar"></span><span class="lab tnum">지금 9:41</span>
+        </div>
+
+        <div class="slot">
+          <div class="time tnum">20:00</div>
+          <div class="mark"><span class="dot"></span></div>
+          <article class="card">
+            <div class="t-card">포타슘 시럽</div>
+            <div class="t-read c-sec">2ml · 저녁 먹고</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="h-done">
+      <h2 class="t-cap c-sec" id="h-done">오늘 끝난 것</h2>
+      <ul class="donelist">
+        <li>
+          <span class="time tnum">08:00</span>
+          <span class="st st--done"><i class="ph ph-check-circle" aria-hidden="true"></i></span>
+          <span class="body"><span class="nm">혈압약</span><span class="sub">엄마가 8:12에 남겼어요</span></span>
+        </li>
+        <li>
+          <span class="time tnum">08:00</span>
+          <span class="st st--skip"><i class="ph ph-warning-circle" aria-hidden="true"></i></span>
+          <span class="body"><span class="nm">오메가3 영양제</span><span class="sub">안 먹으려고 함 · 내가 남겼어요</span></span>
+          <span class="tag">건너뜀</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" aria-label="빠른 기록">
+      <div class="quick">
+        <button class="ghost">체중 남기기</button>
+        <button class="ghost">이상 있었어요</button>
+      </div>
+    </section>
+
+  </div>
+
+  <nav class="nav" aria-label="주요 메뉴">
+    <a href="#" aria-current="page"><i class="ph ph-house ic-nav" aria-hidden="true"></i>오늘</a>
+    <a href="#"><i class="ph ph-note-pencil ic-nav" aria-hidden="true"></i>기록</a>
+    <a href="#"><i class="ph ph-chart-line ic-nav" aria-hidden="true"></i>추세</a>
+    <a href="#"><i class="ph ph-first-aid-kit ic-nav" aria-hidden="true"></i>병원</a>
+  </nav>
+</main>
+
+<aside class="panel">
+  <h2>매력 판정 — 재판정과 수정</h2>
+  <p class="t-read c-sec">1차 목적은 <b>빠른 처리형</b> 그대로다. 목적을 바꾸지 않았으므로 부정형 판정은 유효하다.</p>
+
+  <table>
+    <tr><td class="was">FAIL → PASS</td><td><b>이 화면에만 있는 것</b><br>
+      전: 카드+배지+하단탭 조합. 어느 앱에나 있다.<br>
+      후: <b>하루 투약 시각 축</b>과 <b>「지금 9:41」 라인</b>. 지남/예정이 시간 위에서 갈린다.
+      다른 앱에 그대로 옮기면 어색해진다.</td></tr>
+
+    <tr><td class="was">FAIL → PASS</td><td><b>핵심 수치가 압도적인가</b><br>
+      전: “아직 안 준 약 2개”가 전부 24px. 숫자와 라벨이 같은 크기.<br>
+      후: 라벨 16 · <b>숫자 48</b> · 단위 20. <b>3배</b> 차이. 시각도 탭룰러로 자릿수를 맞췄다.</td></tr>
+
+    <tr><td class="was">FAIL → PASS</td><td><b>종류가 다르면 형태도 다른가</b><br>
+      전: 네 항목이 전부 같은 카드. 테두리 스타일만 달랐다.<br>
+      후: <b>지남 = 강조 표면 카드 + CTA</b> / <b>예정 = 흰 카드</b> /
+      <b>끝난 것 = 카드가 아닌 배경 위 행</b>. 세 형태.</td></tr>
+
+    <tr><td class="now">PASS</td><td><b>표면의 층</b><br>
+      전: 배경 + 카드 2층.<br>
+      후: <b>배경 <code>#F3F4F5</code> / 카드 <code>#FFFFFF</code> / 강조 <code>#FDF0F0</code></b> 3층.</td></tr>
+
+    <tr><td class="was">FAIL → PASS</td><td><b>촌스러운 관습</b><br>
+      전: 끝난 항목에 <b>점선 테두리</b>를 썼다 — 즉시 실패 항목.<br>
+      후: 점선 제거. 그림자는 지남 카드 하나에만. 그라디언트·이모지 0.</td></tr>
+
+    <tr><td class="was">FAIL → PASS</td><td><b>브랜드가 살아 있는가</b><br>
+      전: SEED 토큰을 쓴 것뿐 — 규격 준수지 브랜드 표현이 아니었다.<br>
+      후: <b>형태</b>(시각 축) + <b>타이포</b>(모든 시각 표기 탭룰러 고정폭)로
+      “매일 정해진 시각에 여러 사람이 한 아이를 돌본다”는 성격을 말한다.</td></tr>
+  </table>
+
+  <h3>유지되는 부정형 판정</h3>
+  <table>
+    <tr><td class="now">PASS</td><td>3초 안에 다음 행동 — 최상단 “안 준 약 2개” → 첫 슬롯에 CTA</td></tr>
+    <tr><td class="now">PASS</td><td>시선 착지점 1개 — 유일한 솔리드 채움이 CTA</td></tr>
+    <tr><td class="was">FAIL → PASS</td><td>강조 개수 — 렌더에서 붉은 강조가 3곳(숫자·지남 카드·지금 라인)이었다.
+      시각 표시선은 경고가 아니라 시간 표식이므로 <b>중립색으로 내려</b> 2곳으로 줄였다.</td></tr>
+    <tr><td class="now">PASS</td><td>대비 — CTA 5.76:1 · 본문 7.0:1 이상</td></tr>
+    <tr><td class="now">PASS</td><td>아이콘 — Phosphor Regular, 3자리(내비·상태·주 액션), 크기 3종, 의미 1:1</td></tr>
+  </table>
+</aside>
+</body></html>
