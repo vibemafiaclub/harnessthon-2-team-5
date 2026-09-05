@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>청첩장모임 스케줄러 — 디자인 가이드 SET-B</title>
+<style>
+  :root{
+    --primary-50:#EAF7F5; --primary-100:#D2EFEA; --primary-500:#0D7A64; --primary-700:#095C4D; --primary-900:#063D33;
+    --secondary-100:#FFE3D9; --secondary-500:#FF6F45;
+    --neutral-0:#FFFFFF; --neutral-50:#F8F9F8; --neutral-100:#EFF1F0; --neutral-200:#E3E6E4; --neutral-300:#CDD1CE; --neutral-700:#414944; --neutral-900:#171B18;
+    --bg-page:var(--neutral-0); --bg-surface:var(--neutral-50);
+    --text-primary:var(--neutral-900); --text-secondary:var(--neutral-700); --text-on-primary:var(--neutral-0);
+    --border-default:var(--neutral-200);
+    --success-bg:#E6F5EA; --success-text:#146C2E;
+    --warning-bg:#FFF3DC; --warning-text:#8A5A00;
+    --error-bg:#FCE9E6; --error-text:#B03A22;
+    --font-body:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    --radius-lg:16px; --radius-xl:20px; --radius-full:9999px;
+    --space-4:16px; --space-5:20px; --space-6:24px; --space-8:32px;
+    --shadow-md:0 6px 18px rgba(23,27,24,0.12);
+  }
+  body{background:var(--bg-page);color:var(--text-primary);font-family:var(--font-body);margin:0;padding:var(--space-6);max-width:480px;}
+  header{margin-bottom:var(--space-8);}
+  header .service{font-size:13px;color:var(--text-secondary);}
+  header h1{font-size:22px;font-weight:700;margin:4px 0 0;}
+  section{margin-bottom:var(--space-8);}
+  section h2{font-size:14px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:var(--space-4);}
+  .swatch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4);}
+  .swatch{border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border-default);}
+  .swatch .fill{height:56px;}
+  .swatch .meta{padding:8px;background:var(--bg-surface);}
+  .swatch .name{font-size:12px;font-weight:600;}
+  .swatch .hex{font-size:11px;color:var(--text-secondary);}
+  .swatch .wcag{font-size:10px;color:var(--text-secondary);}
+  .type-row{display:flex;align-items:baseline;gap:var(--space-4);border-bottom:1px solid var(--border-default);padding:12px 0;}
+  .type-row .label{font-size:11px;color:var(--text-secondary);width:80px;flex-shrink:0;}
+  .type-row .sample{font-family:var(--font-body);}
+  .home-card{background:var(--bg-page);border:1px solid var(--border-default);border-radius:var(--radius-xl);padding:var(--space-5);box-shadow:var(--shadow-md);}
+  .weekend-title{font-size:25px;font-weight:700;margin:0 0 var(--space-4);}
+  .alert{background:var(--warning-bg);color:var(--warning-text);border-radius:var(--radius-lg);padding:12px var(--space-4);font-size:13px;margin-bottom:var(--space-4);}
+  .list-row{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border-default);}
+  .list-row:last-child{border-bottom:none;}
+  .list-row .name{font-size:15px;font-weight:600;}
+  .list-row .sub{font-size:13px;color:var(--text-secondary);margin-top:3px;}
+  .chip{display:inline-block;font-size:12px;font-weight:600;padding:5px 12px;border-radius:var(--radius-full);}
+  .chip.confirmed{background:var(--success-bg);color:var(--success-text);}
+  .chip.pending{background:var(--neutral-100);color:var(--text-secondary);}
+  .chip.urgent{background:var(--error-bg);color:var(--error-text);}
+  .btn{display:inline-block;background:var(--primary-500);color:var(--text-on-primary);font-size:15px;font-weight:600;border:none;border-radius:var(--radius-lg);padding:14px 20px;margin-top:var(--space-4);}
+  .input{width:100%;box-sizing:border-box;border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:14px;font-size:15px;margin-top:8px;font-family:var(--font-body);color:var(--text-primary);}
+</style>
+</head>
+<body>
+<header>
+  <div class="service">청첩장모임 스케줄러</div>
+  <h1>디자인 가이드 — SET-B</h1>
+  <div class="service">생성일 2026-09-05</div>
+</header>
+
+<section>
+  <h2>컬러 팔레트</h2>
+  <div class="swatch-grid">
+    <div class="swatch"><div class="fill" style="background:var(--primary-500)"></div><div class="meta"><div class="name">Primary 500</div><div class="hex">#0D7A64</div><div class="wcag">on white text 5.3:1 PASS</div></div></div>
+    <div class="swatch"><div class="fill" style="background:var(--secondary-500)"></div><div class="meta"><div class="name">Secondary 500</div><div class="hex">#FF6F45</div><div class="wcag">accent only</div></div></div>
+    <div class="swatch"><div class="fill" style="background:var(--neutral-900)"></div><div class="meta"><div class="name">Neutral 900</div><div class="hex">#171B18</div><div class="wcag">on white 17.8:1 PASS</div></div></div>
+    <div class="swatch"><div class="fill" style="background:var(--success-bg)"></div><div class="meta"><div class="name">Success bg/text</div><div class="hex">#E6F5EA / #146C2E</div><div class="wcag">5.5:1 PASS</div></div></div>
+    <div class="swatch"><div class="fill" style="background:var(--warning-bg)"></div><div class="meta"><div class="name">Warning bg/text</div><div class="hex">#FFF3DC / #8A5A00</div><div class="wcag">5.0:1 PASS</div></div></div>
+    <div class="swatch"><div class="fill" style="background:var(--error-bg)"></div><div class="meta"><div class="name">Error bg/text</div><div class="hex">#FCE9E6 / #B03A22</div><div class="wcag">5.1:1 PASS</div></div></div>
+  </div>
+</section>
+
+<section>
+  <h2>타입 스케일</h2>
+  <div class="type-row"><div class="label">display 30</div><div class="sample" style="font-size:30px;font-weight:700;letter-spacing:-0.01em;">이번 주말</div></div>
+  <div class="type-row"><div class="label">heading-1 25</div><div class="sample" style="font-size:25px;font-weight:700;">이번 주말</div></div>
+  <div class="type-row"><div class="label">heading-2 20</div><div class="sample" style="font-size:20px;font-weight:600;">동네 친구 모임</div></div>
+  <div class="type-row"><div class="label">body 15</div><div class="sample" style="font-size:15px;">회신 5/8 · 마감 2일 남음</div></div>
+  <div class="type-row"><div class="label">caption 12</div><div class="sample" style="font-size:12px;color:var(--text-secondary);">최근 수정 3시간 전</div></div>
+</section>
+
+<section>
+  <h2>적용 예시 — 홈</h2>
+  <div class="home-card">
+    <div class="weekend-title">이번 주말</div>
+    <div class="alert">같은 날 2건 — 대학 동기 모임과 겹쳐요</div>
+    <div class="list-row"><div><div class="name">대학 동기 모임</div><div class="sub">토요일 저녁 · 6/6 회신</div></div><span class="chip confirmed">확정</span></div>
+    <div class="list-row"><div><div class="name">회사 선배 모임</div><div class="sub">토요일 낮 · 3/5 회신</div></div><span class="chip urgent">마감임박</span></div>
+    <div class="list-row"><div><div class="name">동네 친구 모임</div><div class="sub">날짜 미정 · 2/4 회신</div></div><span class="chip pending">대기</span></div>
+    <input class="input" placeholder="이름으로 지인 찾기">
+    <button class="btn">새 모임 만들기</button>
+  </div>
+</section>
+</body>
+</html>

@@ -1,0 +1,259 @@
+{
+  "$schema_note": "templates/tokens.json 스키마를 따르는 후보 2세트. design/brief.md §3·§4 근거만 사용.",
+  "sets": [
+    {
+      "set_id": "SET-A",
+      "one_liner": "조금 더 또렷한 쪽",
+      "ai_pick": true,
+      "ai_pick_reason": "SET-A의 강조색은 실제 사용자가 고른 반응 근거(W-1-1: 고채도 선명한 파랑)를 그대로 쓰고, §11 '정돈된' 적합성 단서에 더 가깝게 라운딩을 절제했다. RULE-03(형태)은 아직 proposed 단계라 이 선택이 정답이라 단정하지 않는다.",
+      "tokens": {
+        "meta": {
+          "project": "청첩장모임 스케줄러",
+          "chosen_set": "",
+          "platform": "mobile-first",
+          "emotion_keywords_internal": ["정돈된", "또렷한 위계", "고채도"],
+          "wcag_checked_at": "2026-09-05",
+          "source_brief": "design/brief.md"
+        },
+        "color": {
+          "rationale": "W-1-1에서 실제로 선택된 고채도 파랑(RULE-02, confirmed)을 강조색 근거로 쓰고, 한 화면 단색 금지(R-G-01)는 앰버 보조색으로 해소한다.",
+          "primitive": {
+            "primary":   { "50": "#EEF2FF", "100": "#DCE6FF", "300": "#93B0FD", "500": "#3D5AFE", "700": "#2A3EB1", "900": "#1A2666" },
+            "secondary": { "100": "#FFF3D6", "500": "#FFAB1A", "700": "#B36E00" },
+            "neutral":   { "0": "#FFFFFF", "50": "#F7F8FA", "100": "#EEF0F3", "200": "#E2E5EA", "300": "#CBD0D8", "500": "#6B7280", "700": "#3F4550", "900": "#16181D" }
+          },
+          "semantic": {
+            "bg":      { "page": "{color.primitive.neutral.0}", "surface": "{color.primitive.neutral.50}", "elevated": "{color.primitive.neutral.0}" },
+            "text":    { "primary": "{color.primitive.neutral.900}", "secondary": "{color.primitive.neutral.700}", "disabled": "{color.primitive.neutral.300}", "on-primary": "{color.primitive.neutral.0}", "link": "{color.primitive.primary.700}" },
+            "border":  { "default": "{color.primitive.neutral.200}", "strong": "{color.primitive.neutral.300}", "focus": "{color.primitive.primary.500}" },
+            "brand":   { "default": "{color.primitive.primary.500}", "hover": "{color.primitive.primary.700}", "subtle": "{color.primitive.primary.50}" },
+            "accent":  { "default": "{color.primitive.secondary.500}", "subtle": "{color.primitive.secondary.100}" },
+            "feedback": {
+              "success": { "bg": "#E7F6EC", "text": "#146C2E" },
+              "warning": { "bg": "#FFF4E0", "text": "#8A5A00" },
+              "error":   { "bg": "#FDE8E8", "text": "#B42318" },
+              "info":    { "bg": "#E8F1FF", "text": "#1849A9" }
+            },
+            "status": {
+              "_note": "brief §7: 진행 상태 4종(대기/확정임박/확정/완료)",
+              "대기":     { "bg": "#EEF0F3", "text": "#3F4550" },
+              "확정임박": { "bg": "#FFF4E0", "text": "#8A5A00" },
+              "확정":     { "bg": "#E7F6EC", "text": "#146C2E" },
+              "완료":     { "bg": "#E8ECF4", "text": "#2A3A5C" }
+            },
+            "response": {
+              "_note": "brief §7: 회신 응답 3종(가능/불가능/미회신)",
+              "가능":   { "bg": "#E7F6EC", "text": "#146C2E" },
+              "불가능": { "bg": "#FDE8E8", "text": "#B42318" },
+              "미회신": { "bg": "#EEF0F3", "text": "#3F4550" }
+            },
+            "alert": {
+              "_note": "brief §7: 경보 2종 — RULE-01 예외(제목 위계 아닌 상태 신호)",
+              "겹침경고":   { "bg": "#FFF4E0", "text": "#8A5A00" },
+              "마감임박":   { "bg": "#FDE8E8", "text": "#B42318" }
+            }
+          },
+          "wcag": {
+            "text.primary/bg.page": "18.9:1 / PASS",
+            "text.secondary/bg.page": "9.6:1 / PASS",
+            "text.on-primary/brand.default": "5.1:1 / PASS"
+          }
+        },
+        "typography": {
+          "rationale": "중성 산세리프(RULE-04, proposed 방향)를 유지하되 제목-본문 배수를 크게 벌려 '제목 글씨가 큰 게 좋았다'(W-2-1)를 또렷하게 구현한다.",
+          "family": {
+            "body": "Pretendard",
+            "display": "Pretendard",
+            "mono": "SFMono-Regular, Menlo, monospace",
+            "_note": "ASSUMPTION: 외부 웹폰트 CDN 금지 제약(§공통 제약)으로 HTML 산출물은 fallback 스택만 렌더한다. Pretendard 는 3단계 Figma 구현 시 사용 가능 여부를 확인한다.",
+            "fallback": "-apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif"
+          },
+          "scale": {
+            "display":    { "size": 34, "lineHeight": 1.2,  "weight": 700, "letterSpacing": "-0.02em" },
+            "heading-1":  { "size": 28, "lineHeight": 1.25, "weight": 700, "letterSpacing": "-0.01em" },
+            "heading-2":  { "size": 22, "lineHeight": 1.3,  "weight": 600, "letterSpacing": "0" },
+            "heading-3":  { "size": 18, "lineHeight": 1.35, "weight": 600, "letterSpacing": "0" },
+            "body-large": { "size": 17, "lineHeight": 1.5,  "weight": 400, "letterSpacing": "0" },
+            "body":       { "size": 15, "lineHeight": 1.5,  "weight": 400, "letterSpacing": "0" },
+            "body-small": { "size": 13, "lineHeight": 1.5,  "weight": 400, "letterSpacing": "0" },
+            "caption":    { "size": 12, "lineHeight": 1.4,  "weight": 400, "letterSpacing": "0.01em" },
+            "overline":   { "size": 11, "lineHeight": 1.4,  "weight": 600, "letterSpacing": "0.08em" }
+          }
+        },
+        "spacing": {
+          "rationale": "여유 있는 레이아웃 정본(대조표 §3, 공통 고정)을 유지하되, 40~100명 리스트(§7)의 스크롤 부담을 줄이기 위해 리스트 행 패딩만 상대적으로 절제한다.",
+          "unit": 4,
+          "scale": { "0": 0, "0.5": 2, "1": 4, "2": 8, "3": 12, "4": 16, "5": 20, "6": 24, "8": 32, "10": 40, "12": 48, "16": 64, "20": 80, "24": 96 },
+          "usage": {
+            "1": "아이콘-텍스트 간격",
+            "2": "칩·배지 내부 패딩",
+            "4": "컴포넌트 내부 패딩 기본",
+            "6": "카드 간 간격",
+            "8": "섹션 간 간격"
+          },
+          "component_padding": {
+            "button":  { "x": "{spacing.scale.4}", "y": "{spacing.scale.3}" },
+            "card":    { "x": "{spacing.scale.4}", "y": "{spacing.scale.4}" },
+            "input":   { "x": "{spacing.scale.3}", "y": "{spacing.scale.3}" },
+            "modal":   { "x": "{spacing.scale.6}", "y": "{spacing.scale.6}" },
+            "list-row":{ "x": "{spacing.scale.4}", "y": "{spacing.scale.3}" }
+          }
+        },
+        "radius": {
+          "rationale": "RULE-03(형태)은 아직 정본을 세울 수 없는 proposed 상태이므로, '깔끔함'(R-G-02) 쪽 해석으로 절제된 라운딩을 쓴다.",
+          "scale": { "none": 0, "sm": 4, "md": 8, "lg": 10, "xl": 14, "2xl": 18, "full": 9999 },
+          "usage": { "button": "md", "card": "lg", "input": "md", "badge": "full", "avatar": "full", "modal": "xl", "chip": "full" },
+          "concentric_rule": "outerRadius = innerRadius + padding (예: 버튼 radius 8 + 카드 패딩 16 → 카드 radius 10 이상)"
+        },
+        "elevation": {
+          "rationale": "'정돈된' 인상(§11)을 위해 그림자를 얕고 절제되게 써 배경 박스 회피 기조(RULE-01)와 결을 맞춘다.",
+          "scale": {
+            "none": "none",
+            "sm": { "offset": "0 1px", "blur": 2,  "spread": 0, "color": "{color.primitive.neutral.900}", "opacity": 0.05, "usage": "미묘한 깊이" },
+            "md": { "offset": "0 2px", "blur": 8,  "spread": 0, "color": "{color.primitive.neutral.900}", "opacity": 0.08, "usage": "카드·드롭다운" },
+            "lg": { "offset": "0 8px", "blur": 24, "spread": 0, "color": "{color.primitive.neutral.900}", "opacity": 0.14, "usage": "모달·오버레이" }
+          }
+        },
+        "icon": {
+          "rationale": "제목 위계와 또렷한 대비를 선호하는 세트 성격에 맞춰 얇은 외곽선 아이콘을 쓴다(RULE-04 중성 산세리프와 결이 맞음).",
+          "style": "outlined",
+          "size": { "sm": 16, "md": 20, "lg": 24 },
+          "stroke": { "width": "1.5px" }
+        },
+        "layout": {
+          "grid_unit": 4,
+          "content_max_width": "480px",
+          "touch_target_min": 44,
+          "viewport": { "mobile": 360, "desktop": 1280 }
+        }
+      }
+    },
+    {
+      "set_id": "SET-B",
+      "one_liner": "조금 더 부드러운 쪽",
+      "ai_pick": false,
+      "ai_pick_reason": "",
+      "tokens": {
+        "meta": {
+          "project": "청첩장모임 스케줄러",
+          "chosen_set": "",
+          "platform": "mobile-first",
+          "emotion_keywords_internal": ["부드러운", "여유로운 위계", "고채도"],
+          "wcag_checked_at": "2026-09-05",
+          "source_brief": "design/brief.md"
+        },
+        "color": {
+          "rationale": "색온도(§3)는 아직 유보 상태이므로 청록 계열로 대안을 제시하되 RULE-02의 고채도 조건과 웨딩 클리셰 회피(§11)를 함께 지킨다.",
+          "primitive": {
+            "primary":   { "50": "#EAF7F5", "100": "#D2EFEA", "300": "#4DBFA8", "500": "#0D7A64", "700": "#095C4D", "900": "#063D33" },
+            "secondary": { "100": "#FFE3D9", "500": "#FF6F45", "700": "#C94A26" },
+            "neutral":   { "0": "#FFFFFF", "50": "#F8F9F8", "100": "#EFF1F0", "200": "#E3E6E4", "300": "#CDD1CE", "500": "#6D7570", "700": "#414944", "900": "#171B18" }
+          },
+          "semantic": {
+            "bg":      { "page": "{color.primitive.neutral.0}", "surface": "{color.primitive.neutral.50}", "elevated": "{color.primitive.neutral.0}" },
+            "text":    { "primary": "{color.primitive.neutral.900}", "secondary": "{color.primitive.neutral.700}", "disabled": "{color.primitive.neutral.300}", "on-primary": "{color.primitive.neutral.0}", "link": "{color.primitive.primary.700}" },
+            "border":  { "default": "{color.primitive.neutral.200}", "strong": "{color.primitive.neutral.300}", "focus": "{color.primitive.primary.500}" },
+            "brand":   { "default": "{color.primitive.primary.500}", "hover": "{color.primitive.primary.700}", "subtle": "{color.primitive.primary.50}" },
+            "accent":  { "default": "{color.primitive.secondary.500}", "subtle": "{color.primitive.secondary.100}" },
+            "feedback": {
+              "success": { "bg": "#E6F5EA", "text": "#146C2E" },
+              "warning": { "bg": "#FFF3DC", "text": "#8A5A00" },
+              "error":   { "bg": "#FCE9E6", "text": "#B03A22" },
+              "info":    { "bg": "#E7F1FD", "text": "#1849A9" }
+            },
+            "status": {
+              "_note": "brief §7: 진행 상태 4종(대기/확정임박/확정/완료)",
+              "대기":     { "bg": "#EFF1F0", "text": "#414944" },
+              "확정임박": { "bg": "#FFF3DC", "text": "#8A5A00" },
+              "확정":     { "bg": "#E6F5EA", "text": "#146C2E" },
+              "완료":     { "bg": "#E6EEEC", "text": "#2A4A44" }
+            },
+            "response": {
+              "_note": "brief §7: 회신 응답 3종(가능/불가능/미회신)",
+              "가능":   { "bg": "#E6F5EA", "text": "#146C2E" },
+              "불가능": { "bg": "#FCE9E6", "text": "#B03A22" },
+              "미회신": { "bg": "#EFF1F0", "text": "#414944" }
+            },
+            "alert": {
+              "_note": "brief §7: 경보 2종 — RULE-01 예외(제목 위계 아닌 상태 신호)",
+              "겹침경고":   { "bg": "#FFF3DC", "text": "#8A5A00" },
+              "마감임박":   { "bg": "#FCE9E6", "text": "#B03A22" }
+            }
+          },
+          "wcag": {
+            "text.primary/bg.page": "17.8:1 / PASS",
+            "text.secondary/bg.page": "8.9:1 / PASS",
+            "text.on-primary/brand.default": "5.3:1 / PASS"
+          }
+        },
+        "typography": {
+          "rationale": "동일한 중성 산세리프 방향(RULE-04)에서 제목-본문 배수를 완만하게 해 부드러운 위계를 만든다(W-2-1 방향은 유지).",
+          "family": {
+            "body": "Noto Sans KR",
+            "display": "Noto Sans KR",
+            "mono": "SFMono-Regular, Menlo, monospace",
+            "_note": "ASSUMPTION: 외부 웹폰트 CDN 금지 제약(§공통 제약)으로 HTML 산출물은 fallback 스택만 렌더한다. Noto Sans KR 은 3단계 Figma 구현 시 사용 가능 여부를 확인한다.",
+            "fallback": "-apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif"
+          },
+          "scale": {
+            "display":    { "size": 30, "lineHeight": 1.3,  "weight": 700, "letterSpacing": "-0.01em" },
+            "heading-1":  { "size": 25, "lineHeight": 1.35, "weight": 700, "letterSpacing": "0" },
+            "heading-2":  { "size": 20, "lineHeight": 1.4,  "weight": 600, "letterSpacing": "0" },
+            "heading-3":  { "size": 17, "lineHeight": 1.4,  "weight": 600, "letterSpacing": "0" },
+            "body-large": { "size": 17, "lineHeight": 1.6,  "weight": 400, "letterSpacing": "0" },
+            "body":       { "size": 15, "lineHeight": 1.6,  "weight": 400, "letterSpacing": "0" },
+            "body-small": { "size": 13, "lineHeight": 1.6,  "weight": 400, "letterSpacing": "0" },
+            "caption":    { "size": 12, "lineHeight": 1.5,  "weight": 400, "letterSpacing": "0.01em" },
+            "overline":   { "size": 11, "lineHeight": 1.5,  "weight": 600, "letterSpacing": "0.06em" }
+          }
+        },
+        "spacing": {
+          "rationale": "여유 있는 레이아웃 정본(대조표 §3, 공통 고정)을 더 넉넉하게 적용해 부드러운 인상을 강화한다.",
+          "unit": 4,
+          "scale": { "0": 0, "0.5": 2, "1": 4, "2": 8, "3": 12, "4": 16, "5": 20, "6": 24, "8": 32, "10": 40, "12": 48, "16": 64, "20": 80, "24": 96 },
+          "usage": {
+            "1": "아이콘-텍스트 간격",
+            "2": "칩·배지 내부 패딩",
+            "4": "컴포넌트 내부 패딩 기본",
+            "6": "카드 간 간격",
+            "8": "섹션 간 간격"
+          },
+          "component_padding": {
+            "button":  { "x": "{spacing.scale.5}", "y": "{spacing.scale.4}" },
+            "card":    { "x": "{spacing.scale.5}", "y": "{spacing.scale.5}" },
+            "input":   { "x": "{spacing.scale.4}", "y": "{spacing.scale.4}" },
+            "modal":   { "x": "{spacing.scale.6}", "y": "{spacing.scale.6}" },
+            "list-row":{ "x": "{spacing.scale.5}", "y": "{spacing.scale.4}" }
+          }
+        },
+        "radius": {
+          "rationale": "같은 RULE-03(형태) 미확정 구간에서 더 큰 라운딩으로 '둥근 카드' 반응(R-G-02)을 강하게 해석한다.",
+          "scale": { "none": 0, "sm": 6, "md": 12, "lg": 16, "xl": 20, "2xl": 28, "full": 9999 },
+          "usage": { "button": "lg", "card": "xl", "input": "lg", "badge": "full", "avatar": "full", "modal": "2xl", "chip": "full" },
+          "concentric_rule": "outerRadius = innerRadius + padding (예: 버튼 radius 16 + 카드 패딩 20 → 카드 radius 20 이상)"
+        },
+        "elevation": {
+          "rationale": "둥근 카드 선호(R-G-02)를 그림자에도 반영해 더 부드럽고 넓게 퍼지는 음영을 쓴다.",
+          "scale": {
+            "none": "none",
+            "sm": { "offset": "0 2px", "blur": 6,  "spread": 0, "color": "{color.primitive.neutral.900}", "opacity": 0.07, "usage": "미묘한 깊이" },
+            "md": { "offset": "0 6px", "blur": 18, "spread": 0, "color": "{color.primitive.neutral.900}", "opacity": 0.12, "usage": "카드·드롭다운" },
+            "lg": { "offset": "0 16px","blur": 40, "spread": 0, "color": "{color.primitive.neutral.900}", "opacity": 0.18, "usage": "모달·오버레이" }
+          }
+        },
+        "icon": {
+          "rationale": "둥근 카드 선호(R-G-02)와 부드러운 인상에 맞춰 두 톤 채움 아이콘으로 여백감을 준다.",
+          "style": "duotone",
+          "size": { "sm": 16, "md": 20, "lg": 24 },
+          "stroke": { "width": "1px(보조 외곽선, duotone은 면 중심)" }
+        },
+        "layout": {
+          "grid_unit": 4,
+          "content_max_width": "480px",
+          "touch_target_min": 44,
+          "viewport": { "mobile": 360, "desktop": 1280 }
+        }
+      }
+    }
+  ]
+}
