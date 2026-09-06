@@ -61,11 +61,13 @@ argument-hint: "<PRD 경로> [--budget 40m]"
 
 브리프에 넘길 것: **입력 화이트리스트 = `design/prd_analysis.md`, `templates/interview_page.html`, `.claude/skills/design-interview/references/interview_prompts.md`** (그 외 금지). 출력 `design/stimuli/interview.html` + `design/stimuli/gallery_index.json`(타일·쌍 ID → 축·변형). 상한 문장: "질문 ≤{human_interview_questions_max}, 타일 ≤{human_gallery_tiles_max}(축 6 × 2~3, 타일 1장 요소 ≤{agent_gallery_tile_elements_max}), 대비쌍 축당 1(≤6), 파일 ≤{agent_gallery_html_kb_max}KB".
 
-maker 는 골격의 **`<script id="harness-data">` JSON 만 채운다.** 마크업·스크립트는 고치지 않는다(D-6 함정 처리·진행률·폴백이 거기 있다). 채울 것:
+maker 는 골격을 **`design/stimuli/interview.html` 로 복사한 뒤 그 사본의 `<script id="harness-data">` JSON 만 채운다.** `templates/interview_page.html` 은 **쓰기 대상으로 열지 않는다**(브리프에 이 문장을 넣는다). 마크업·스크립트는 고치지 않는다(D-6 함정 처리·진행률·폴백이 거기 있다). 채울 것:
 - `questions[]`: `interview_prompts.md` §6 뼈대에서 PRD 로 문구를 바꾼 것. **PRD 가 이미 답한 질문은 넣지 않는다**(확인만 필요한 것은 `options` 에 "맞아요/아니에요"). **Q1·Q5 를 맨 앞에.** 선택지는 라벨이 아니라 **장면**(`scene`)으로, 2~3개. 자유서술 `free: true`, "모르겠음" `unknown: true` 는 항상. 금지어 13개가 문구에 들어가면 안 된다. PRD 반박은 `kind: "pushback"` 으로 대안 A/B/PRD대로 3택(0-A §6 의 "물을 쉬운 말"이 `text`). fast 는 Q1·Q5·Q2·Q6·Q8·Q11.
 - `tiles[]`: 같은 화면 조각(PRD 도메인의 목록 행 3개 + 제목 + 버튼 + 상태 칩)을 축 하나씩만 바꾼 타일. `axis`·`variant` 는 페이지가 **숨긴다**(월드컵 자동 필터에만 쓴다). 대비 4.5:1 미만 조합 금지. 인라인 스타일만(외부 리소스 없음).
 - `pairs[]`: 축마다 대비쌍 1개("옅은 것과 진한 것을 나란히"). 페이지가 갤러리 답으로 갈린 축은 자동으로 감춘다.
 - `banner`: "글자 내용이 아니라 보이는 느낌만" 사전 고정.
+
+**생성물 검증(`design-worker`, 발행 전)**: 기준점은 `git show HEAD:templates/interview_page.html` (워킹트리 템플릿이 아니다 — D-28). ①`git diff --quiet -- templates/` 종료 코드 0 이 아니면 FAIL, `git checkout -- templates/` 후 재검 ②HEAD 골격과 생성물에서 `harness-data` 블록을 제거한 나머지가 바이트 단위로 같은가(다르면 FAIL) ③JSON 유효, 질문 ≤상한·Q1·Q5 선두, 타일·쌍 수 ④사용자에게 보이는 텍스트 조각(title·intro·banner·질문·선택지 value·scene) 전부에서 금지어 13개 grep 0건 ⑤파일 크기 ≤상한. 결과는 `design/verify/exit_interview_page.md` 에 명령·출력 원문과 함께.
 
 ### 0-C. 발행과 안내 (메인 세션)
 
@@ -145,6 +147,7 @@ maker 는 골격의 **`<script id="harness-data">` JSON 만 채운다.** 마크�
 - [ ] §11 적합성 단서 2~6줄
 - [ ] 위 모든 상한 초과는 하한 미달과 같은 FAIL 로 보고한다
 - [ ] `interview_raw.md` 답변 수 ≥ 질문 수 (답 없는 질문은 `[UNANSWERED]` 태그), 회수한 `meta-status.answered` 와 raw 의 항목 수 일치, 갤러리 반응 ≥5 또는 Q12 위임 기록
+- [ ] `git diff --quiet -- templates/` 종료 코드 0 (템플릿 무변조), `design/verify/exit_interview_page.md` 존재·전건 PASS
 
 ## 이 스킬이 하지 않는 것
 
