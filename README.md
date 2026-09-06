@@ -48,6 +48,7 @@ scripts/eval.sh · evals/                      # 성격이 반대인 픽스처 3
 .claude/agents/design-maker.md                # 생성형 서브에이전트 — Sonnet 5 · medium
 .claude/agents/design-worker.md               # 기계형 서브에이전트 — Haiku · low
 templates/brief.md · design.md · tokens.json · decisions.md · state.json   # 산출물 양식
+templates/interview_page.html                 # 0단계 인터뷰 페이지 골격 (질문·갤러리·월드컵 4단계, db 저장, 폴백)
 docs/concept.md                               # 컨셉 스펙 전문
 docs/prd.md                                   # 예시 PRD (청첩장모임 스케줄러)
 ```
