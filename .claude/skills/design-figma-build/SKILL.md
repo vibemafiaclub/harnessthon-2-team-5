@@ -57,7 +57,9 @@ argument-hint: "<figma file url | --new>"
 - 프레임 위치는 겹치지 않게(오른쪽으로 순차). 화면 간 이동은 프로토타입 연결(brief §2 진입 경로)까지.
 - 화면별 호출을 병렬로 내되 **한 호출 안에서 페이지 전환은 1회**.
 - 생성 노드 ID → **화면별 별도 파일 `design/figma_nodes.<화면슬러그>.json`**. 병합은 3-C 종료 후 `design-worker` 단일 호출(D-8).
-- 프레임 규격은 `design.md` §2 의 값(모바일 390×844, 상태바·탭바 포함)으로 고정. hug 금지.
+- 프레임 규격은 `design.md` §2 의 값(모바일 390×844, 상태바·탭바 포함)으로 고정. hug 금지. 내용이 넘치면 프레임에 clip content 를 켜고 내용 컨테이너를 세로 스크롤(프로토타입 overflow scrolling)로 둔다.
+- **주 행동 노드는 `Action/Primary` 로 이름 짓고**, 첫 화면(y+height ≤ 프레임 높이) 안에 있거나 `Bar/Action` 하단 고정 컨테이너(프로토타입 "fix position when scrolling") 안에 둔다. 잘리거나 스크롤 뒤에 있으면 A검사 13 FAIL.
+- **내용 높이가 프레임을 넘는 화면은 `<nn> <이름> / full` 프레임을 함께 만든다** — 내용 길이만큼 늘린 프레임(이 프레임만 hug 허용), 844 위치에 점선 가이드 `Guide/Fold`. 심사자가 잘린 부분을 못 보는 일이 없게 한다.
 
 ## 3-D. A단계 — 기계 검사 (`design-worker`)
 
@@ -83,6 +85,8 @@ argument-hint: "<figma file url | --new>"
 10. **고정 요소 겹침** — 하단 탭바·고정 액션바가 있으면 스크롤 콘텐츠 하단 여백이 그 높이 이상. 콘텐츠가 가려지면 FAIL.
 11. **터치 영역** — 프로토타입 연결(reactions)이 있는 노드는 blocker(`touch-target-min`), 이름으로 추정한 노드(Button·Tab·Input·Checkbox 등, 인터랙티브 조상 없음)는 warning(`touch-target-min-inferred`)으로 3-G 사람 게이트가 본다. 시안에 무엇이 눌리는지는 기계가 이름으로 확신할 수 없다. 시각 크기를 키우지 말고 패딩·히트영역으로.
 12. **텍스트 오버플로** — 도메인 최장 문자열·최대 수치를 넣은 `long` 프레임에서 잘림·겹침 0.
+13. **주 행동 가시성** — 화면 프레임마다 `Action/Primary` 가 정확히 1개(없으면 프레임 description 에 `no-primary`), 그 노드의 절대 y+height ≤ 프레임 높이 이거나 조상에 `Bar/Action` 존재. 잘림·스크롤 뒤 = FAIL (D-26).
+14. **full 프레임 존재** — 내용 컨테이너 높이 > 프레임 높이인 화면은 같은 이름의 `/ full` 프레임이 있고 `Guide/Fold` 가 844 에 있다. 없으면 FAIL.
 
 FAIL 항목은 위반 노드 ID 목록과 함께 3-F 로. 판정자는 고치지 않는다.
 

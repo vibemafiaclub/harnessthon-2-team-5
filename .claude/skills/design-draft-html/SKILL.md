@@ -48,6 +48,8 @@ argument-hint: "[--axes 3] [--variants 2]  (fast 모드: 축 ≤1, 2-G 는 grep 
 - **더미 콘텐츠 기준**: 이름·명칭은 그 로케일의 실제 분포를 따르고 길이를 섞는다(짧은 것·평균·아주 긴 것). 분류 라벨은 **PRD 에 등장한 어휘** 그대로. 날짜·수량은 PRD 가 서술한 시점·규모에 맞춰 **몰리게** 분포(균등하게 뿌리지 않는다 — 실제 데이터는 몰린다). **예외 케이스를 반드시 섞는다**: 최댓값 1, 최솟값 1, PRD 가 언급한 특수 케이스 1(중복 소속·마감 초과·같은 날 겹침 같은 것). `홍길동`·`항목 1`·"Lorem ipsum" 금지.
 - 아이콘은 design.md §9 아이콘 체계를 따른다: **공식 MIT 패키지(기본 Phosphor Regular)의 실제 SVG 만**. SVG path 를 기억으로 재현하지 않는다 — 형태가 틀리고 틀린 건 눈에 보인다. 크기 16/20/24, 굵기 하나, 아이콘만 있는 조작 요소에는 `aria-label`.
 - 루트 요소에 `data-frame="390x844"` 를 표기한다(검사기가 읽는다). `word-break: keep-all` + `overflow-wrap: break-word`(`anywhere` 금지).
+- **주 행동은 첫 화면 안에 있거나 하단 고정이다.** 화면의 주 행동 요소 하나에 `data-role="primary-action"` 을 붙인다(주 행동이 없는 화면은 루트에 `data-no-primary="true"`). 그 요소는 `data-fixed="bottom"` 인 하단 고정 바 안에 있거나, 스크롤 없이 보이는 위치여야 한다(`data-above-fold="true"` 로 maker 가 선언하고 judge 가 스크린샷으로 확인). 스크롤해야 보이는 주 버튼, 프레임에 잘린 주 버튼은 FAIL(실측: 회신 화면의 "선택 완료" 가 844 아래로 잘림). 하단 고정 바가 있으면 내용 영역 하단 여백을 그 높이 이상 확보한다.
+- **내용이 프레임을 넘는 화면은 `full` 상태를 함께 만든다.** 루트에 `data-overflow="true"` 를 표기하고 `data-state="full"` 섹션(내용 길이만큼 늘린 프레임, 844 위치에 점선 가이드)을 추가한다. 캔버스에서 잘린 부분을 심사자·개발자가 못 보는 일이 없게 한다. 현업 관행: 기기 프레임 고정 + 스크롤 프로토타입 + 리뷰용 긴 프레임.
 
 ## 2-D. 교차 비평 (`design-judge`)
 
@@ -83,7 +85,7 @@ variant 열은 `Value(설명)` 을 쉼표로. 산문 형식(`## 1. 이름 (id �
 ## 2-G. 초안 자체 점검 (`design-judge`)
 
 Figma 로 가기 전 싼 사전 점검. 브리프: **입력 화이트리스트 = `drafts/*.html`, `design.md`**. 출력 `design/verify/draft_review.md` (**≤`agent_report_lines_max`줄**).
-- **결정론 검사 먼저**: `node scripts/check-html.js --drafts design/drafts --frame <design.md §2 규격> --out design/verify/html_check.json`. H-1 미선언 CSS 변수(L-9) · H-2 keep-all(L-7) · H-3 anywhere 금지(L-13) · H-4 hex/px 리터럴 · H-5 프레임 규격 동일(D-11·D-14) · H-6 상태 3종 · H-7 무음 절단 경고(L-8) · H-8 자리표시자. FAIL 이면 승인 화면을 열지 않는다. 명령·출력 원문 첨부.
+- **결정론 검사 먼저**: `node scripts/check-html.js --drafts design/drafts --frame <design.md §2 규격> --out design/verify/html_check.json`. H-1 미선언 CSS 변수(L-9) · H-2 keep-all(L-7) · H-3 anywhere 금지(L-13) · H-4 hex/px 리터럴 · H-5 프레임 규격 동일(D-11·D-14) · H-6 상태 3종 · H-7 무음 절단 경고(L-8) · H-8 자리표시자 · **H-9 주 행동 위치**(`primary-action` 이 하단 고정 바 안이거나 above-fold 선언) · **H-10 overflow 화면의 `full` 상태 존재**. FAIL 이면 승인 화면을 열지 않는다. 명령·출력 원문 첨부.
 - §4A 규칙 중 HTML 소스로 판정 가능한 나머지(공통 요소 구조 일치 등)를 grep 으로 판정.
 - 스크린샷이 가능하면(`aside-browser` 스킬 사용 가능 시) 화면별 1장을 찍어 §4C 규칙과 §5 1등 정보를 **이미지를 열어** 점검. 불가하면 "C 점검 미실시 — Figma 단계에서" 라고 명시. 추측 판정 금지. **fast 모드에서는 grep 항목만 실행하고 스크린샷 점검은 생략**(가정 로그 기록).
 - §7 핵심 과업 3개를 전체 화면 세트에서 경로 추적: `index.html` 의 흐름 순서대로 과업별 `찾음/헤맴/불가`. `불가` 가 있으면 FAIL.

@@ -373,3 +373,7 @@ D-10 과 같은 뿌리다 — **만든 것을 만든 직후 확인하지 않는 
 1. components.md 표 형식 고정(2-F)이 실효를 내는지 — maker 가 실제로 표로 쓰는지. 산문 폴백에 계속 기대면 형식이 흔들린다.
 2. **tokens.json 슬러그 마이그레이션 경로 없음** — 기존 프로젝트(한글 키)를 새 스킬로 재감사하려면 tokens.json·tokens.css·Figma Variables 이름을 함께 바꾸는 절차가 필요. 새 프로젝트는 1단계부터 슬러그라 해당 없음. (미구현, 필요해지면 `scripts/migrate-token-keys.js` 로)
 3. 미구현 3종(contrast·image_fill·text_overflow)이 `requires_human_review` 로 나간다. contrast 는 조상 체인에서 실제 배경 찾기가 필요해 비용 큼. 3-G 사람 게이트가 이것을 실제로 확인하는지가 다음 런의 관전 포인트.
+
+## D-26. 주 행동이 프레임 아래로 잘린 채 승인됨 (오너 지적)
+회신 화면의 주 버튼 "선택 완료" 가 844 아래로 잘려 캔버스에서 보이지 않았다. 프레임 규격 고정(D-11)만으로는 "무엇이 잘렸는가" 를 못 본다. 현업 관행은 기기 프레임 고정 + 스크롤 프로토타입 + 리뷰용 긴 프레임이며, 주 행동은 잘리게 두지 않고 하단 고정 바로 만든다.
+**처치**: ①2-C/2-F 규칙 — `data-role="primary-action"` 은 `data-fixed="bottom"` 바 안이거나 above-fold 선언, 넘치는 화면은 `data-state="full"` 섹션. check-html H-9·H-10. ②3-C — `Action/Primary` 는 첫 화면 안 또는 `Bar/Action`, 넘치는 화면은 `/ full` 프레임(hug 허용) + `Guide/Fold`. A검사 13·14. ③c_checks C-6 에 "주 행동이 스크롤 없이 보이는가". ④design.md §2 에 주 행동 위치 한 줄.

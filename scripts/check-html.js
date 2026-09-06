@@ -14,6 +14,8 @@
  *   H-6  data-state="normal|empty|long" 섹션이 전부 있는가              (상태 3종)
  *   H-7  고정 높이 + overflow:hidden 이면서 스크롤 컨테이너가 없는가      (L-8, 경고)
  *   H-8  "Lorem ipsum" / "제목을 입력" 류 자리표시자가 없는가            (C-5)
+ *   H-9  주 행동(data-role=primary-action)이 하단 고정 바(data-fixed=bottom) 안이거나 above-fold 선언인가 (D-26)
+ *   H-10 data-overflow=true 화면에 data-state="full" 섹션이 있는가              (D-26)
  * L-6 라벨 폭 예산·L-8 높이 초과량은 렌더가 필요하므로 여기서 계산하지 않는다(judge + 브라우저).
  */
 const fs = require('fs'); const path = require('path');
@@ -47,6 +49,22 @@ for (const f of files) {
   if (/^screen_/.test(f)) add('H-6', f, states.length ? 'FAIL' : 'PASS', states.length ? '누락 상태: ' + states.join(', ') : '상태 3종 존재');
   add('H-7', f, (/overflow\s*:\s*hidden/.test(src) && !/overflow(-y)?\s*:\s*auto|scroll/.test(src)) ? 'WARN' : 'PASS', '고정 높이+hidden 인데 스크롤 컨테이너 없음 → 무음 절단 가능');
   add('H-8', f, /lorem ipsum|제목을 입력|텍스트를 입력|placeholder text/i.test(src) ? 'FAIL' : 'PASS', '자리표시자 텍스트');
+  if (/^screen_/.test(f)) {
+    const noPrimary = /data-no-primary\s*=\s*"true"/.test(src);
+    const pa = [...src.matchAll(/<[^>]+data-role\s*=\s*"primary-action"[^>]*>/g)];
+    if (noPrimary) add('H-9', f, 'PASS', '주 행동 없음 선언(data-no-primary)');
+    else if (pa.length !== 1) add('H-9', f, 'FAIL', `data-role="primary-action" 가 ${pa.length}개 (정확히 1개, 없으면 data-no-primary="true")`);
+    else {
+      const idx = src.indexOf(pa[0][0]);
+      const before = src.slice(0, idx);
+      const opens = (before.match(/data-fixed\s*=\s*"bottom"/g) || []).length;
+      const inFixed = opens > 0 && /data-fixed\s*=\s*"bottom"/.test(before.slice(Math.max(0, before.lastIndexOf('data-fixed'))));
+      const aboveFold = /data-above-fold\s*=\s*"true"/.test(pa[0][0]);
+      add('H-9', f, (inFixed || aboveFold) ? 'PASS' : 'FAIL', inFixed ? '주 행동이 하단 고정 바 안' : aboveFold ? '주 행동 above-fold 선언 (judge 가 스크린샷으로 확인)' : '주 행동이 하단 고정 바 밖이고 above-fold 선언도 없음 — 스크롤/잘림 위험');
+    }
+    const overflow = /data-overflow\s*=\s*"true"/.test(src);
+    if (overflow) add('H-10', f, /data-state\s*=\s*"full"/.test(src) ? 'PASS' : 'FAIL', 'overflow 화면인데 full 상태 없음');
+  }
 }
 const distinct = new Set(Array.from(frames.values()));
 if (distinct.size > 1) add('H-5', '(all)', 'FAIL', '화면 간 프레임 규격 불일치: ' + Array.from(distinct).join(' / '));
