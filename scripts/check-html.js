@@ -10,12 +10,12 @@
  *   H-2  루트에 word-break: keep-all 이 있는가                          (L-7)
  *   H-3  overflow-wrap: anywhere 를 쓰지 않았는가                       (L-13)
  *   H-4  tokens.css 밖에 hex 색·px 리터럴이 없는가                       (토큰 규율)
- *   H-5  루트 프레임 규격이 전 화면 동일하고 --frame 과 같은가           (D-11·D-14)
+ *   H-5  루트 프레임 폭이 전 화면 동일하고 --frame 폭과 같은가 (높이는 내용에 따라 다름) (D-11·D-14·D-34)
  *   H-6  data-state="normal|empty|long" 섹션이 전부 있는가              (상태 3종)
  *   H-7  고정 높이 + overflow:hidden 이면서 스크롤 컨테이너가 없는가      (L-8, 경고)
  *   H-8  "Lorem ipsum" / "제목을 입력" 류 자리표시자가 없는가            (C-5)
  *   H-9  주 행동(data-role=primary-action)이 하단 고정 바(data-fixed=bottom) 안이거나 above-fold 선언인가 (D-26)
- *   H-10 data-overflow=true 화면에 data-state="full" 섹션이 있는가              (D-26)
+ *   H-10 스크롤 영역을 overflow:hidden + 고정 높이로 절단하지 않는가              (D-26·D-34)
  * L-6 라벨 폭 예산·L-8 높이 초과량은 렌더가 필요하므로 여기서 계산하지 않는다(judge + 브라우저).
  */
 const fs = require('fs'); const path = require('path');
@@ -43,8 +43,8 @@ for (const f of files) {
   const px = (body.match(/\b\d{2,4}px\b/g) || []).length;
   add('H-4', f, hex.length ? 'FAIL' : (px > 6 ? 'WARN' : 'PASS'), `hex 리터럴 ${hex.length}건${hex.length ? ' (' + Array.from(new Set(hex)).slice(0, 5).join(', ') + ')' : ''}, px 리터럴 ${px}건(프레임·상태바 규격 외에는 0 이어야)`);
   const fm = src.match(/data-frame\s*=\s*"(\d+)x(\d+)"/) || src.match(/\.screen\s*\{[^}]*width\s*:\s*(\d+)px[^}]*height\s*:\s*(\d+)px/);
-  const fr = fm ? `${fm[1]}x${fm[2]}` : null; frames.set(f, fr);
-  add('H-5', f, fr === A.frame ? 'PASS' : 'FAIL', fr ? `프레임 ${fr} (기대 ${A.frame})` : '루트 프레임 규격 미표기 — data-frame="WxH" 또는 .screen{width;height} 필요');
+  const fw = fm ? fm[1] : null; frames.set(f, fw);
+  add('H-5', f, fw === String(FW) ? 'PASS' : 'FAIL', fw ? `프레임 폭 ${fw} (기대 ${FW}; 높이 ${fm[2]} 는 내용에 따라 자유)` : '루트 프레임 규격 미표기 — data-frame="WxH" 또는 .screen{width;height} 필요');
   const states = ['normal', 'empty', 'long'].filter((s) => !new RegExp(`data-state\\s*=\\s*"${s}"`).test(src));
   if (/^screen_/.test(f)) add('H-6', f, states.length ? 'FAIL' : 'PASS', states.length ? '누락 상태: ' + states.join(', ') : '상태 3종 존재');
   add('H-7', f, (/overflow\s*:\s*hidden/.test(src) && !/overflow(-y)?\s*:\s*auto|scroll/.test(src)) ? 'WARN' : 'PASS', '고정 높이+hidden 인데 스크롤 컨테이너 없음 → 무음 절단 가능');
@@ -62,12 +62,12 @@ for (const f of files) {
       const aboveFold = /data-above-fold\s*=\s*"true"/.test(pa[0][0]);
       add('H-9', f, (inFixed || aboveFold) ? 'PASS' : 'FAIL', inFixed ? '주 행동이 하단 고정 바 안' : aboveFold ? '주 행동 above-fold 선언 (judge 가 스크린샷으로 확인)' : '주 행동이 하단 고정 바 밖이고 above-fold 선언도 없음 — 스크롤/잘림 위험');
     }
-    const overflow = /data-overflow\s*=\s*"true"/.test(src);
-    if (overflow) add('H-10', f, /data-state\s*=\s*"full"/.test(src) ? 'PASS' : 'FAIL', 'overflow 화면인데 full 상태 없음');
+    const cut = /\.(?:content|scroll|body|list)[^{]*\{[^}]*(?:height\s*:\s*\d+px|max-height\s*:\s*\d+px)[^}]*overflow(?:-y)?\s*:\s*hidden/.test(src) || /overflow(?:-y)?\s*:\s*hidden[^}]*(?:height|max-height)\s*:\s*\d+px/.test(src);
+    add('H-10', f, cut ? 'FAIL' : 'PASS', cut ? '스크롤 영역을 고정 높이 + overflow:hidden 으로 절단 — 프레임이 길어져야 한다' : '내용 절단 없음');
   }
 }
 const distinct = new Set(Array.from(frames.values()));
-if (distinct.size > 1) add('H-5', '(all)', 'FAIL', '화면 간 프레임 규격 불일치: ' + Array.from(distinct).join(' / '));
+if (distinct.size > 1) add('H-5', '(all)', 'FAIL', '화면 간 프레임 폭 불일치: ' + Array.from(distinct).join(' / '));
 if (A.out) { fs.mkdirSync(path.dirname(A.out), { recursive: true }); fs.writeFileSync(A.out, JSON.stringify(report, null, 2)); }
 if (A.format === 'json') console.log(JSON.stringify(report, null, 2));
 else {

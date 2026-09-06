@@ -57,9 +57,9 @@ argument-hint: "<figma file url | --new>"
 - 프레임 위치는 겹치지 않게(오른쪽으로 순차). 화면 간 이동은 프로토타입 연결(brief §2 진입 경로)까지.
 - 화면별 호출을 병렬로 내되 **한 호출 안에서 페이지 전환은 1회**.
 - 생성 노드 ID → **화면별 별도 파일 `design/figma_nodes.<화면슬러그>.json`**. 병합은 3-C 종료 후 `design-worker` 단일 호출(D-8).
-- 프레임 규격은 `design.md` §2 의 값(모바일 390×844, 상태바·탭바 포함)으로 고정. hug 금지. 내용이 넘치면 프레임에 clip content 를 켜고 내용 컨테이너를 세로 스크롤(프로토타입 overflow scrolling)로 둔다.
+- 프레임 규격은 `design.md` §2 의 값 — **폭 390 고정 + 상태바 + 탭바, 높이는 내용에 맞춰(최소 844, hug 허용)**. 현업 관행대로 프레임이 길어지고 탭바는 맨 아래, 프로토타입에서 탭바·고정 바에 "fix position when scrolling". clip content 로 내용을 잘라 숨기지 않는다(D-34 정정).
 - **주 행동 노드는 `Action/Primary` 로 이름 짓고**, 첫 화면(y+height ≤ 프레임 높이) 안에 있거나 `Bar/Action` 하단 고정 컨테이너(프로토타입 "fix position when scrolling") 안에 둔다. 잘리거나 스크롤 뒤에 있으면 A검사 13 FAIL.
-- **내용 높이가 프레임을 넘는 화면은 `<nn> <이름> / full` 프레임을 함께 만든다** — 내용 길이만큼 늘린 프레임(이 프레임만 hug 허용), 844 위치에 점선 가이드 `Guide/Fold`. 심사자가 잘린 부분을 못 보는 일이 없게 한다.
+- 첫 화면 경계를 보이고 싶으면 y=844 에 `Guide/Fold` 점선 하나(선택). **같은 화면을 두 벌(기기 크기 + full) 만들지 않는다** — 현업에서 드문 방식이고 두 벌이 어긋난다(D-34).
 
 ## 3-D. A단계 — 기계 검사 (`design-worker`)
 
@@ -81,12 +81,12 @@ argument-hint: "<figma file url | --new>"
 6. **variant 커버리지** — components.md 의 상태가 variant 로 전부 존재.
 7. **아이콘 덮임·배경** — 아이콘 컴포넌트·인스턴스 안에 `visible` 한 VECTOR/BOOLEAN_OPERATION 이 ≥1 이고, 그 벡터의 조상 중 벡터 영역을 덮는 불투명 fill(opacity ≥ 0.9, 크기 ≥ 벡터) 을 가진 FRAME/RECTANGLE 이 없다(D-10: 마스터는 정상, 인스턴스만 네모). **아이콘 컨테이너 프레임(`Icon/*`)에 보이는 fill 이 있으면 FAIL** — 벡터 뒤에 있어 아이콘은 보이더라도 회색 네모가 남는다(D-33: 탭바 4개 전부 회색 상자). 예외는 활성 탭 표시(`Tab/*` 의 `Indicator` 노드, 화면당 1개)뿐. 화면 프레임 안의 **인스턴스**를 검사 대상으로 한다.
 8. **크기 sanity** — 각 컴포넌트 인스턴스의 width/height/padding 이 `drafts/components.md` 에 적힌 초안 HTML 대응 요소 값의 ±30% 이내. 토큰에서 왔는지가 아니라 값이 말이 되는지를 본다(실측: 80px 도 scale 에 있으면 PASS 였다).
-9. **프레임 규격** — Screens 페이지의 모든 화면 프레임이 `design.md` §2 규격과 같고 hug 가 아니다.
+9. **프레임 규격** — Screens 페이지의 모든 화면 프레임이 `design.md` §2 의 폭이고 상태바·탭바가 있다. 높이는 ≥844 이며 내용에 따라 달라도 된다.
 10. **고정 요소 겹침** — 하단 탭바·고정 액션바가 있으면 스크롤 콘텐츠 하단 여백이 그 높이 이상. 콘텐츠가 가려지면 FAIL.
 11. **터치 영역** — 프로토타입 연결(reactions)이 있는 노드는 blocker(`touch-target-min`), 이름으로 추정한 노드(Button·Tab·Input·Checkbox 등, 인터랙티브 조상 없음)는 warning(`touch-target-min-inferred`)으로 3-G 사람 게이트가 본다. 시안에 무엇이 눌리는지는 기계가 이름으로 확신할 수 없다. 시각 크기를 키우지 말고 패딩·히트영역으로.
 12. **텍스트 오버플로** — 도메인 최장 문자열·최대 수치를 넣은 `long` 프레임에서 잘림·겹침 0.
 13. **주 행동 가시성** — 화면 프레임마다 `Action/Primary` 가 정확히 1개(없으면 프레임 description 에 `no-primary`), 그 노드의 절대 y+height ≤ 프레임 높이 이거나 조상에 `Bar/Action` 존재. 잘림·스크롤 뒤 = FAIL (D-26).
-14. **full 프레임 존재** — 내용 컨테이너 높이 > 프레임 높이인 화면은 같은 이름의 `/ full` 프레임이 있고 `Guide/Fold` 가 844 에 있다. 없으면 FAIL.
+14. **내용 절단 없음** — 화면 프레임 안 모든 자식의 절대 y+height ≤ 프레임 높이(clip content 로 잘린 노드 0). 잘려 있으면 FAIL — 프레임을 늘린다.
 
 FAIL 항목은 위반 노드 ID 목록과 함께 3-F 로. 판정자는 고치지 않는다.
 
@@ -148,7 +148,7 @@ FAIL 항목은 위반 노드 ID 목록과 함께 3-F 로. 판정자는 고치지
 
 - [ ] `design/figma.md` 에 링크 존재, 상태 파일 `figma_url` 일치
 - [ ] `figma_nodes.json` (병합본) 유효 JSON, variables·components·screens 섹션, screens 수 == brief §2 화면 수 × 상태 수, 화면별 조각 파일 수 == 화면 수
-- [ ] `design/verify/shots/final/` 에 화면 프레임 스크린샷 == 화면 수 × 상태 수, 상태 파일에 메인 직접 확인 기록
+- [ ] `design/verify/shots/final/` 에 화면 프레임 스크린샷 == 화면 수 × 상태 수(긴 화면은 전체 높이로 캡처), 상태 파일에 메인 직접 확인 기록
 - [ ] `audit.json` 의 `passed_machine == true`, `requires_human_review` 항목마다 3-G 에서 사람이 확인한 기록 또는 즉석 검사 결과 존재, `a_report.md` 보완 항목 전건 PASS 또는 사용자 승인된 예외 명시
 - [ ] `c_report.md` 마지막 라운드에 미분류 FAIL 0
 - [ ] `final_ack.approved == true`
