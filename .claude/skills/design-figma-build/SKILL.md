@@ -92,7 +92,7 @@ FAIL 항목은 위반 노드 ID 목록과 함께 3-F 로. 판정자는 고치지
 
 ## 3-E. C단계 — 육안 판정 (`design-judge` × 2)
 
-화면 프레임마다 `get_screenshot`(또는 `node.exportAsync`) 으로 PNG 를 `design/verify/shots/<nn>_<state>.png` 에 저장(`design-worker`). 그 다음 **2콜**:
+화면 프레임마다 `get_screenshot`(또는 `node.exportAsync`) 으로 PNG 를 `design/verify/shots/<nn>_<state>.png` 에 저장(`design-worker`). **캡처마다 `design/verify/shots/index.md` 에 파일명·캡처 시각(ISO)·Figma 파일 `lastModified`·노드 id 를 기록**하고, 판정 브리프에 이 index 를 넣는다. 판정자는 캡처 시각이 Figma `lastModified` 보다 앞서면 판정하지 않고 **`C_STALE`** 을 반환한다(D-29 실측: 수정 전 캡처로 판정해 "이미 고친 결함" 3건을 상위로 보고 — 판정은 정확했고 대상이 낡았을 뿐이라 리포트만으로는 구분이 안 된다). 수정 후 "재캡처" 라며 찍은 파일이 이전 파일과 바이트 동일하면 재캡처가 아니다 — worker 가 `shasum` 으로 대조해 같으면 FAIL. 그 다음 **2콜**:
 
 **1콜 블라인드** (`design-judge`, brief·design.md 를 **주지 않는다**): PNG 만 주고 "시선이 가는 순서대로 요소 3개 + 각각 근거(위치·크기·색)" → `design/verify/c_first_impression.json`. 정답을 알려 주고 묻는 것은 유도 질문이다.
 
@@ -130,7 +130,7 @@ FAIL 항목은 위반 노드 ID 목록과 함께 3-F 로. 판정자는 고치지
 | 분류 | 처리 |
 |---|---|
 | A FAIL | 위반 노드만 `design-maker` 수정 → 3-D 재검 |
-| C `local` | 그 속성만 수정 → 3-E 재검(2콜 다시). **B단계로 돌아가지 않는다** |
+| C `local` | 그 속성만 수정 → **재캡처(index.md 갱신, 이전 파일과 해시 다름 확인)** → 3-E 재검(2콜 다시). 재캡처 없는 재검은 무효. **B단계로 돌아가지 않는다** |
 | C `direction` | `design-draft-html` 2-B 로 회귀, 그 축만 재발산. 상태 파일에 기록 |
 | C `taste_gap` | 사용자에게 질의(호출 품질 게이트 4항). 답을 raw 에 기록, brief §4 에 RULE 추가(provisional), design.md 갱신 후 재검 |
 | C `repeat: true` (같은 이유 2회) | 요구사항 해석 오류 신호. **0단계로 에스컬레이션** — 사용자에게 "이 부분 해석이 어긋난 것 같습니다" 로 브리핑하고 진행 여부 결정 |

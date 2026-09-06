@@ -63,11 +63,20 @@ argument-hint: "<PRD 경로> [--budget 40m]"
 
 maker 는 골격을 **`design/stimuli/interview.html` 로 복사한 뒤 그 사본의 `<script id="harness-data">` JSON 만 채운다.** `templates/interview_page.html` 은 **쓰기 대상으로 열지 않는다**(브리프에 이 문장을 넣는다). 마크업·스크립트는 고치지 않는다(D-6 함정 처리·진행률·폴백이 거기 있다). 채울 것:
 - `questions[]`: `interview_prompts.md` §6 뼈대에서 PRD 로 문구를 바꾼 것. **PRD 가 이미 답한 질문은 넣지 않는다**(확인만 필요한 것은 `options` 에 "맞아요/아니에요"). **Q1·Q5 를 맨 앞에.** 선택지는 라벨이 아니라 **장면**(`scene`)으로, 2~3개. 자유서술 `free: true`, "모르겠음" `unknown: true` 는 항상. 금지어 13개가 문구에 들어가면 안 된다. PRD 반박은 `kind: "pushback"` 으로 대안 A/B/PRD대로 3택(0-A §6 의 "물을 쉬운 말"이 `text`). fast 는 Q1·Q5·Q2·Q6·Q8·Q11.
-- `tiles[]`: 같은 화면 조각(PRD 도메인의 목록 행 3개 + 제목 + 버튼 + 상태 칩)을 축 하나씩만 바꾼 타일. `axis`·`variant` 는 페이지가 **숨긴다**(월드컵 자동 필터에만 쓴다). 대비 4.5:1 미만 조합 금지. 인라인 스타일만(외부 리소스 없음).
+- `tiles[]`: 같은 화면 조각(PRD 도메인의 목록 행 3개 + 제목 + 버튼 + 상태 칩)을 축 하나씩만 바꾼 타일. `axis`·`variant` 는 페이지가 **숨긴다**(월드컵 자동 필터에만 쓴다). 대비 4.5:1 미만 조합 금지. 인라인 스타일만(외부 리소스 없음). **축마다 "무엇을 바꾸는가" 가 정해져 있고 변형 사이에 그 속성이 실제로 달라야 한다**(D-32 실측: 타이포 축이 굵기·자간만 바꾸고 서체 계열은 안 바꿔 방향이 안 나옴):
+
+  | 축 | 변형 사이에 반드시 달라야 하는 것 |
+  |---|---|
+  | 색온도·무드 | 배경·텍스트의 hue (따뜻 ↔ 차가움), 나머지 동일 |
+  | 정보 밀도 | 같은 영역의 항목 수와 행 간격 (3행 ↔ 6행) |
+  | 형태 | radius 0 vs 16 이상, 카드(그림자/경계) vs 구분선 |
+  | 타이포 성격 | **서체 계열**(serif ↔ sans, 또는 둥근 고딕 ↔ 각진 고딕) + 제목/본문 크기비 |
+  | 강조 방식 | 1등 정보를 색으로 vs 크기로 vs 위치로 |
+  | 색 채도 | 강조색 채도 (회색조에 가까움 ↔ 선명) |
 - `pairs[]`: 축마다 대비쌍 1개("옅은 것과 진한 것을 나란히"). 페이지가 갤러리 답으로 갈린 축은 자동으로 감춘다.
 - `banner`: "글자 내용이 아니라 보이는 느낌만" 사전 고정.
 
-**생성물 검증(`design-worker`, 발행 전)**: 기준점은 `git show HEAD:templates/interview_page.html` (워킹트리 템플릿이 아니다 — D-28). ①`git diff --quiet -- templates/` 종료 코드 0 이 아니면 FAIL, `git checkout -- templates/` 후 재검 ②HEAD 골격과 생성물에서 `harness-data` 블록을 제거한 나머지가 바이트 단위로 같은가(다르면 FAIL) ③JSON 유효, 질문 ≤상한·Q1·Q5 선두, 타일·쌍 수 ④사용자에게 보이는 텍스트 조각(title·intro·banner·질문·선택지 value·scene) 전부에서 금지어 13개 grep 0건 ⑤파일 크기 ≤상한. 결과는 `design/verify/exit_interview_page.md` 에 명령·출력 원문과 함께.
+**생성물 검증(`design-worker`, 발행 전)**: 기준점은 `git show HEAD:templates/interview_page.html` (워킹트리 템플릿이 아니다 — D-28). ①`git diff --quiet -- templates/` 종료 코드 0 이 아니면 FAIL, `git checkout -- templates/` 후 재검 ②HEAD 골격과 생성물에서 `harness-data` 블록을 제거한 나머지가 바이트 단위로 같은가(다르면 FAIL) ③JSON 유효, 질문 ≤상한·Q1·Q5 선두, 타일·쌍 수 ④사용자에게 보이는 텍스트 조각(title·intro·banner·질문·선택지 value·scene) 전부에서 금지어 13개 grep 0건 ⑤파일 크기 ≤상한 ⑥**축 구현 검사** — 타이포 축 변형 사이에 `font-family` 값이 다른가, 형태 축에 `border-radius` 차이가 있는가, 밀도 축에 행 수 차이가 있는가(grep). 하나라도 같으면 그 축은 자극이 아니므로 FAIL. 결과는 `design/verify/exit_interview_page.md` 에 명령·출력 원문과 함께.
 
 ### 0-C. 발행과 안내 (메인 세션)
 
@@ -120,7 +129,7 @@ maker 는 골격을 **`design/stimuli/interview.html` 로 복사한 뒤 그 사�
 
 판정은 `entailed` / `over_generalized` / `unsupported` 3택 + **`narrowed`**(근거가 지지하는 만큼으로 좁힌 statement — 실측에서 "1.5배"·"16px"·"4.5:1" 같이 하네스가 채워 넣은 수치가 전부 여기서 걸러졌다). → `design/audit_result.json`.
 
-메인은 결과를 brief.md 의 `audit:` 필드에 반영한다. `over_generalized` 는 **statement 를 `narrowed` 로 교체**하고 confidence 유지, `unsupported` 는 `proposed` 로 강등. 강등된 기준은 구현 강제 대상이 아니라 참고용이다. 감사 결과가 전건 강등이면 감사 입력 형식을 의심한다.
+메인은 결과를 brief.md 의 `audit:` 필드에 반영한다. `over_generalized` 는 **statement 를 `narrowed` 로 교체**하고 confidence 유지, `unsupported` 는 `proposed` 로 강등. **교체로 사라진 수치·조건(예: 18px·4.5:1·hue 20~50°)은 그 규칙을 참조하는 §5 하드 제약·§7 토큰 자리·§8 도메인 기준에서도 지운다** — §4 만 고치면 1단계가 §7 을 읽고 감사가 제거한 수치를 되살린다(D-31 실측). 강등된 기준은 구현 강제 대상이 아니라 참고용이다. 감사 결과가 전건 강등이면 감사 입력 형식을 의심한다(2회차) — 다만 근거가 실제로 얇아서(이유 0건·축 미분리) 전건 강등이 나올 수도 있다(3회차). 둘은 감사 note 로 구분한다.
 
 ## 0-H. 규칙 전량표 ack (메인 세션, 1회)
 
@@ -134,7 +143,12 @@ maker 는 골격을 **`design/stimuli/interview.html` 로 복사한 뒤 그 사�
 | UX 직관 | §2 화면 흐름·1등 정보 + §2b 핵심 과업 3개 |
 | 적합성 | §11 적합성 단서 + §8 도메인 특수 기준 + §10 PRD 반박 결정 |
 
-## 종료조건 (기계 판정 — `design-worker` 에 위임 가능)
+## 종료조건 (기계 판정 — **`scripts/check-brief.js` 가 센다**, worker 는 실행만)
+
+```
+node scripts/check-brief.js --brief design/brief.md --raw design/interview_raw.md --state design/state.json --audit design/audit_result.json --out design/verify/exit_stage0.md
+```
+worker(Haiku)의 판단으로 세게 하면 섹션 경계(§2 vs §2b)·조사 변형·인용 대조에서 반복해서 틀렸고(3회 연속, D-30) 파일도 안 만들었다. 세는 일은 산술이다. 스크립트 종료 코드 0 이 통과이고, 리포트 파일은 스크립트가 쓴다. 아래 목록은 스크립트가 검사하는 항목의 사람용 설명이다.
 
 - [ ] `design/brief.md` 존재, **전체 ≤`agent_brief_lines_max`줄**, §1 문제 진술 3~5
 - [ ] §2 화면 표 행 전부에 PRD 기능 번호 매핑
