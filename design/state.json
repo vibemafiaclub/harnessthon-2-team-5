@@ -2,58 +2,58 @@
   "$note": "하네스 진행 상태. 오케스트레이터가 시작할 때 읽어 next_stage 부터 이어간다. 사람이 손으로 고치지 않는다.",
   "version": 1,
   "prd": "docs/prd.md",
-  "figma_url": "https://www.figma.com/design/sbkAu7Vvampc2WR1CozIWb",
+  "figma_url": "",
   "budget_minutes": 40,
   "mode": "fast",
-  "started_at": "2026-09-05T15:50:59",
-  "updated_at": "2026-09-05T18:33:11",
-  "next_stage": "done",
+  "started_at": "2026-09-07T02:06:38",
+  "updated_at": "2026-09-07T03:21:38",
+  "next_stage": "interview",
   "stages": {
     "interview": {
-      "status": "done",
-      "started_at": "2026-09-05T15:50:59",
-      "done_at": "2026-09-05T16:53:51",
-      "exit_check": "design/verify/exit_stage0.md RESULT: PASS (15/15). 0-G 재감사 후 entailed 1 / over_generalized 4 / unsupported 1, 0-H ack \"없음\""
+      "status": "in_progress",
+      "started_at": "2026-09-07T02:06:38",
+      "done_at": "",
+      "exit_check": ""
     },
     "tokens": {
-      "status": "done",
+      "status": "pending",
       "started_at": "",
-      "done_at": "2026-09-05T17:19:42",
-      "exit_check": "design/verify/exit_stage1.md RESULT: PASS (14/14)"
+      "done_at": "",
+      "exit_check": ""
     },
     "draft": {
-      "status": "done",
+      "status": "pending",
       "started_at": "",
-      "done_at": "2026-09-05T17:19:42",
-      "exit_check": "2-B~2-E 생략(사용자 시간 제약). 화면 3종 병렬 생성, 상태 토큰 18종 적용, 미정의 var 0건",
+      "done_at": "",
+      "exit_check": "",
       "revision_rounds": 0
     },
     "figma": {
-      "status": "done",
-      "started_at": "2026-09-05T17:20:10",
-      "done_at": "2026-09-05T18:33:11",
-      "exit_check": "design/verify/a_report_final.md 9/10 PASS → 타이포 스타일 보정 후 전항 PASS. 재사용률 12.7%는 사용자 승인 예외",
-      "c_rounds": 1,
+      "status": "pending",
+      "started_at": "",
+      "done_at": "",
+      "exit_check": "",
+      "c_rounds": 0,
       "c_fail_reasons": []
     }
   },
   "human_gates": {
     "interview_answers": {
-      "count": 9
+      "count": 5
     },
     "stimulus_reactions": {
       "gallery": 12,
-      "worldcup": 2
+      "worldcup": 3
     },
     "token_set_choice": {
-      "chosen": "SET-B",
-      "ai_pick": "SET-A",
+      "chosen": "",
+      "ai_pick": "",
       "changed_after_reveal": false
     },
     "draft_approval": {
-      "approved": true,
-      "at": "2026-09-05T17:19:42",
-      "quote": "피그마로 ㄱㄱ"
+      "approved": false,
+      "at": "",
+      "quote": ""
     },
     "final_ack": {
       "approved": false,
