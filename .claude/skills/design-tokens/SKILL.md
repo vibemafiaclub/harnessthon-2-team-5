@@ -36,7 +36,8 @@ argument-hint: "[--sets 3]  (fast 모드는 2)"
   - **엘리베이션**: sm/md/lg 3단계, 각 offset·blur·spread·color·opacity·용도.
   - **아이콘**: outlined/filled/duotone 중 선택 + 근거, 크기 16/20/24, 스트로크는 본문 weight 에 맞춤.
 - 세트 간 차이는 brief §3 대조표에서 **정본이 확정된 축은 고정**하고, 남은 자유도(정확한 색상값·라운딩 크기·글꼴 계열)에서만 낸다. 정본을 뒤집는 세트를 만들지 않는다.
-- 세트마다 한 줄 설명은 디자인 용어 없이("조금 더 따뜻한 쪽", "선이 더 또렷한 쪽").
+- 세트마다 한 줄 설명은 **체감**으로, 디자인 용어 없이. 좋음: "친근하고 말 걸듯" / "깔끔하고 빠릿". 나쁨: "웜 톤의 프렌들리 미니멀"(설명이 또 하나의 전문 어휘). **세 후보는 서로 체감이 달라야 한다** — 비슷한 셋을 주면 고를 수 없다.
+- **공개 디자인 시스템을 참조해도 된다** — 단 가져오는 것은 **구조**(역할 구성·스케일의 모양·상태 계약·지오메트리)뿐이다. **색 hex 는 가져오지 않는다.** 참조 팔레트를 `tokens.meta.reference_palette` 에 **금지 목록**으로 적고 `meta.reference_system` 에 출처를 적는다. 로고·아이콘·카피·화면 구성은 복사하지 않는다. (팀 디자이너 두 분의 입장이 갈린 지점 — 색은 그 회사의 브랜드이자 그 도메인의 답이라 복사하면 정체성 도용과 도메인 불일치가 동시에 생긴다는 쪽을 채택.)
 - **세트별 디자인 가이드 HTML** (`design_guide_<SET>.html`), 7섹션 세로 배치: ①헤더(서비스명·생성일, 감성 키워드는 **표시하지 않는다**) ②컬러 팔레트 스워치(사각형+HEX+이름+WCAG 표기) ③타입 스케일을 실제 크기로 렌더 ④스페이싱을 길이가 다른 바로 ⑤래디어스를 실제 적용된 사각형으로 ⑥그림자 3단계 카드 ⑦**적용 예시** — brief §2 첫 화면의 화면 조각(목록 행 3개 + 상태 칩 + 버튼 + 인풋)을 그 세트 토큰으로 렌더. **메타 일관성**: 가이드 페이지 자체가 그 세트의 토큰으로 만들어져야 한다(제목 글꼴·여백·색 전부).
 - 사용자 선택 화면은 **⑦ 적용 예시를 세트별로 나란히** 놓은 `design_guide_compare.html`. 색 칩 나열로는 사용자가 판단하지 못한다. 각 세트에서 전체 가이드 페이지로 가는 링크.
 - 외부 리소스 없는 단일 HTML(웹폰트는 로컬 시스템 폰트 스택 fallback 포함). 세트 ID 는 `SET-A/B/C`. 사용자에게 보이는 설명은 디자인 용어 없이 한 줄, 축 이름·감성 키워드는 숨긴다.
@@ -67,21 +68,24 @@ argument-hint: "[--sets 3]  (fast 모드는 2)"
 
 브리프: **입력 화이트리스트 = `design/stimuli/token_sets.json`, `design/brief.md`, `templates/design.md`** + 선택된 세트 ID. 출력 `design/tokens.json`, `design/design.md`. 상한 문장: "design.md ≤{agent_design_md_lines_max}줄".
 
-- `tokens.json` = 선택 세트 그대로 + `meta.chosen_set`, `meta.platform`, `meta.wcag_checked_at`, `color.wcag` 측정값 기입. `rationale` 유지. 참조 문법 `{color.primitive.…}` 은 유지(소비 측이 해석).
+- `tokens.json` = 선택 세트 그대로 + `meta.chosen_set`, `meta.platform`, `meta.wcag_checked_at`, `color.wcag` 측정값 기입. `rationale` 유지. 참조 문법 `{color.primitive.…}` 은 유지(소비 측이 해석). rationale 마다 **증거 등급** 하나를 붙인다: `prd` / `client-quote`(반응 ID) / `measured` / `assumption` / `extension`(근거에 없지만 필요해 추가한 것).
+- **`design/project.rules.json` 생성** (`design-worker`): `node scripts/build-rules.js --tokens design/tokens.json --out design/project.rules.json`. 이것이 3단계 결정론 검사기(`scripts/audit.js`)의 입력이다. 스크립트가 빈 값·참조 팔레트 충돌을 잡아 거부하면 tokens.json 을 고치고 다시 생성한다. 손으로 고치지 않는다. 이어서 `node scripts/audit.js --project design/project.rules.json --compile-only` 가 통과해야 이 단계가 끝난다.
 - `design.md`:
   - §2 토큰 원칙: semantic 만 직접 사용, primitive 는 참조 전용, scale 타이포만 사용 — 이 셋은 고정. **화면 규격 한 줄**(모바일 390×844 + 상태바 44 + 탭바 83, 또는 데스크톱 1440×900)을 여기 적는다 — 2단계 HTML 과 3단계 Figma 프레임이 이 값을 읽는다. 나머지는 brief 에서.
   - §2b **결정 근거 요약**(prd-to-design-guide 4단계 채택): "왜 이 primary 인가"(도메인·반응 정본), "왜 이 폰트인가"(사용자층·가독성·한글), "왜 이 스페이싱 체계인가"(정보 밀도·플랫폼), "왜 이 래디어스·그림자인가". 각 항목은 tokens.json 의 `rationale` 을 사용자가 읽을 수 있는 말로 옮긴 것이며, 1-C 에서 선택 뒤 사용자에게 이 요약을 3~5줄로 보여 준다.
   - §3 제약: 하네스 고정 하한선 2개 + brief §5 하드 제약 전부.
-  - §4A/§4C: brief §4 의 기준 중 `confidence: confirmed` 와 `provisional` 을 `verdict_method` 로 갈라 표에 옮긴다. RULE-ID 유지. `proposed` 는 §4 에 넣지 않고 §9 가정 아래 "미적용 기준" 으로만 나열. **A 규칙에는 기준값을 tokens.json 토큰 이름으로 적는다**(예: 간격은 `spacing.scale` 값만 허용).
+  - §4A/§4C: brief §4 의 기준 중 `confidence: confirmed` 와 `provisional` 을 `verdict_method` 로 갈라 표에 옮긴다. RULE-ID 유지. `proposed` 는 §4 에 넣지 않고 §13 가정 아래 "미적용 기준" 으로만 나열. **A 규칙에는 기준값을 tokens.json 토큰 이름으로 적는다**(예: 간격은 `spacing.scale` 값만 허용).
   - §5 화면별 1등 정보: brief §2 복사.
   - §6 금지 목록: brief 에서 '싫다' 로 확정된 것만. 하네스가 추가하지 않는다.
   - §7 핵심 과업: brief §2b 복사. §8 적합성 기준: brief §11 + §10 반박 결정 요약. 이 둘이 없으면 뒤 단계가 UX·적합성을 판정할 근거가 없다.
+  - §9 아이콘 체계(출처 패키지·이 프로젝트 아이콘 사전), §10 표현 전략(**브랜드 장치 하나** — 적합성 축의 핵심), §11 Voice & Tone 대조 2쌍, §12 Locale(최장 문자열·최대 수치). 값은 brief 반응·PRD 에서, 근거 없으면 `assumption` 등급으로.
 
 ## 종료조건 (`design-worker`)
 
 - [ ] `design/tokens.json` 유효 JSON, 빈 문자열 값 0개(`_note`·`$schema_note` 제외), 6카테고리 `rationale` 전부 비어 있지 않음, `typography.family.fallback` 존재
+- [ ] `design/project.rules.json` 존재, `node scripts/audit.js --project design/project.rules.json --compile-only` 종료 코드 0 (명령·출력 원문 첨부). build-rules 가 비ASCII 키로 거부하면 tokens.json 의 키를 영문 슬러그로 바꾸고 한글은 `label` 로 — **1단계에서 확정된 뒤에는 tokens.json·tokens.css·Figma Variables 이름이 서로 물리므로 키를 나중에 바꾸지 않는다**
 - [ ] `design/verify/wcag_tokens.md` 에 선택 세트 전 쌍 PASS, 스케일 단조성 PASS, 강·약 관계 PASS
-- [ ] `design/design.md` §1~§9 전부 존재, **전체 ≤`agent_design_md_lines_max`줄**, §2b 결정 근거 4항목, §4A+§4C 행 수 = brief §4 의 confirmed+provisional 기준 수, §7 과업 3개, §8 적합성 ≥2줄
+- [ ] `design/design.md` §1~§13 전부 존재(§9 아이콘 출처·§10 브랜드 장치 한 줄·§12 최장 문자열 필수), **전체 ≤`agent_design_md_lines_max`줄**, §2b 결정 근거 4항목, §4A+§4C 행 수 = brief §4 의 confirmed+provisional 기준 수, §7 과업 3개, §8 적합성 ≥2줄
 - [ ] `design.md` 안에 hex 색상값 직접 표기 0건(토큰 이름만) — `grep -c '#[0-9A-Fa-f]\{6\}'` == 0
 - [ ] 상태 파일 `human_gates.token_set_choice.chosen` 기입
 

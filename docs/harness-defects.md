@@ -304,3 +304,72 @@ D-10 과 같은 뿌리다 — **만든 것을 만든 직후 확인하지 않는 
 | 결함 | 처리 | 위치 |
 |---|---|---|
 | D-15 | 서브 규칙 3건 추가: ①생성 브리프는 반환값에 구조 실측치 요구(노드 ID 만은 미완료), 검증 도구에도 동일 적용 ②시험 자산은 리포트 파일 확정·메인 열람 후 철거 ③같은 task 완료 보고가 2회 이상이면 전제 대조 후 판단, 리포트는 덮어쓰기 대신 번호 붙여 보존. design-maker 정의 6항과 3-B 반환 규칙에 실측치 필수 | `design-harness` 서브 규칙, `.claude/agents/design-maker.md`, `design-figma-build` 3-B |
+
+# 4회차 검증 1 (2026-09-07, 세션 test2) — 결정론 검사기 실제 Figma 실행
+
+## D-16. extract-nodes.js 가 선택 없는 상태에서 PAGE 노드를 serialize 해 크래시
+`[figma.currentPage]` 를 루트로 넘기는데 `serialize` 첫 줄이 `node.visible` 을 읽어 `TypeError: no such property 'visible' on PAGE node`. "Screens 페이지 선택 상태" 전제는 사람 손을 요구한다.
+**처치**: 루트를 `figma.currentPage.children` 으로, `visible` 은 `'visible' in node` 가드. 판정 핵심을 `scripts/lib/audit-core.js` 로 빼면서 `serializeNode` 도 같은 가드로 통일.
+
+## D-17. 노드 덤프를 디스크로 내릴 다리가 없다 (심각 · 설계 결함)
+`use_figma` 는 로컬 파일에 쓸 수 없고 반환값은 약 20KB 에서 잘린다. 24프레임 덤프가 553KB(1289 노드) — 청크로 받으면 컨텍스트 약 15만 토큰. 문서의 "출력을 nodes.json 으로 저장한 뒤" 는 누가 어떻게 하는지 정의되지 않았다.
+**처치(2번 안 채택 — 판정을 Figma 안에서 완결)**: `scripts/make-figma-audit.js` 가 컴파일된 규칙 + `audit-core.js` 소스를 하나의 `use_figma` 코드(약 15KB)로 묶는다. Figma 안에서 순회·판정하고 **위반 목록만 반환**(규칙당 기록 상한 25, 개수는 전부, 실측 반환 2KB). `audit.js --render` 로 텍스트 리포트. 결정론 게이트라면 판정까지 결정론이어야 한다는 원칙과도 맞는다. `extract-nodes.js` 는 작은 프레임을 사람이 들여다볼 때만.
+
+## 부수 관찰 처치
+- build-rules.js 가 한글 키를 통과시킴 → **비ASCII 키 거부**로 변경(2-A 변환기와 같은 정책, D-9). 색 자체는 hex 목록이라 감사 대상에서 빠진 것은 아니었으나 정책 불일치가 문제.
+- variant required 0 → 파서가 마크다운 표의 "상태/variant" 열을 읽도록 강화, `--variants "a,b,c"` 명시 옵션 추가, 0건이면 경고 출력.
+- `min_font_size`·`min_size` 검사기 구현 추가(미구현 10 → 7). 남은 미구현(contrast·image_fill·text_overflow·saturation·style_bound·reuse_ratio·variant_states)은 여전히 사람 게이트 승격.
+
+# 4회차 검증 1 재실행 (2026-09-07, test2) — 번들 방식 4단계 통과. 판정 오탐·구조 결함 3건
+
+## D-18. 이름 기반 인터랙티브 추정으로 터치 타깃 오탐 128건
+`Chip/Status`(상태 배지)·`Icon/*`(탭 안의 그림)이 이름만으로 인터랙티브로 잡혀 44×44 미달로 판정. 상태 배지는 누르는 것이 아니고, 탭바의 터치 타깃은 아이콘이 아니라 감싼 `Tab/*` 프레임이다.
+**처치**: 이름 목록에서 Chip·Icon·Row 제거(reactions 우선). **인터랙티브 조상이 있으면 자식은 제외**(터치 타깃은 가장 바깥 것 하나). 인스턴스 내부 노드 제외 옵션(`exclude_instance_children`)을 core 규칙에 적용. 재현 테스트: Tab 안 Icon·Chip 미검출, 343×30 버튼만 검출.
+
+## D-19. 인스턴스 내부 자동 생성 `Vector` 90건이 네이밍 위반으로
+`createNodeFromSvg` 가 만드는 자식 벡터 이름은 `Vector` 이고 부모(`Icon/Home`)가 이미 의미 이름이다. 아이콘 path 하나하나에 역할 이름을 요구하는 것은 과하다.
+**처치**: 인스턴스 내부(id 에 `;`)는 네이밍 검사 제외, 의미 있는 부모 아래의 자동 생성 이름(Vector·Union·Ellipse…)은 통과. 최상위에 남은 `Vector` 는 여전히 잡는다.
+
+## D-20. 미구현 blocker 가 `passed` 를 영구 false 로 만든다 (구조)
+`passed = blocker==0 && unchecked==0` 이라 검사기가 반쯤 구현된 동안 어떤 프로젝트도 A게이트를 통과할 수 없었다. 게이트가 정보만 주고 문을 여닫지 못했다.
+**처치**: `passed_machine`(구현된 검사 기준)과 `requires_human_review`(미구현 blocker 목록)를 분리. 종료 코드·게이트 판정은 `passed_machine`, 미구현분은 3-G 사람 게이트로. `style_bound`(textStyleId 바인딩)·`variant_states_present`(COMPONENT_SET 의 variantProperties, **컴포넌트별 요구 목록**) 구현 → 미구현 7→5. 남은 것: contrast 2종(색 쌍 해석 필요)·image_fill·text_overflow·reuse_ratio.
+
+## 부수
+- variant 파서: 괄호 안 쉼표를 구분자로 보지 않도록, `Key=Value` 는 Value 만. 컴포넌트별 요구 목록(`required_by_component`)을 표 1열(이름)에서 만든다 — 전역 목록을 모든 세트에 요구하던 문제(Avatar 에 hover 요구) 해소.
+- 진짜 위반 17건(RowLabel 하드코딩 색 16 + paddingBottom 88)은 검사가 아니었으면 못 찾았을 것 — 검사기의 존재 이유가 실측됨.
+- 마이그레이션: 한글 키 tokens.json 은 1단계 확정 시점부터 슬러그여야 한다. 이미 Figma Variables·tokens.css 와 물린 프로젝트는 셋을 함께 바꾸는 절차가 필요(이번엔 사본 `tokens.slug.json` 으로 우회). design-tokens 종료조건에 명시.
+- use_figma 코드 상한 50,000자 실측. 번들 16~18KB 로 여유.
+
+# 4회차 검증 1 3차 (2026-09-07, test2) — 오탐 해소 확인, 잔여 3건 처치
+
+- naming 90→0, touch-target 128→25(실제 컨트롤만), 진짜 위반 33건 유지(RowLabel 색 16 + 스타일 16 + spacing 1 — 전부 제작자 실수, 눈으로 안 보임). `type-style-reuse` 신규 검출 16건은 mixed 0·인스턴스 내부 0 으로 정확.
+- **D-21. variant 검사 미발동 — Components 페이지를 안 봄.** `--page Screens` 만 돌려 COMPONENT_SET 0개 → 0건이 통과처럼 보였다. 처치: 리포트에 `applicable_per_rule`·`not_applicable`(적용 대상 0개) 추가, `audit.js --render a.json,b.json` 병합, 절차를 "페이지마다 번들 1회 → 병합"으로. N/A 는 통과가 아니라고 명시.
+- **D-22. required_by_component 미생성.** 파서가 앞 표의 "상태 메모" 열에 걸렸다. 처치: 헤더는 다음 줄이 구분선인 표 줄만, variant 열 우선·'상태'는 정확 일치만. 생성 로그에 사용한 표·열·컴포넌트 수 출력.
+- **D-23. 터치 타깃 정책.** 이름 추정으로 blocker 를 잠그면 Row 포함/제외 어느 쪽이든 오탐(배지 vs 행 안 체크박스). 처치: `touch-target-min`(blocker) 은 reactions 있는 노드만, `touch-target-min-inferred`(warning) 은 이름 추정 — 사람 게이트가 본다. reactions 있는 노드는 추정 규칙에서 제외(중복 방지).
+
+# 4회차 검증 1 4차 (2026-09-07, test2) — **A게이트 첫 통과** (Screens·Components 둘 다 passed_machine true)
+
+- D-21·D-23 확인. 진짜 위반 33건을 고치자 blocker 정확히 0 — 오탐이 남아 있었다면 여기서 드러났을 것.
+- **D-22 재발**: components.md 가 표가 아니라 산문(`## 1. Chip/Status (id 4:12)` + `variant: \`Status=Waiting\`(대기) · …`)이었다. 형식이 스킬에 고정돼 있지 않아 maker 가 임의로 썼고, test2 가 파일을 열지 않고 형식을 전언한 것이 한 라운드를 낭비시켰다(보고 전 실물 확인 규칙의 세 번째 위반 사례 — D-10·D-15와 같은 뿌리). 처치: ①2-F 에 components.md **표 형식 고정**(4열, 크기 열 포함) ②build-rules 에 산문 형식 폴백(섹션 제목 이름 + `variant:` 줄, `·` 구분, 백틱 Key=Value 의 Value).
+- **D-24 COMPONENT_SET radius 오탐 7건**: variant set 컨테이너의 cornerRadius 5 는 Figma 기본값. 처치: radius 규칙에서 COMPONENT_SET 제외(`exclude_node_types`).
+- 남은 미구현(사람 게이트): contrast-text-aa · image-fill-valid · text-not-clipped. 소요: 4단계 약 3분.
+
+# 검증 1 최종 (2026-09-07) — 종료
+
+| 라운드 | 결과 |
+|---|---|
+| 1차 | extract-nodes PAGE 크래시(D-16), 553KB 덤프로 파이프라인 실행 불가(D-17) → 판정을 Figma 안에서 완결하는 번들 방식 채택 |
+| 2차 | 번들 완주. 오탐 218/235(터치 타깃 128·네이밍 90), passed 영구 false(D-18~D-20) |
+| 3차 | 네이밍 0, 터치 타깃 실제 컨트롤만. variant 미발동·컴포넌트별 목록 미생성(D-21~D-23) |
+| 4차 | **A게이트 첫 통과**(Screens·Components passed_machine true). 진짜 위반 33 → 수정 후 0. COMPONENT_SET radius 오탐(D-24), 산문형 components.md(D-22 재발) |
+| 5차 | required_by_component 자동 생성 6/6 일치. 종료 |
+
+검사기 신뢰도 근거: 잡은 33건이 전부 진짜였고 고치자 정확히 0. 오탐이 남았다면 33→0 이 나오지 않는다.
+
+## D-25. "실물을 열어 확인" 규칙이 문장으로는 지켜지지 않는다 (구조)
+같은 뿌리의 위반 3회(D-10·D-15·D-22). 처치: 오케스트레이터와 에이전트 정의 3종에 **보고의 `EVIDENCE:` 블록 강제** — 읽은 파일은 경로:줄, 본 노드는 id+실측치, 스크린샷은 파일명+위치+본 것, 명령은 종료 코드. 근거 블록 없는 보고는 미완료. 근거를 적으려면 열 수밖에 없다.
+
+## 다음 런에 넘기는 잔여 위험
+1. components.md 표 형식 고정(2-F)이 실효를 내는지 — maker 가 실제로 표로 쓰는지. 산문 폴백에 계속 기대면 형식이 흔들린다.
+2. **tokens.json 슬러그 마이그레이션 경로 없음** — 기존 프로젝트(한글 키)를 새 스킬로 재감사하려면 tokens.json·tokens.css·Figma Variables 이름을 함께 바꾸는 절차가 필요. 새 프로젝트는 1단계부터 슬러그라 해당 없음. (미구현, 필요해지면 `scripts/migrate-token-keys.js` 로)
+3. 미구현 3종(contrast·image_fill·text_overflow)이 `requires_human_review` 로 나간다. contrast 는 조상 체인에서 실제 배경 찾기가 필요해 비용 큼. 3-G 사람 게이트가 이것을 실제로 확인하는지가 다음 런의 관전 포인트.

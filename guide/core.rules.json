@@ -1,0 +1,210 @@
+{
+  "$schema": "./README.md",
+  "layer": "core",
+  "version": "0.4.0",
+  "description": "L1 — 프로젝트와 무관하게 항상 적용되는 객관적 품질 하한선. 이 파일은 하네스가 소유하며 프로젝트별로 수정하지 않는다.",
+  "rules": [
+    {
+      "id": "contrast-text-aa",
+      "title": "본문 텍스트 대비율 WCAG AA",
+      "rationale": "읽을 수 없는 텍스트는 어떤 프로젝트에서도 결함이다. 취향의 영역이 아니다.",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "node_types": [
+          "TEXT"
+        ]
+      },
+      "check": {
+        "type": "contrast_ratio",
+        "min": 4.5,
+        "large_text_min": 3.0,
+        "large_text_threshold": {
+          "size_pt": 18,
+          "bold_size_pt": 14
+        }
+      },
+      "autofix": false,
+      "fix_hint": "전경색을 팔레트 내 다른 토큰으로 교체하거나 배경 surface를 바꾼다. 임의 색상 생성 금지."
+    },
+    {
+      "id": "contrast-nontext-aa",
+      "title": "비텍스트 UI 요소 대비율",
+      "rationale": "경계선·아이콘·입력필드 테두리가 배경에 묻히면 조작 가능 여부를 지각할 수 없다.",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "node_types": [
+          "VECTOR",
+          "RECTANGLE",
+          "ELLIPSE",
+          "LINE"
+        ],
+        "interactive_only": true
+      },
+      "check": {
+        "type": "contrast_ratio",
+        "min": 3.0
+      },
+      "autofix": false,
+      "fix_hint": "팔레트 내 border 토큰 중 대비를 만족하는 것으로 교체한다."
+    },
+    {
+      "id": "touch-target-min",
+      "title": "터치 타깃 최소 크기",
+      "rationale": "누를 수 없는 버튼은 디자인 취향과 무관한 기능 결함이다. blocker 는 프로토타입 연결(reactions)이 있어 \"눌린다\"가 확실한 노드에만 건다 — 시안 단계에서 무엇이 눌리는지는 기계가 이름으로 확신할 수 없다(실측: 이름 추정은 Row 를 넣으면 배지 오탐, 빼면 행 안 체크박스 오탐).",
+      "stage": [
+        "wireframe",
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "interactive_only": true,
+        "require_reactions": true,
+        "exclude_instance_children": true
+      },
+      "check": {
+        "type": "min_size",
+        "width": 44,
+        "height": 44,
+        "include_padding": true
+      },
+      "autofix": true,
+      "fix_hint": "노드 크기를 키우지 말고 패딩 또는 히트영역을 확장한다. 시각 크기는 유지."
+    },
+    {
+      "id": "touch-target-min-inferred",
+      "title": "터치 타깃 최소 크기 (이름 추정)",
+      "rationale": "reactions 가 없는 시안에서 Button·Tab·Input·Checkbox 같은 이름으로 추정한 터치 대상. 문을 잠그지는 않고 3-G 사람 게이트가 본다. 인터랙티브 조상이 있으면 자식은 제외(터치 타깃은 가장 바깥 하나).",
+      "stage": [
+        "wireframe",
+        "design"
+      ],
+      "severity": "warning",
+      "applies_to": {
+        "interactive_only": true,
+        "exclude_instance_children": true,
+        "exclude_with_reactions": true
+      },
+      "check": {
+        "type": "min_size",
+        "width": 44,
+        "height": 44,
+        "include_padding": true
+      },
+      "autofix": true,
+      "fix_hint": "노드 크기를 키우지 말고 패딩 또는 히트영역을 확장한다. 시각 크기는 유지."
+    },
+    {
+      "id": "image-fill-valid",
+      "title": "이미지 깨짐 없음",
+      "rationale": "빈 이미지 슬롯이 남은 화면은 완성본이 아니다.",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "has_image_fill": true
+      },
+      "check": {
+        "type": "image_fill_present"
+      },
+      "autofix": false,
+      "fix_hint": "플레이스홀더를 채우거나, 의도된 빈 상태라면 empty state 컴포넌트로 교체한다."
+    },
+    {
+      "id": "text-not-clipped",
+      "title": "텍스트 잘림 없음",
+      "rationale": "고정 높이 프레임에 텍스트가 넘쳐 잘리는 것은 실데이터에서 반드시 재현되는 결함이다.",
+      "stage": [
+        "wireframe",
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "node_types": [
+          "TEXT"
+        ]
+      },
+      "check": {
+        "type": "text_overflow"
+      },
+      "autofix": true,
+      "fix_hint": "부모를 hug 또는 auto-height로 바꾼다. 폰트 크기를 줄여서 해결하지 않는다."
+    },
+    {
+      "id": "no-zero-size-node",
+      "title": "0 크기 / 보이지 않는 잔여 노드 없음",
+      "rationale": "작업 중 남은 쓰레기 노드는 이후 A단계 재사용률 계산과 핸드오프를 오염시킨다.",
+      "stage": [
+        "wireframe",
+        "design"
+      ],
+      "severity": "warning",
+      "applies_to": {},
+      "check": {
+        "type": "min_size",
+        "width": 1,
+        "height": 1
+      },
+      "autofix": true,
+      "fix_hint": "삭제한다."
+    },
+    {
+      "id": "text-size-min",
+      "title": "최소 가독 폰트 크기",
+      "rationale": "일정 크기 이하는 디바이스에서 물리적으로 읽히지 않는다. 값은 하한선이며 프로젝트가 더 높일 수 있다.",
+      "stage": [
+        "design"
+      ],
+      "severity": "warning",
+      "applies_to": {
+        "node_types": [
+          "TEXT"
+        ]
+      },
+      "check": {
+        "type": "min_font_size",
+        "size_pt": 11
+      },
+      "autofix": false,
+      "fix_hint": "타이포 스케일 내 상위 단계로 올린다. 스케일 밖 임의 값 금지."
+    },
+    {
+      "id": "wireframe-grayscale",
+      "title": "와이어프레임 단계 무채색 강제",
+      "rationale": "하네스 규약. 와이어프레임에 색이 들어가면 클라이언트·심사자가 구조가 아니라 비주얼에 반응하게 되어 W단계 게이트가 무의미해진다(concept.md 4장 0단계 원칙의 연장).",
+      "stage": [
+        "wireframe"
+      ],
+      "severity": "blocker",
+      "applies_to": {},
+      "check": {
+        "type": "saturation_max",
+        "max": 0.05
+      },
+      "autofix": true,
+      "fix_hint": "해당 채도를 회색조로 변환한다. 강조가 필요하면 명도 차이로만 표현한다."
+    },
+    {
+      "id": "no-reference-color-copy",
+      "title": "참조 시스템 색 복사 금지",
+      "rationale": "참조에서 가져올 것은 구조(역할·스케일·상태 계약)이지 색 값이 아니다. 참조 팔레트를 그대로 쓰면 그 회사의 브랜드를 도용하는 동시에, 0단계에서 도출한 이 제품의 판단기준이 색에 전혀 반영되지 않는다. 색은 도메인에서 나온다.",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {},
+      "check": {
+        "type": "color_denylist",
+        "deny": "$tokens._reference_palette"
+      },
+      "autofix": false,
+      "fix_hint": "참조 값을 지우고 PRD·클라이언트 반응에서 팔레트를 다시 도출한다. 역할 구성(몇 개의 역할, 어떤 상태 계약)은 참조를 따라도 되지만 hex는 이 도메인의 답이어야 한다. 참조 값과 우연히 같아졌다면 그것도 위반으로 본다 — 도출 과정이 없었다는 뜻이다."
+    }
+  ]
+}

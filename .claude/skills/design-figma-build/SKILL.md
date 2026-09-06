@@ -32,6 +32,9 @@ argument-hint: "<figma file url | --new>"
 - 타이포 scale 9단계(display~overline)는 텍스트 스타일로. **먼저 `figma.listAvailableFontsAsync()` 로 tokens.json 의 `typography.family.body/display` 가 로드 가능한지 확인**한다. 불가하면 `typography.family.fallback` 으로 교체하고, 교체 사실을 `figma_nodes.json` 의 `font_substitution` 과 brief §6 가정 로그에 기록한다. 사용자에게 폰트 설치를 요청하지 않는다.
 - 라이트/다크 모드는 brief 에 요구가 있을 때만. 없으면 단일 모드.
 - 생성한 variable ID·style ID 전부 반환·기록. 한 호출에 컬렉션 하나씩.
+- **바인딩 paint 의 리터럴 color 도 변수 값과 같게 쓴다.** Figma 는 리터럴을 그대로 렌더한다 — 바인딩만 걸고 리터럴을 검정으로 두면 검정으로 보인다(팀 디자이너 실측 사고). A검사 1 이 바인딩·리터럴 일치를 함께 본다.
+- 날짜·카운트·D-day·시간 스타일은 tabular numerals 를 켠다. 면 전용 색 변수는 설명에 "면 전용 — 텍스트 금지".
+- **호출 예산**: Figma MCP 는 하루 200회·분당 10회(Pro 좌석 기준). 시작 전에 예상 호출 수를 상태 파일에 적고, 노드를 하나씩 만지지 말고 화면·컴포넌트 묶음 단위로 실행한다. **토큰·변수를 바꾼 직후에는 반드시 스크린샷을 렌더한다** — 노드 속성으로는 대비 사고가 안 잡힌다.
 
 ## 3-B. 컴포넌트 (`design-maker`)
 
@@ -58,10 +61,17 @@ argument-hint: "<figma file url | --new>"
 
 ## 3-D. A단계 — 기계 검사 (`design-worker`)
 
-`design.md` §4A 의 각 RULE 과 하네스 내장 6항목을 **read-only `use_figma` 스크립트**로 판정. 출력 `design/verify/a_report.md`(항목 / 기준값 / 측정값 / PASS·FAIL / 위반 노드 ID / 실행 스크립트 원문). **≤`agent_report_lines_max`줄** — 위반 노드 ID 가 많으면 항목당 10개까지만 적고 나머지는 개수만.
+**결정론 검사기 먼저, 즉석 스크립트는 보완.** (팀 디자이너 A 의 대전제 채택: 프롬프트는 준수를 보장하지 못한다, 검사기만 보장한다.)
 
-내장 6항목(항목은 고정, 기준값은 design.md·tokens.json 에서):
-1. **팔레트 일관성** — 모든 fill/stroke 가 Variables 바인딩 또는 tokens.json 값과 일치. 예외: 이미지 fill.
+1. **번들 생성**(`design-worker`): `node scripts/make-figma-audit.js --project design/project.rules.json --stage design --page Screens --out design/verify/figma_audit.js`. 규칙을 Figma 안으로 들여보내는 방식이다 — `use_figma` 반환값은 약 20KB 에서 잘리고 로컬 파일에 쓸 수 없어 노드 덤프(실측 553KB)를 밖으로 꺼낼 수 없다(D-17). 컴파일 실패(종료 2)면 화면이 아니라 규칙 문제 → 1단계로.
+2. **Figma 안에서 판정**(`design-worker`, `figma-use` 스킬 로드 후): 번들을 **페이지마다 하나씩** 만들어(`--page Screens`, `--page Components`) 각각 `use_figma` **1회**로 실행한다(호출당 페이지 전환은 1회가 원칙. 사람이 프레임을 선택해 둘 필요 없다 — 페이지의 자식 전부를 순회한다). 반환 JSON(수 KB)을 `design/verify/audit_screens.json`·`audit_components.json` 에 저장하고 `node scripts/audit.js --render design/verify/audit_screens.json,design/verify/audit_components.json` 으로 **병합** 리포트를 만든다. variant 규칙은 Components 페이지에서만 발동하므로 두 페이지를 다 돌리지 않으면 리포트에 `적용 대상 0개 (N/A)` 로 표시된다 — N/A 는 통과가 아니다. 종료 코드 0 통과(`passed_machine`) / 1 미통과. 반환에 `error` 가 있으면 그것이 결과다.
+3. 게이트 판정은 `passed_machine`(구현된 검사 기준 blocker 0)으로 한다. 리포트의 `unchecked_blockers`(검사기 미구현 타입: contrast 계열·image_fill·text_overflow·reuse_ratio)는 **통과도 실패도 아니다** — 아래 즉석 스크립트로 보완 측정하고, 그래도 못 본 blocker 는 `requires_human_review` 목록으로 3-G 사람 게이트에 올린다. "못 봤다"를 "통과했다"로 적지 않되, 미구현 때문에 문이 영원히 안 열리는 상태도 만들지 않는다(실측: `passed` 하나로 묶었을 때 어떤 프로젝트도 통과 불가).
+4. `severity: blocker` 만 게이트를 막는다. `warning` 은 기록만. 심각도를 안 나누면 사소한 위반으로 무한루프에 빠진다.
+
+출력 `design/verify/a_report.md`(audit.json 요약 + 보완 항목 / 기준값 / 측정값 / PASS·FAIL / 위반 노드 ID / 실행 스크립트 원문). **≤`agent_report_lines_max`줄** — 위반 노드 ID 가 많으면 항목당 10개까지만 적고 나머지는 개수만.
+
+보완 항목(검사기 미구현분 + 우리 실측분. 항목은 고정, 기준값은 design.md·tokens.json 에서):
+1. **팔레트 일관성** — 모든 fill/stroke 가 Variables 바인딩 **이고 리터럴 color 가 변수 값과 일치**. 예외: 이미지 fill. (audit.js `color_allowlist` + 즉석 바인딩 검사)
 2. **타이포 스타일 재사용** — 텍스트 노드 전부 텍스트 스타일 적용. 미적용 0.
 3. **spacing 그리드** — 모든 gap/padding 이 `spacing.scale` 값. 예외 목록은 design.md exception.
 4. **컴포넌트 재사용률** — Screens 페이지의 시각 요소 중 인스턴스 비율. 기준값 design.md(없으면 ≥70% 를 provisional 기준으로 쓰고 명시).
@@ -70,6 +80,9 @@ argument-hint: "<figma file url | --new>"
 7. **아이콘 덮임** — 아이콘 컴포넌트·인스턴스 안에 `visible` 한 VECTOR/BOOLEAN_OPERATION 이 ≥1 이고, 그 벡터의 조상 중 벡터 영역을 덮는 불투명 fill(opacity ≥ 0.9, 크기 ≥ 벡터) 을 가진 FRAME/RECTANGLE 이 없다. 화면 프레임 안의 **인스턴스**를 검사 대상으로 한다(D-10: 마스터는 정상, 인스턴스만 네모).
 8. **크기 sanity** — 각 컴포넌트 인스턴스의 width/height/padding 이 `drafts/components.md` 에 적힌 초안 HTML 대응 요소 값의 ±30% 이내. 토큰에서 왔는지가 아니라 값이 말이 되는지를 본다(실측: 80px 도 scale 에 있으면 PASS 였다).
 9. **프레임 규격** — Screens 페이지의 모든 화면 프레임이 `design.md` §2 규격과 같고 hug 가 아니다.
+10. **고정 요소 겹침** — 하단 탭바·고정 액션바가 있으면 스크롤 콘텐츠 하단 여백이 그 높이 이상. 콘텐츠가 가려지면 FAIL.
+11. **터치 영역** — 프로토타입 연결(reactions)이 있는 노드는 blocker(`touch-target-min`), 이름으로 추정한 노드(Button·Tab·Input·Checkbox 등, 인터랙티브 조상 없음)는 warning(`touch-target-min-inferred`)으로 3-G 사람 게이트가 본다. 시안에 무엇이 눌리는지는 기계가 이름으로 확신할 수 없다. 시각 크기를 키우지 말고 패딩·히트영역으로.
+12. **텍스트 오버플로** — 도메인 최장 문자열·최대 수치를 넣은 `long` 프레임에서 잘림·겹침 0.
 
 FAIL 항목은 위반 노드 ID 목록과 함께 3-F 로. 판정자는 고치지 않는다.
 
@@ -79,7 +92,7 @@ FAIL 항목은 위반 노드 ID 목록과 함께 3-F 로. 판정자는 고치지
 
 **1콜 블라인드** (`design-judge`, brief·design.md 를 **주지 않는다**): PNG 만 주고 "시선이 가는 순서대로 요소 3개 + 각각 근거(위치·크기·색)" → `design/verify/c_first_impression.json`. 정답을 알려 주고 묻는 것은 유도 질문이다.
 
-**2콜 대조** (`design-judge`, 별도 호출): 1콜 결과 + `design.md` §4C·§5·§6·§7·§8 + PNG 전부. 판정은 **채점 3축**으로 묶어 리포트한다:
+**2콜 대조** (`design-judge`, 별도 호출): 입력 화이트리스트 = 1콜 결과 + `design.md` + PNG 전부 + **`.claude/skills/design-figma-build/references/c_checks.md`**(판정 기준 원본 — 다른 곳에서 기준을 새로 만들지 않는다). **decisions.md·제작 브리프·서브 완료 보고는 주지 않는다** — 판정자는 제작 의도를 듣지 않고, 설계 의도 문장이 섞여 있어도 판정 근거로 쓰지 않는다. 절차: ①화면마다 **1차 목적 선언**(빠른 처리형/현황 파악형/선택형/입력형 — design.md §7·brief §2) ②c_checks 의 부정형 C-1~C-9 를 순서대로 ③전부 통과한 화면만 **긍정형 매력 판정** ④3축 매핑. 스크린샷을 못 얻은 화면은 `C_NOT_RUN` 이며 통과가 아니다. 판정은 통과/실패만 — "대체로 괜찮음" 같은 중간값 금지. 판정은 **채점 3축**으로 묶어 리포트한다:
 - §5 1등 정보 == 1콜의 1순위인가 (화면별)
 - §4C 각 RULE (근거: 파일명 + 위치)
 - 하네스 내장 C 항목: 섹션 간 색온도 일관성 / 위계가 한눈에 읽히는가 / 여백 리듬 체감 일관성 / 밀도 번잡함 / 클리셰·AI 슬롭 여부 / empty·long 상태의 실제 완성도
@@ -90,7 +103,19 @@ FAIL 항목은 위반 노드 ID 목록과 함께 3-F 로. 판정자는 고치지
 
 **자체 채점**(신호일 뿐 게이트 아님): UI 심미 / UX 직관 / 적합성 각각 1·3·5 (1 = AI 슬롭처럼 보임, 3 = 신입 디자이너, 5 = 시니어). 3 미만인 축은 그 이유를 FAIL 항목으로 반드시 낸다. 점수만 적고 이유가 없는 채점은 무효.
 
-출력 `design/verify/c_report.md` (**≤`agent_report_lines_max`줄**, 화면당 FAIL 은 심각한 순 ≤5건). 각 FAIL 에 **진단 분류** 필수:
+출력 `design/verify/c_report.md` (**≤`agent_report_lines_max`줄**, 화면당 FAIL 은 심각한 순 ≤5건) **+ `design/verify/c_report.json`** (고정 스키마 — 메인이 파싱한다):
+
+```json
+{ "screens": [ { "id": "02_home", "purpose": "현황 파악형", "ran": true, "screenshots": 3,
+    "checks": [ { "id": "C-2", "verdict": "fail", "elements": ["Card/conflict","Card/pending"],
+                  "evidence": "카드 5개 동일 radius/그림자, 3초 내 최우선 지목 불가, primary 2개 동등" } ],
+    "positive": { "unique_element": false, "dominant_number": true, "form_differs_by_kind": false, "surface_layers": true, "brand_device": false },
+    "tasks": [ { "id": "T-1", "result": "찾음|헤맴|불가", "first_click": "..." } ],
+    "score": { "ui": 3, "ux": 3, "fit": 1 } } ],
+  "diagnosis": "local|direction|taste_gap|repeat", "routing": "...", "retry_count": 1, "escalate_to_human": false }
+```
+
+각 FAIL 에 **진단 분류** 필수:
 - `local` 국소 결함 — 표면 속성 하나(간격·색 하나)
 - `direction` 방향 오류 — 국소 조정으로 안 고쳐지는 구조 문제
 - `taste_gap` 취향 공백 — design.md 에 근거 없음 → 사람 질의
@@ -120,7 +145,7 @@ FAIL 항목은 위반 노드 ID 목록과 함께 3-F 로. 판정자는 고치지
 - [ ] `design/figma.md` 에 링크 존재, 상태 파일 `figma_url` 일치
 - [ ] `figma_nodes.json` (병합본) 유효 JSON, variables·components·screens 섹션, screens 수 == brief §2 화면 수 × 상태 수, 화면별 조각 파일 수 == 화면 수
 - [ ] `design/verify/shots/final/` 에 화면 프레임 스크린샷 == 화면 수 × 상태 수, 상태 파일에 메인 직접 확인 기록
-- [ ] `a_report.md` 전건 PASS 또는 사용자 승인된 예외 명시
+- [ ] `audit.json` 의 `passed_machine == true`, `requires_human_review` 항목마다 3-G 에서 사람이 확인한 기록 또는 즉석 검사 결과 존재, `a_report.md` 보완 항목 전건 PASS 또는 사용자 승인된 예외 명시
 - [ ] `c_report.md` 마지막 라운드에 미분류 FAIL 0
 - [ ] `final_ack.approved == true`
 

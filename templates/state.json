@@ -63,7 +63,7 @@
   },
   "caps": {
     "_note": "사람 개입 상한(human_*)과 에이전트 산출 상한(agent_*)을 분리한다. 오케스트레이터가 fast 모드면 caps_fast 로 덮어쓴다. 서브 브리프에는 해당 상한을 숫자 문장으로 넣는다.",
-    "human_interview_questions_max": 12,
+    "human_interview_questions_max": 8,
     "human_gallery_tiles_max": 24,
     "human_worldcup_rounds_max": 6,
     "human_token_sets": 3,

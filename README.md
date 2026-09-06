@@ -33,10 +33,16 @@ C단계에서 탈락하면 원인에 따라 세 갈래로 라우팅한다 — �
 ```
 .claude/skills/design-harness/SKILL.md        # ★ 진입점(오케스트레이터) — 명령 하나로 0→3단계, state.json 으로 재시작
 .claude/skills/design-interview/SKILL.md      # 0단계: PRD 기반 인터뷰 → 자극(갤러리·월드컵·시나리오) 반응 → 판단기준 역추출 → brief.md
-.claude/skills/design-interview/references/   #   인터뷰 원문 프롬프트·질문 뼈대 / 8필드 규칙 스키마·감사 절차
+.claude/skills/design-interview/references/   #   인터뷰 원문 프롬프트·질문 뼈대 / 8필드 규칙 스키마·감사 절차 / 화면 도출·PRD 반박 / 답변 번역표
 .claude/skills/design-tokens/SKILL.md         # 1단계: 토큰 세트 후보 → 스와치로 선택 → tokens.json + design.md
 .claude/skills/design-draft-html/SKILL.md     # 2단계(B): HTML 후보 병렬 발산·교차 비평·선택·승인 → decisions.md, drafts/
+.claude/skills/design-draft-html/references/  #   layout_rules.md — 실제로 깨진 레이아웃 14유형(판정 기준·빈발 사례·수정 방침)
 .claude/skills/design-figma-build/SKILL.md    # 3단계(A/C): Figma MCP 구현 → A 기계 검사 → C 육안 판정(2콜 블라인드) → 라우팅 → 링크
+.claude/skills/design-figma-build/references/ #   c_checks.md — C단계 판정 기준 원본(1차 목적 선언 → 부정형 C-1~C-9 → 긍정형 매력 판정)
+scripts/audit.js · extract-nodes.js           # A게이트 결정론 검사기(LLM 아님) · use_figma 1회 순회 노드 덤프
+scripts/build-rules.js · check-html.js        # tokens.json → project.rules.json 생성 · 2단계 HTML 승인 전 정적 검사
+guide/core.rules.json · README.md             # L1 고정 하한선(접근성·터치·잘림) · 규칙 스키마/check.type 카탈로그
+scripts/eval.sh · evals/                      # 성격이 반대인 픽스처 3종 평가 루프 + 회귀 판정
 .claude/skills/oss-design-harness/SKILL.md    # 4단계 판단 원칙 요약(참가자용 뼈대)
 .claude/agents/design-judge.md                # 판단형 서브에이전트 — Opus 5 · high
 .claude/agents/design-maker.md                # 생성형 서브에이전트 — Sonnet 5 · medium
@@ -111,8 +117,29 @@ PRD ─▶ 0 인터뷰 ─▶ brief.md ─▶ 1 토큰·가이드 ─▶ tokens.
 | 토큰 분류 체계(6카테고리) | `templates/tokens.json` | 그룹 추가 시 `rationale` 필드 유지 — 출처: 팀 디자이너 `prd-to-design-guide` 스킬 |
 | 하네스 고정 하한선(접근성 등) | `templates/design.md` | §3 제약사항 |
 | 서브에이전트 모델·effort | `.claude/agents/*.md` | frontmatter |
+| 기계 검사 규칙(결정론) | `guide/core.rules.json`(L1) · `scripts/build-rules.js`(L2 생성) · `design/project.rules.json` `project_specific`(L3) | 새 `check.type` 은 `guide/README.md` 카탈로그와 `scripts/audit.js` CATALOG 를 **함께** 고친다 |
+| 레이아웃 파손 카탈로그 | `.claude/skills/design-draft-html/references/layout_rules.md` | 3종 세트(판정 기준·빈발 사례·수정 방침) 없으면 추가 금지 |
+| C단계 판정 카탈로그 | `.claude/skills/design-figma-build/references/c_checks.md` | 〃 |
+| 비전문가 답변 번역표 | `.claude/skills/design-interview/references/answer_translation.md` | 행 추가 |
+| 화면 도출·PRD 반박 절차 | `.claude/skills/design-interview/references/screen_derivation.md` | 트리거·단계 추가 |
 
-**넣지 말 것**: 특정 취향 값("카드는 라운딩 12", "파란 보더 금지"). 그것은 사용자 반응에서 나와야 하며, 미리 넣으면 심사자의 안목 대신 우리 답을 검토하게 된다. 항목(카테고리)은 넣되 값은 비운다.
+**넣지 말 것**: 특정 취향 값("카드는 라운딩 12", "파란 보더 금지"). 그것은 사용자 반응에서 나와야 하며, 미리 넣으면 심사자의 안목 대신 우리 답을 검토하게 된다. 항목(카테고리)은 넣되 값은 비운다. 예외는 **판정 수치의 기본값**(c_checks.md, answer_translation.md)이다 — 팀 디자이너 두 분의 실측 안목이며, 프로젝트 규칙(design.md §4)이 덮어쓸 수 있다.
+
+## 하네스를 고칠 때 (유지보수 규칙)
+
+팀 디자이너들의 브랜치에서 가져온 규칙이다. 결함 로그(`docs/harness-defects.md`) 운영에도 그대로 적용한다.
+
+- **기록을 요구하는 규칙을 추가할 때는 기록할 자리(템플릿 칸)를 함께 만든다.** 쓸 자리가 없는 규칙은 실행 시점에 무시된다. brief.md·design.md·decisions.md 의 칸은 스킬이 "남긴다"고 요구하는 항목과 1:1 이어야 한다.
+- **검증을 요구하는 규칙에는 검증 방법(명령·스크립트·스크린샷)을 함께 적는다.** "확인한다"로 끝나는 규칙은 확인되지 않는다.
+- **부정형("~하면 실패")과 긍정형("~가 있는가")을 함께 둔다.** 부정형만 있으면 "틀리지 않은 결과물"이 최대치가 된다.
+- **표본 1건으로 규칙을 늘리지 않는다.** 한 프로젝트에서만 나온 발견은 기록해 두고, 다른 도메인에서 재현될 때 승격한다.
+- **새 실패 유형은 카탈로그에 3종 세트(판정 기준(수치)·빈발 사례·수정 방침)로 추가한다.** 셋 중 하나라도 없으면 추가하지 않는다. 눈으로 잡는 항목을 빌드·검사기로 옮길 수 있으면 옮긴다 — "사람이 봐야" 칸이 늘어나는 것은 후퇴다.
+- **프롬프트 문구를 다듬는 것으로 품질을 올리지 않는다.** 탈락 패턴을 카탈로그에 추가하고 검사기 커버리지를 넓힌다. 프롬프트는 준수를 보장하지 못하고, 검사기만 보장한다.
+- **스킬을 고쳤으면 `evals/` 픽스처 3종을 다 돌린다.** 하나만 돌리면 그 하나에 과적합된다. 01에서 통한 여백과 톤이 02에서 그대로 통하면 그 자체가 실패 신호다.
+
+## 출처
+
+이 하네스는 팀 5의 세 갈래를 합친 것이다. 뼈대(인터뷰 반응 역추출·인용 감사·산출 상한·예산 모드·상태 재시작·HTML 승인 게이트·서브에이전트 규율 D-1~D-15)는 `seongho` 브랜치, 결정론 A게이트·규칙 3계층·레이아웃 카탈로그·QA 출력 스키마·평가 루프는 `design-harness` 브랜치(팀 디자이너 A), 화면 도출 알고리즘·PRD 반박 트리거·질문 금지어·답변 번역표·1차 목적 선언·긍정형 매력 판정·표현 전략·아이콘 체계는 `noyunseo` 브랜치(팀 디자이너 B)에서 왔다.
 
 ## 라이선스
 

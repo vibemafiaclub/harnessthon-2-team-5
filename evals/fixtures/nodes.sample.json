@@ -1,0 +1,19 @@
+[{
+  "id": "1:1", "name": "Screen/GroupList", "type": "FRAME", "layoutMode": "VERTICAL",
+  "itemSpacing": 16, "paddingTop": 24, "paddingLeft": 16, "paddingRight": 16, "paddingBottom": 24,
+  "fills": [{ "type": "SOLID", "hex": "#FAF8F6" }],
+  "children": [
+    { "id": "1:2", "name": "Card/MeetingRow", "type": "FRAME", "layoutMode": "HORIZONTAL",
+      "itemSpacing": 14, "paddingTop": 12, "paddingLeft": 12, "paddingRight": 12, "paddingBottom": 12,
+      "fills": [{ "type": "SOLID", "hex": "#FFFFFF" }],
+      "children": [
+        { "id": "1:3", "name": "Person/groom_side", "type": "TEXT", "characters": "김신랑",
+          "fontSize": 14, "fills": [{ "type": "SOLID", "hex": "#1A1613" }] },
+        { "id": "1:4", "name": "Frame 427", "type": "FRAME", "layoutMode": "NONE",
+          "fills": [{ "type": "SOLID", "hex": "#7C3AED" }] },
+        { "id": "1:5", "name": "Chip/group_status", "type": "FRAME", "layoutMode": "HORIZONTAL",
+          "itemSpacing": 6, "paddingLeft": 8, "paddingRight": 8,
+          "fills": [{ "type": "SOLID", "hex": "#75395C" }] }
+      ] }
+  ]
+}]
