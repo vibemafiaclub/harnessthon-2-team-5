@@ -80,7 +80,7 @@ argument-hint: "<figma file url | --new>"
 4. **컴포넌트 재사용률** — Screens 페이지의 시각 요소 중 인스턴스 비율. 기준값 design.md(없으면 ≥70% 를 provisional 기준으로 쓰고 명시).
 5. **레이어 네이밍** — 정규식(기본 `^[A-Z][A-Za-z]+(/[A-Z][A-Za-z0-9 ]+)*`), `Frame \d+|Rectangle \d+|Group \d+` 0건.
 6. **variant 커버리지** — components.md 의 상태가 variant 로 전부 존재.
-7b. **아이콘 내부 이물** (`icon_foreign_fill`, audit.js 구현, warning) — 아이콘 컨테이너 안에 VECTOR/BOOLEAN_OPERATION 외의 보이는 fill 을 가진 RECTANGLE·FRAME·ELLIPSE 가 있으면 위반. **opacity 와 무관**(0.14 배경 칩도 회색 상자로 보인다 — D-38). 덮개(D-10)·배경 칩 둘 다 이 한 줄로 걸린다. 예외: 활성 `Indicator`. 탭바·목록 행처럼 반복되는 아이콘에서 걸리면 거의 실수다.
+7b. **아이콘 내부 이물** (`icon_foreign_fill`, audit.js 구현, warning) — 아이콘 컨테이너 안에 VECTOR/BOOLEAN_OPERATION 외의 보이는 fill 을 가진 RECTANGLE·FRAME·ELLIPSE 가 있으면 위반. **opacity 와 무관**(0.14 배경 칩도 회색 상자로 보인다 — D-38). 덮개(D-10)·배경 칩 둘 다 이 한 줄로 걸린다. 예외: 활성 `Indicator`. **같은 아이콘 인스턴스가 3개 이상 반복되면(탭바·목록 행) 그 히트는 blocker 로 승격**(`blocker_if_repeats: 3`) — 반복 컴포넌트의 이물은 사실상 항상 실수이고 warning 이면 `passed_machine` 을 막지 않아 지나간다(D-38 실측: 사용자 4회 지적까지 아무도 못 잡음). 한 번 쓰이는 장식 아이콘은 warning 유지.
 7. **아이콘 덮임·배경** — 아이콘 컴포넌트·인스턴스 안에 `visible` 한 VECTOR/BOOLEAN_OPERATION 이 ≥1 이고, 그 벡터의 조상 중 벡터 영역을 덮는 불투명 fill(opacity ≥ 0.9, 크기 ≥ 벡터) 을 가진 FRAME/RECTANGLE 이 없다(D-10: 마스터는 정상, 인스턴스만 네모). **아이콘 컨테이너 프레임(`Icon/*`)에 보이는 fill 이 있으면 FAIL** — 벡터 뒤에 있어 아이콘은 보이더라도 회색 네모가 남는다(D-33: 탭바 4개 전부 회색 상자). 예외는 활성 탭 표시(`Tab/*` 의 `Indicator` 노드, 화면당 1개)뿐. 화면 프레임 안의 **인스턴스**를 검사 대상으로 한다.
 8. **크기 sanity** — 각 컴포넌트 인스턴스의 width/height/padding 이 `drafts/components.md` 에 적힌 초안 HTML 대응 요소 값의 ±30% 이내. 토큰에서 왔는지가 아니라 값이 말이 되는지를 본다(실측: 80px 도 scale 에 있으면 PASS 였다).
 9. **프레임 규격** — Screens 페이지의 모든 화면 프레임이 `design.md` §2 의 폭이고 상태바·탭바가 있다. 높이는 ≥844 이며 내용에 따라 달라도 된다.

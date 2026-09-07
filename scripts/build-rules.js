@@ -162,7 +162,7 @@ const out = {
       check: { type: 'reuse_ratio', min: A.reuseMin }, autofix: false, status: 'filled', source: '가정: 기본값 ' + A.reuseMin + ' (provisional)',
       fix_hint: '기존 컴포넌트로 대체 가능한 신규 노드를 인스턴스로.' },
     { id: 'icon-foreign-fill', title: '아이콘 내부 이물(판·칩·덮개)', stage: ['design'], severity: 'warning', applies_to: {},
-      check: { type: 'icon_foreign_fill', icon_name_pattern: '^Icon/' }, autofix: false, status: 'filled', source: 'D-10·D-38 실측 — 아이콘은 벡터만',
+      check: { type: 'icon_foreign_fill', icon_name_pattern: '^Icon/', blocker_if_repeats: 3 }, autofix: false, status: 'filled', source: 'D-10·D-38 실측 — 아이콘은 벡터만. 같은 아이콘 인스턴스 3개 이상(탭바·목록 행)이면 blocker 로 승격',
       fix_hint: '아이콘 컨테이너 안의 RECTANGLE/FRAME/ELLIPSE 를 지우거나 fill 을 없앤다. 활성 표시는 Tab/* 의 Indicator 하나뿐.' },
     { id: 'layer-naming-semantic', title: '레이어 네이밍 semantic', stage: ['wireframe', 'design'], severity: 'warning', applies_to: {},
       check: { type: 'name_pattern', deny: ['^(Frame|Group|Rectangle|Ellipse|Vector|Line)\\s*\\d*$'] }, autofix: true, status: 'filled', source: '하네스 기본 — 인스턴스 내부·의미 있는 부모 아래의 자동 생성 벡터는 제외',

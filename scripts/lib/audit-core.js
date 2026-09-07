@@ -123,14 +123,20 @@ var CHECKS = {
   },
   /* A검사 7b — 아이콘 내부 이물(D-38): 아이콘 컨테이너 안에 VECTOR/BOOLEAN_OPERATION 외의 "보이는 fill 을 가진" RECTANGLE·FRAME·ELLIPSE 가 있으면 위반.
      opacity 와 무관(0.14 여도 보인다). 덮개(D-10)·배경 칩(D-38) 둘 다 걸린다. 예외: 활성 표시 Indicator, 컨테이너 자신(fill 없음). */
-  icon_foreign_fill: function (node, check) {
+  icon_foreign_fill: function (node, check, ctx) {
     var iconRe = new RegExp(check.icon_name_pattern || '^Icon/', 'i');
     var inIcon = (node._ancestorNames || []).some(function (a) { return iconRe.test(a || ''); });
     if (!inIcon) return [];
     if (['RECTANGLE', 'FRAME', 'ELLIPSE', 'POLYGON', 'STAR'].indexOf(node.type) < 0) return [];
     if (/indicator/i.test(node.name || '')) return [];
     var vis = (node.fills || []).filter(function (f) { return f.visible !== false && f.type !== 'IMAGE' && (f.opacity == null || f.opacity > 0); });
-    return vis.length ? [{ property: 'fills', expected: '아이콘 안에는 벡터만 (판·칩·테두리 금지)', actual: node.type + ' fill ' + (vis[0].hex || vis[0].type) + (vis[0].opacity != null ? ' @' + vis[0].opacity : '') }] : [];
+    if (!vis.length) return [];
+    var hit = { property: 'fills', expected: '아이콘 안에는 벡터만 (판·칩·테두리 금지)', actual: node.type + ' fill ' + (vis[0].hex || vis[0].type) + (vis[0].opacity != null ? ' @' + vis[0].opacity : '') };
+    /* 반복 아이콘(같은 이름의 인스턴스가 blocker_if_repeats 개 이상 — 탭바·목록 행)의 이물은 사실상 항상 실수 → blocker 로 승격 */
+    var iconName = (node._ancestorNames || []).filter(function (a) { return iconRe.test(a || ''); }).pop();
+    var minRep = Number(check.blocker_if_repeats || 0);
+    if (minRep && ctx && ctx.instanceCount && iconName && (ctx.instanceCount[iconName] || 0) >= minRep) { hit.severity = 'blocker'; hit.escalation_reason = iconName + ' 인스턴스 ' + ctx.instanceCount[iconName] + '개 반복'; }
+    return [hit];
   },
   min_size: function (node, check) {
     if (typeof node.width !== 'number' || typeof node.height !== 'number') return [];
@@ -242,6 +248,9 @@ function audit(opts) {
   /* 숨은 노드와 숨은 조상 아래의 노드는 렌더되지 않으므로 판정하지 않는다 */
   var flat = flatten(nodes).filter(function (n) { return n.visible !== false && !n._hidden; });
   var violations = [], unchecked = [], summary = { blocker: 0, warning: 0, skipped_out_of_stage: 0, skipped_unimplemented: 0 }, perRule = {}, applicable = {};
+  /* 검사 컨텍스트: 같은 이름의 INSTANCE 개수(반복 컴포넌트 판정용) */
+  var instanceCount = {}; flat.forEach(function (n) { if (n.type === 'INSTANCE' && n.name) instanceCount[n.name] = (instanceCount[n.name] || 0) + 1; });
+  var ctx = { flat: flat, instanceCount: instanceCount };
   rules.forEach(function (rule) {
     if ((rule.stage || []).indexOf(stage) < 0) { summary.skipped_out_of_stage++; return; }
     if (AUDIT_IMPLEMENTED.indexOf(rule.check.type) < 0) {
@@ -253,11 +262,12 @@ function audit(opts) {
     flat.forEach(function (node) {
       if (!matches(node, rule.applies_to)) return;
       applicable[rule.id]++;
-      CHECKS[rule.check.type](node, rule.check).forEach(function (hit) {
+      CHECKS[rule.check.type](node, rule.check, ctx).forEach(function (hit) {
+        var sev = hit.severity || rule.severity;   /* 검사가 히트별로 severity 를 올릴 수 있다(반복 아이콘의 이물 등) */
         perRule[rule.id]++;
-        summary[rule.severity === 'blocker' ? 'blocker' : 'warning']++;
+        summary[sev === 'blocker' ? 'blocker' : 'warning']++;
         if (cap && perRule[rule.id] > cap) return;
-        violations.push({ rule: rule.id, node: (node.name || '(unnamed)') + ' / ' + hit.property, node_id: node.id || null, expected: hit.expected, actual: hit.actual, severity: rule.severity, autofix: rule.autofix === true, fix_hint: rule.fix_hint });
+        violations.push({ rule: rule.id, node: (node.name || '(unnamed)') + ' / ' + hit.property, node_id: node.id || null, expected: hit.expected, actual: hit.actual, severity: sev, autofix: rule.autofix === true, fix_hint: rule.fix_hint, escalated: sev !== rule.severity ? (hit.escalation_reason || true) : undefined });
       });
     });
   });
