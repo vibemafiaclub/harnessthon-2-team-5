@@ -70,3 +70,28 @@ C 판정이 잡을 수는 있으나 육안 판정이라 놓칠 수 있고, 실�
 **이 둘은 커밋 60b4c4f 에서 "스크롤되는 목록이라 잘리는 것이 정상" 으로 잘못 분류했던 것이다.**
 D-34 가 규칙을 "높이는 내용에 맞춰 늘어난다(최소 844), 내용을 잘라 숨기지 않는다" 로 정정하면서
 둘 다 blocker 로 뒤집혔다. Figma 내부 변경이라 git diff 에 나타나지 않아 여기에 기록한다.
+
+## 2026-09-07 — F-9 비활성 CTA 표현 통일
+
+`Button/Primary` COMPONENT_SET 에 `State=Disabled` variant 가 이미 있는데
+두 화면 모두 인스턴스를 쓰지 않고 생 FRAME 으로 따로 그려서 표현이 갈렸다.
+
+| 노드 | 수정 전 | 수정 후 |
+|---|---|---|
+| `44:305` cta-button disabled (06 GroupCompose / none) | fill #CDD1CE, h59, 텍스트 17px — 색은 맞으나 변수 미바인딩 | 정본과 동일 바인딩 |
+| `46:354` btn btn-disabled (07 DatePropose / empty) | **fill #FFFFFF + 회색 테두리, h56, 텍스트 15px** | fill·텍스트·높이·radius 전부 정본과 동일 |
+
+정본(`State=Disabled`)의 바인딩을 그대로 복사했다:
+fills → `color/semantic/text/disabled`, 텍스트 fills → `color/semantic/text/secondary`,
+radius 4개 → `radius/lg`, stroke 없음.
+
+**중간에 낸 회귀 하나**: 첫 시도에서 `n.cornerRadius = 16` 을 대입해 topLeft~bottomRight
+radius 의 변수 바인딩 4개가 끊겼고, `#CDD1CE` 값 검색으로 `color/primitive/neutral/300` 을
+직접 바인딩해 "semantic 만 직접 사용" 원칙도 어겼다. 정본 variant 의 바인딩을 읽어
+그대로 복사하는 방식으로 다시 고쳤다. **값으로 변수를 역추적하면 primitive 가 잡힌다.**
+
+### 별건 (F-9 범위 밖, 미처리)
+
+활성 CTA 도 화면마다 규격이 다르다 — 06 `cta-button` 358×59/17px,
+07 `btn btn-primary` **390×56/15px**(좌우 여백 0), 03 `Button/Primary` 350×59/17px.
+07 의 폭 390 은 프레임 전폭이라 여백이 없다. C 판정은 비활성만 지적했다.
