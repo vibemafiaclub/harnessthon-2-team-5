@@ -25,7 +25,7 @@
  *   H-10 스크롤 영역을 overflow:hidden + 고정 높이로 절단하지 않는가              (D-26·D-34)
  *   H-11 [--brief] §2 매핑 열에서 F\d+|P-\d+ 수집 → 각 번호의 담당 행 # 에 screen_<nn>_*.html 존재, §2 전 행에 파일 (U-1·U-4)
  *   H-12 [--brief] §2c 여정·필수 플로우 표의 담당 화면 # 각각 파일 존재 — 화면 없이 사유만 있으면 WARN, 둘 다 없으면 FAIL (U-4)
- *   H-13 compare_axis*·index·design_guide_compare 의 사용자 노출 텍스트에 금지어 0건 — 정본 scripts/lib/forbidden-words.js 14개 (V-1)
+ *   H-13 compare_axis*·index·design_guide_compare 의 사용자 노출 텍스트에 금지어 0건 — 정본 scripts/lib/forbidden-words.js 26개 (V-1)
  *   H-14 index.html 의 <a href="screen_…"> 고유 링크 집합 == screen 파일 집합                                          (2-F)
  *   H-15 screen_* 마다 data-role="top-info" 정확히 1개, data-fold 이전 또는 data-fixed 안,
  *        그 요소의 font-size 가 var(--typography-scale-(heading|display)-…) 참조                                   (U-5 1등 정보)

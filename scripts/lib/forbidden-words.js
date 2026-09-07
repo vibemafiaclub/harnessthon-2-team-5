@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * 금지어 정본 — 사용자에게 보이는 문구에서 디자인 어휘 14개를 잡는다.
+ * 금지어 정본 — 사용자에게 보이는 문구에서 디자인 어휘 14개 + 문서·내부 용어 12개를 잡는다.
+ * 문서·내부 용어(PRD·요구사항·기획서…)는 비전공자가 모르는 말이다. 사용자 문장에서는 'PRD' 를 '지금 계획' 으로, 'PRD대로' 를 '계획대로' 로 바꿔 말한다(interview_prompts §1-11).
  * 왜: "금지어 13개 grep" 처럼 숫자로 지시하면 worker 가 하나를 빠뜨려도 항목 수로는 맞는다(interview_prompts §1-6 은 14개, SKILL 은 13개라 적었다).
  *     목록·정규식을 이 파일 한 곳에 두고 모든 검사기가 require 한다. 문서에서 개수를 적을 때는 "14개(scripts/lib/forbidden-words.js 정본)" 로 쓴다.
  * 쓰는 곳: check-brief B-19(§4 plain) · check-html H-13(compare_axis·index·design_guide_compare) · check-interview-page P-4
@@ -8,7 +9,9 @@
  *
  * API:
  *   const { FORBIDDEN_WORDS, FORBIDDEN_RE, TASTE_PATTERN, scanText, scanFile } = require('./lib/forbidden-words');
- *   FORBIDDEN_WORDS : string[14]  — 정보 밀도·위계·톤앤매너·그리드·여백·대비·무드·컨셉·미니멀·모던·레이아웃·컴포넌트·플로우·IA
+ *   FORBIDDEN_WORDS : string[14]  — 정보 밀도·위계·톤앤매너·그리드·여백·대비·무드·컨셉·미니멀·모던·레이아웃·컴포넌트·플로우·IA (디자인 어휘)
+ *   DOC_WORDS       : string[12]  — PRD·요구사항·기획서·명세·스펙·유저 스토리·와이어프레임·프로토타입·온보딩·UX·UI·인터페이스 (문서·내부 용어)
+ *   ALL_WORDS       : string[26]  — 위 둘을 합친 것. scanText/FORBIDDEN_RE 는 26개 전부를 잡는다.
  *   FORBIDDEN_RE    : RegExp(g)   — 14개를 한 번에 잡는 정규식(IA 는 \bIA\b). 상태(lastIndex)가 있으니 test 만 할 때는 fresh() 로 새로 만들어 쓴다.
  *   TASTE_PATTERN   : RegExp      — 취향형·라벨형 질문 패턴(느낌이 좋|어떤 느낌|선호|취향|스타일이). 질문 text·scene 에만 적용한다.
  *   scanText(str)                 → [{ word, index, context }]  (index 는 str 안의 위치, context 는 앞뒤 20자)
@@ -23,6 +26,9 @@
 'use strict';
 
 const FORBIDDEN_WORDS = ['정보 밀도', '위계', '톤앤매너', '그리드', '여백', '대비', '무드', '컨셉', '미니멀', '모던', '레이아웃', '컴포넌트', '플로우', 'IA'];
+/* 문서·내부 용어 — 비전공자가 모르는 말. 하네스 안에서는 쓰되 사용자에게 보이는 문장에는 못 나간다. */
+const DOC_WORDS = ['PRD', '요구사항', '기획서', '명세', '스펙', '유저 스토리', '와이어프레임', '프로토타입', '온보딩', 'UX', 'UI', '인터페이스'];
+const ALL_WORDS = FORBIDDEN_WORDS.concat(DOC_WORDS);
 
 /* 단어 → 패턴. 띄어쓰기 변형(정보밀도·톤 앤 매너)도 같은 단어로 잡는다. IA 는 영문 경계(\b)로만 — '다이어그램' 류의 부분 일치 방지. */
 const PATTERNS = [
@@ -40,6 +46,18 @@ const PATTERNS = [
   ['컴포넌트', '컴포넌트'],
   ['플로우', '플로우'],
   ['IA', '\\bIA\\b'],
+  ['PRD', '\\bPRD\\b'],
+  ['요구사항', '요구\\s?사항'],
+  ['기획서', '기획서'],
+  ['명세', '명세'],
+  ['스펙', '스펙'],
+  ['유저 스토리', '유저\\s?스토리'],
+  ['와이어프레임', '와이어\\s?프레임'],
+  ['프로토타입', '프로토\\s?타입'],
+  ['온보딩', '온보딩'],
+  ['UX', '\\bUX\\b'],
+  ['UI', '\\bUI\\b'],
+  ['인터페이스', '인터페이스'],
 ];
 const SOURCE = PATTERNS.map(([, p]) => '(?:' + p + ')').join('|');
 const FORBIDDEN_RE = new RegExp(SOURCE, 'g');
@@ -96,7 +114,7 @@ function lineCol(text, index) {
   return { line, col: index - before.lastIndexOf('\n') };
 }
 
-module.exports = { FORBIDDEN_WORDS, FORBIDDEN_RE, TASTE_PATTERN, scanText, scanFile, scanTaste, stripTags, fresh };
+module.exports = { FORBIDDEN_WORDS, DOC_WORDS, ALL_WORDS, FORBIDDEN_RE, TASTE_PATTERN, scanText, scanFile, scanTaste, stripTags, fresh };
 
 /* ---- CLI ---- */
 if (require.main === module) {
@@ -112,6 +130,6 @@ if (require.main === module) {
     for (const h of hits) console.log(`${f}:${h.line}:${h.col}: 「${h.word}」 ${h.context}`);
     total += hits.length;
   }
-  console.log(`금지어${taste ? '·취향형' : ''} 매치 ${total}건 (${files.length}개 파일, ${FORBIDDEN_WORDS.length}개 단어${raw ? ', raw' : ', 보이는 텍스트'})`);
+  console.log(`금지어${taste ? '·취향형' : ''} 매치 ${total}건 (${files.length}개 파일, ${ALL_WORDS.length}개 단어${raw ? ', raw' : ', 보이는 텍스트'})`);
   process.exit(total ? 1 : 0);
 }

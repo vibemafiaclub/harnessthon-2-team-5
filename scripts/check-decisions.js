@@ -19,7 +19,7 @@
  *        state.human_gates.axis_choice.ai_pick[] 이 있으면 축 수와 대조.
  *   D-4  §3 최종 화면 세트 ≥1행(전 셀 채움) + 승인 일시 + 승인 원문 == state.human_gates.draft_approval.quote(공백·따옴표 정규화),
  *        draft_approval.approved == true. screen_count 가 있으면 §3 행 수와 대조.
- *   D-5  §1·§2 사용자 노출 문구에 금지어 0 — 정본 scripts/lib/forbidden-words.js(14개). 노출 문구 = §1 '축' 열, §2 축 이름,
+ *   D-5  §1·§2 사용자 노출 문구에 금지어 0 — 정본 scripts/lib/forbidden-words.js(26개). 노출 문구 = §1 '축' 열, §2 축 이름,
  *        §2 표 '후보'·'설명' 열, §2 `- **질문**:` 줄. 페르소나 비평·AI 추천·'왜 아직 열려 있는가'·사용자 원문 줄은 사용자에게 보이지 않으므로 제외.
  * HTML 주석(<!-- -->)은 파싱 전에 제거한다(템플릿 설명문이 매치되던 check-brief B-12 결함 재발 방지).
  * 자리표시자 행("예:" 로 시작하는 셀이 있는 행, 전 셀 빈 행)은 세지 않는다 — 빈 템플릿은 D-1~D-4 가 FAIL 이어야 한다.

@@ -84,6 +84,8 @@ for f in scripts/*.js scripts/lib/*.js scripts/fixtures/*.js; do
 done; ok "node --check scripts/*.js scripts/lib/*.js scripts/fixtures/*.js"
 N="$(node -e 'process.stdout.write(String(require("./scripts/lib/forbidden-words").FORBIDDEN_WORDS.length))')"
 [ "$N" = 14 ] && ok "forbidden-words FORBIDDEN_WORDS 14개" || ng "forbidden-words FORBIDDEN_WORDS ${N}개 (정본 14)"
+ND="$(node -e 'process.stdout.write(String(require("./scripts/lib/forbidden-words").DOC_WORDS.length))')"
+[ "$ND" = 12 ] && ok "forbidden-words DOC_WORDS 12개(문서·내부 용어)" || ng "forbidden-words DOC_WORDS ${ND}개 (정본 12)"
 cmp -s templates/brief.md "$FX/brief_empty.md" && ok "brief_empty.md == templates/brief.md" || echo "[warn] brief_empty.md 가 templates/brief.md 와 다름 — cp templates/brief.md $FX/brief_empty.md (라이브 템플릿도 아래에서 같이 검사한다)"
 cmp -s templates/decisions.md "$FX/decisions_empty.md" && ok "decisions_empty.md == templates/decisions.md" || echo "[warn] decisions_empty.md 가 templates/decisions.md 와 다름 — cp templates/decisions.md $FX/decisions_empty.md"
 
@@ -96,6 +98,8 @@ if node -e '
   if (bad.length||extra.length){ console.error("1회가 아닌 단어: "+bad.join(",")+" / 목록 밖: "+extra.join(",")); process.exit(1); }
   console.log(Object.keys(c).length+"단어 각 1회");' "$FX/forbidden_14.txt" > "$TMP/fw.log" 2>&1; then ok "forbidden_14.txt — 14단어 각각 정확히 1회 매치"; else ng "forbidden_14.txt — $(cat "$TMP/fw.log")"; fi
 expect_rc "forbidden_clean.txt → 종료 0" 0 node scripts/lib/forbidden-words.js "$FX/forbidden_clean.txt"
+expect_rc "forbidden_doc12.txt(문서 용어 12) → 종료 1" 1 node scripts/lib/forbidden-words.js "$FX/forbidden_doc12.txt"
+if node -e 'const f=require("./scripts/lib/forbidden-words"); const t=require("fs").readFileSync(process.argv[1],"utf8"); const c={}; for (const h of f.scanText(t)) c[h.word]=(c[h.word]||0)+1; const bad=f.DOC_WORDS.filter(w=>c[w]!==1); if (bad.length||Object.keys(c).length!==12) { console.log("불일치: "+JSON.stringify(c)); process.exit(1);} ' "$FX/forbidden_doc12.txt" > "$TMP/fwd.log" 2>&1; then ok "forbidden_doc12.txt — 문서 용어 12개 각각 정확히 1회 매치"; else ng "forbidden_doc12.txt — $(cat "$TMP/fwd.log")"; fi
 printf '어떤 느낌이 좋으세요?\n' > "$TMP/taste.txt"
 expect_rc "취향형 문장, --taste 없이 → 종료 0" 0 node scripts/lib/forbidden-words.js "$TMP/taste.txt"
 expect_rc "취향형 문장, --taste → 종료 1" 1 node scripts/lib/forbidden-words.js --taste "$TMP/taste.txt"

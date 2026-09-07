@@ -102,7 +102,7 @@ prd_analysis §1 상태 순위표를 Q5(실수의 대가) 답으로 확정한 �
 
 <!--
 형식 예시 1건. 내용은 예시이며 실제 기준이 아니다.
-plain = 같은 규칙을 디자인 용어 없이 쓴 한 줄. 0-H ack 표가 statement 대신 이것을 사용자에게 보인다. 금지어 14개(scripts/lib/forbidden-words.js 정본)가 들어가면 FAIL(B-19).
+plain = 같은 규칙을 디자인 용어 없이 쓴 한 줄. 0-H ack 표가 statement 대신 이것을 사용자에게 보인다. 금지어 26개(scripts/lib/forbidden-words.js 정본, 디자인 14 + 문서 용어 12)가 들어가면 FAIL(B-19).
 
 ### RULE-01
 - statement: 같은 위계의 목록 행은 한 가지 구분 방식만 쓴다

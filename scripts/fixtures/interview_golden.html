@@ -6,7 +6,7 @@
 
   harness-data 스키마 (check-interview-page.js 가 검사한다):
   - questions[]  필수: id·text·options[]({value, scene ≥8자})·free:true·unknown:true·skeleton("Q1"…, interview_prompts §6 정본)·payload(§6 payload 열 — 같은 payload 두 질문이면 FAIL)
-      kind: question(기본) | pushback(PRD 반박 — options 정확히 3개 + recommended(options.value 중 하나) + why, 결정형이라 추천을 먼저 보인다)
+      kind: question(기본) | pushback(계획 반박(PRD) — options 정확히 3개 + recommended(options.value 중 하나) + why, 결정형이라 추천을 먼저 보인다)
             | pattern(레퍼런스 UX 패턴 — options ≥2, 장면 = 실제 서비스가 같은 과업을 푸는 방식, 서비스명 숨김)
   - tiles[]      id·axis·variant·html — 한 타일은 축 하나만 바꾼다(다른 속성은 같은 축의 타일끼리 동일)
   - pairs[]      axis·left·right, 선택 always:true — 갤러리 결과와 무관하게 항상 노출하는 재검증 쌍(진술형 질문이 없는 축)
@@ -114,10 +114,10 @@
         { "value": "맞아요", "scene": "등록 → 약 일정 → 공유 링크 순서가 실제와 같아요" },
         { "value": "달라요", "scene": "공유 링크가 먼저 있고 약은 나중에 넣어요" } ],
       "free": true, "unknown": true },
-    { "id": "Q-11", "kind": "pushback", "skeleton": "Q11", "payload": "pushback", "text": "PRD에는 복약 상태가 '예정·먹임·건너뜀' 셋뿐인데, 실제로는 시각이 지나도록 안 먹인 약이 꼭 생깁니다. 저는 시각이 지나면 그 약을 맨 위에 크게 보이고 '지금 먹이세요'라고 알리는 쪽(A)이 맞다고 봅니다 — 놓친 약을 다시 찾는 일이 가장 잦기 때문입니다. 그래도 다른 쪽이 나은 경우가 있을까요?", "options": [
+    { "id": "Q-11", "kind": "pushback", "skeleton": "Q11", "payload": "pushback", "text": "지금 계획에는 복약 상태가 '예정·먹임·건너뜀' 셋뿐인데, 실제로는 시각이 지나도록 안 먹인 약이 꼭 생깁니다. 저는 시각이 지나면 그 약을 맨 위에 크게 보이고 '지금 먹이세요'라고 알리는 쪽(A)이 맞다고 봅니다 — 놓친 약을 다시 찾는 일이 가장 잦기 때문입니다. 그래도 다른 쪽이 나은 경우가 있을까요?", "options": [
         { "value": "A", "scene": "시각이 지나면 '지금 먹이세요 · 보리 관절약'이 맨 위에 크게 보이고 바로 먹임 표시를 할 수 있어요" },
         { "value": "B", "scene": "시각이 지나도 목록 자리는 그대로 두고 알림만 한 번 더 와요" },
-        { "value": "PRD대로", "scene": "PRD에 적힌 대로 세 상태만 두고 특별한 처리는 하지 않아요" } ],
+        { "value": "계획대로", "scene": "지금 계획대로 세 상태만 두고 특별한 처리는 하지 않아요" } ],
       "recommended": "A", "why": "놓친 약을 다시 찾는 일이 가장 잦아서, 그 약이 먼저 보여야 합니다.",
       "free": true, "unknown": true },
     { "id": "Q-12", "skeleton": "Q12", "payload": "delegation", "text": "여기까지 말씀하신 것 외에는 제가 정해도 될까요? 꼭 직접 고르고 싶은 게 있나요?", "options": [
@@ -240,19 +240,20 @@
     renderQuestions(); renderTiles(); renderPairs(); showStep(state.step); updateProgress();
   }
   // 회수 레코드에 질문 → 페이로드 → 소비처 매핑 필드(skeleton·payload·recommended)를 항상 싣는다.
-  function qrec(q, a) { return Object.assign({ id: q.id, kind: q.kind || 'question', skeleton: q.skeleton || '', payload: q.payload || '', recommended: q.recommended || '', question: q.text, free: a.free || '' }, a); }
+  function qrec(q, a) { return Object.assign({ id: q.id, kind: q.kind || 'question', skeleton: q.skeleton || '', payload: q.payload || '', verifies: q.verifies || '', recommended: q.recommended || '', question: q.text, free: a.free || '' }, a); }
   function renderQuestions() {
     const root = $('step0'); root.innerHTML = '';
     DATA.questions.forEach((q) => {
       const a = state.answers[q.id] || {};
       const card = document.createElement('div'); card.className = 'card';
       const hint = q.kind === 'pushback' ? '저희 추천은 표시해 두었습니다 — 실제로 쓸 때를 떠올려 다르게 보이면 골라 주세요.'
-        : q.kind === 'pattern' ? '다른 서비스들이 같은 일을 푸는 방식입니다(서비스 이름은 가렸습니다). 실제로 쓸 때를 떠올려 골라 주세요.' : '';
+        : q.kind === 'pattern' ? '다른 서비스들이 같은 일을 푸는 방식입니다(서비스 이름은 가렸습니다).' + (q.recommended ? ' 저희 추천은 표시해 두었습니다 — ' : ' ') + '실제로 쓸 때를 떠올려 골라 주세요.'
+        : q.verifies ? '앞에서 고르신 것을 다른 장면으로 한 번 더 확인하는 질문이에요. 편하게 다시 골라 주세요.' : '';
       card.innerHTML = '<p class="q">' + esc(q.text) + '</p>' + (hint ? '<p class="hint">' + hint + '</p>' : '');
       const opts = document.createElement('div'); opts.className = 'opts';
       q.options.forEach((o) => {
         const b = document.createElement('button'); b.className = 'opt' + (a.value === o.value ? ' sel' : '');
-        const rec = q.kind === 'pushback' && q.recommended && o.value === q.recommended;
+        const rec = (q.kind === 'pushback' || q.kind === 'pattern') && q.recommended && o.value === q.recommended;
         b.innerHTML = '<b>' + esc(o.value) + '</b>' + (rec ? '<span class="rec">하네스 추천</span>' : '') + '<br><span style="color:var(--ink-2);font-size:14px">' + esc(o.scene) + '</span>'
           + (rec && q.why ? '<br><span style="color:var(--ink-2);font-size:13px">추천 이유: ' + esc(q.why) + '</span>' : '');
         b.onclick = () => { a.value = o.value; a.unknown = false; save(qrec(q, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b);

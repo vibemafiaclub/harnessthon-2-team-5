@@ -38,7 +38,7 @@
  *   B-16  §2c 사용자 여정·필수 플로우: 고정 행 9 전부 존재, 담당 화면 # ∈ §2 번호 집합 또는 사유; 초대 두 행 '해당 없음' 인데 §2 역할 2종 이상이면 FAIL
  *   B-17  §2d 상태 강조 순위 ≥2행, raw 에 ^A-05 있으면 1순위 행이 A-05 참조, 행마다 §2c 상태 행에 '상태 #n' 대응
  *   B-18  §9 레퍼런스 행 agent_references_min(4·fast 3)~agent_references_max(10·fast 6), 출처 공백 0, T-1~T-3 각각 '우리 과업' 열에 ≥1(fast)/≥2(full), --refs 존재·비어 있지 않은 줄 ≥10
- *   B-19  §4 각 RULE: plain: 필드 존재(그 안에 금지어 0) 또는 statement 에 금지어 0 — 금지어 14개 정본은 scripts/lib/forbidden-words.js
+ *   B-19  §4 각 RULE: plain: 필드 존재(그 안에 금지어 0) 또는 statement 에 금지어 0 — 금지어 26개 정본은 scripts/lib/forbidden-words.js
  *   B-20  raw 반응 하한: ^R-…(좋다|싫다) + ^W-n: (left|right) ≥5 또는 state.human_gates.delegations[] 에 kind q12
  *   B-21  --page-report(기본 design/verify/exit_interview_page.md) 존재·비어 있지 않음·'| FAIL |' 0
  *   B-22  state.stages.interview.answered 있으면 raw ^A-nn + ^R- + ^W-n 합계와 일치 (없으면 N/A)

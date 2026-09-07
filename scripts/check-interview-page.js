@@ -19,14 +19,14 @@
  *   P-2  JSON 유효 · questions ≤ human_interview_questions_max · [0]=Q1 · [1]=Q5 · tiles ≤ human_gallery_tiles_max
  *        · pairs ≤ human_worldcup_rounds_max(기본 6) · flows[].steps ≤ agent_flow_steps_max
  *   P-3  questions(+flows) 전건 unknown===true && free===true · options 전건 value 있음·scene ≥8자
- *        · kind:pushback 은 options 정확히 3 + recommended(options.value 중 하나) + why · kind:pattern 은 options ≥2
- *   P-4  사용자 노출 텍스트(title·intro·banner·text·why·value·scene·tile/pair/flow html 텍스트 노드) 금지어 0 + text·scene 에 TASTE_PATTERN 0
+ *        · kind:pushback 은 options 정확히 3 + recommended(options.value 중 하나) + why · kind:pattern 은 options ≥2 (recommended 가 있으면 options.value 중 하나 + why)
+ *   P-4  사용자 노출 텍스트(title·intro·banner·text·why·value·scene·tile/pair/flow html 텍스트 노드) 금지어(디자인 14 + 문서 용어 12) 0 + text·scene 에 TASTE_PATTERN 0
  *   P-5  축 차이: 타이포=font-family · 형태=border-radius · 밀도=행 수 · 색온도=hue · 채도=saturation · 강조=font-weight|font-size|색 이 변형 간 다름
  *   P-6  축 격리: 같은 축 변형의 style 선언 집합에서 P-5 축 속성을 제거한 나머지가 동일
  *   P-7  타일 여는 태그 수 ≤ agent_gallery_tile_elements_max (<br> 제외)
  *   P-8  타일·흐름 텍스트에 자리표시자 0 + 타일마다 prd_analysis §1 화면표 1열 명사 ≥1
  *   P-9  타일·쌍·흐름 텍스트의 color ↔ 배경 hex 대비 ≥4.5:1 (hex 아니면 N/A)
- *   P-10 questions 전건 skeleton·payload 존재 · payload ∈ prompts §6 payload 집합 · 같은 payload 2건(pushback·pattern 제외) FAIL
+ *   P-10 questions 전건 skeleton·payload 존재 · payload ∈ prompts §6 payload 집합 · 같은 payload 2건(pushback·pattern·verifies 재검증 제외) FAIL · verifies 는 다른 질문 id
  *   P-11 필수 payload {mood_axis,state_priority,top_info,constraint,ia,pushback,delegation,audience} 중 빠진 키마다 index.skipped[] 에 'PRD 가 답함: …'
  *   P-12 kind:pattern 수 == references.md 과업 수(fast ≤2, full ≤agent_reference_patterns_max) 또는 references.md 에 '레퍼런스 없음'
  *   P-13 페이지 skeleton 집합 ⊆ prompts §6 정본 세트(fast/full)
@@ -218,6 +218,7 @@ if (!D) {
     const id = q.id || '(id 없음)'; const opts = Array.isArray(q.options) ? q.options : [];
     if (q.unknown !== true) p3.push(`${id} unknown≠true`); if (q.free !== true) p3.push(`${id} free≠true`);
     opts.forEach((o, i) => { if (!o || !String(o.value || '').trim()) p3.push(`${id}.options[${i}] value 없음`); if (!o || chars(o.scene) < 8) p3.push(`${id}.options[${i}] scene ${chars(o && o.scene)}자 < 8`); });
+    if (q.kind === 'pattern' && q.recommended != null) { if (!opts.some((o) => o && o.value === q.recommended)) p3.push(`${id} pattern recommended(${q.recommended}) 가 options.value 에 없음`); if (!String(q.why || '').trim()) p3.push(`${id} pattern 추천이 있는데 why 없음`); }
     if (q.kind === 'pushback') { if (opts.length !== 3) p3.push(`${id} pushback options ${opts.length} ≠ 3`); if (!opts.some((o) => o && o.value === q.recommended)) p3.push(`${id} recommended(${q.recommended == null ? '없음' : q.recommended}) 가 options.value 에 없음`); if (!String(q.why || '').trim()) p3.push(`${id} why 없음`); }
     if (q.kind === 'pattern' && opts.length < 2) p3.push(`${id} pattern options ${opts.length} < 2`);
   });
@@ -302,7 +303,10 @@ if (!D) {
     if (typeof q.payload !== 'string' || !q.payload.trim()) p10.push(`${id} payload 없음`);
     else { if (!payloadSet.has(q.payload)) p10.push(`${id} payload '${q.payload}' ∉ §6`); (seen[q.payload] = seen[q.payload] || []).push(id); }
   });
-  for (const k of Object.keys(seen)) if (seen[k].length > 1 && k !== 'pushback' && k !== 'pattern') p10.push(`payload '${k}' 중복: ${seen[k].join(',')}`);
+  /* 같은 payload 2건은 pushback·pattern, 그리고 재검증(verifies: <원 질문 id>, §6 재검증 규칙) 만 허용 */
+  const qid = new Set(Q.map((q) => q.id));
+  Q.forEach((q) => { if (q.verifies != null && (!qid.has(q.verifies) || q.verifies === q.id)) p10.push(`${q.id} verifies '${q.verifies}' 가 페이지의 다른 질문 id 가 아님`); });
+  for (const k of Object.keys(seen)) { if (seen[k].length <= 1 || k === 'pushback' || k === 'pattern') continue; const rest = seen[k].filter((id) => !Q.some((q) => q.id === id && q.verifies && qid.has(q.verifies) && q.verifies !== q.id)); if (rest.length > 1) p10.push(`payload '${k}' 중복: ${seen[k].join(',')} (재검증이면 verifies 필요)`); }
   add('P-10', p10.length === 0, `skeleton·payload 위반 ${p10.length}건 (§6 payload 집합 ${payloadSet.size}개${promptNote ? ', ' + promptNote : ''})`, short(p10) || `payload: ${Q.map((q) => q.payload).join(', ')}`);
 
   /* P-11 필수 payload 8종 — 빠지면 index.skipped[] 에 'PRD 가 답함: …' */

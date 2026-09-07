@@ -6,7 +6,7 @@
 
   harness-data 스키마 (check-interview-page.js 가 검사한다):
   - questions[]  필수: id·text·options[]({value, scene ≥8자})·free:true·unknown:true·skeleton("Q1"…, interview_prompts §6 정본)·payload(§6 payload 열 — 같은 payload 두 질문이면 FAIL)
-      kind: question(기본) | pushback(PRD 반박 — options 정확히 3개 + recommended(options.value 중 하나) + why, 결정형이라 추천을 먼저 보인다)
+      kind: question(기본) | pushback(계획 반박(PRD) — options 정확히 3개 + recommended(options.value 중 하나) + why, 결정형이라 추천을 먼저 보인다)
             | pattern(레퍼런스 UX 패턴 — options ≥2, 장면 = 실제 서비스가 같은 과업을 푸는 방식, 서비스명 숨김)
   - tiles[]      id·axis·variant·html — 한 타일은 축 하나만 바꾼다(다른 속성은 같은 축의 타일끼리 동일)
   - pairs[]      axis·left·right, 선택 always:true — 갤러리 결과와 무관하게 항상 노출하는 재검증 쌍(진술형 질문이 없는 축)
@@ -78,23 +78,30 @@
   "intro": "청첩장 모임 날짜를 잡는 앱을 만들기 전에, 실제로 쓸 때를 떠올려 몇 가지만 여쭙습니다. 10분이면 됩니다.",
   "banner": "글자 내용(뜻)이 아니라 보이는 느낌만 평가해 주세요.",
   "questions": [
-    { "id": "Q-01", "skeleton": "Q1", "payload": "mood_axis", "text": "이 앱을 주로 언제, 어디서 쓰게 될까요?", "options": [
-        { "value": "이동 중 잠깐", "scene": "지하철이나 길에서 한 손으로 잠깐 열어 확인하고 닫아요" },
-        { "value": "앉아서 오래", "scene": "저녁에 앉아서 여러 사람 일정을 한참 들여다보며 정리해요" } ],
+    { "id": "Q-01", "skeleton": "Q1", "payload": "mood_axis", "text": "이 앱을 주로 언제, 어디서, 어떤 기분으로 열게 될까요?", "options": [
+        { "value": "이동 중 잠깐", "scene": "지하철이나 길에서 한 손으로 잠깐 열어 확인하고 닫아요. 빨리 끝내고 싶은 기분이에요" },
+        { "value": "앉아서 오래", "scene": "저녁에 앉아서 여러 사람 일정을 한참 들여다보며 정리해요. 차분히 챙기는 기분이에요" } ],
       "free": true, "unknown": true },
     { "id": "Q-05", "skeleton": "Q5", "payload": "state_priority", "text": "여기서 뭔가 빠뜨리거나 잘못되면 뭐가 제일 곤란할까요?", "options": [
         { "value": "날짜를 잘못 잡음", "scene": "다들 된다고 한 날이 아닌 날로 잡혀서, 몇 명이 못 오게 돼요" },
         { "value": "답 없는 사람을 놓침", "scene": "아직 답을 안 한 사람을 잊고 있다가, 마감이 지나서야 알아차려요" } ],
       "free": true, "unknown": true },
-    { "id": "Q-04", "kind": "pattern", "skeleton": "Q4'", "payload": "pattern", "text": "여러 사람의 되는 날을 맞출 때, 다른 서비스들은 보통 이렇게 보여 줍니다. 실제로 쓸 때 어느 쪽이 편할까요?", "options": [
+    { "id": "Q-05b", "skeleton": "Q5", "payload": "state_priority", "verifies": "Q-05",
+      "text": "한 번만 더 여쭐게요. 마감이 지났는데 두 사람이 아직 답이 없어요. 이때 화면이 맨 먼저 보여 줘야 하는 건 뭘까요?",
+      "options": [
+        { "value": "답 없는 두 사람", "scene": "‘아직 답 없는 사람 2명’이 맨 위에 크게 보이고, 그 사람들에게 다시 보내는 버튼이 바로 있어요" },
+        { "value": "지금까지 모인 날짜", "scene": "답한 사람들 기준으로 겹치는 날이 맨 위에 보이고, 답 없는 사람은 아래에 작게 있어요" } ],
+      "free": true, "unknown": true },
+    { "id": "Q-04", "kind": "pattern", "skeleton": "Q4'", "payload": "pattern", "text": "여러 사람의 되는 날을 맞출 때, 다른 서비스들은 보통 이렇게 보여 줍니다. 저는 ‘되는 날만 모아서’ 쪽이 이 앱에 맞다고 봅니다 — 잠깐 열어 볼 때 답이 바로 보여서요. 그래도 실제로 쓸 때 다른 쪽이 편할까요?", "options": [
         { "value": "표로 한눈에", "scene": "날짜가 가로, 사람이 세로로 놓인 표에서 되는 날이 겹치는 칸이 색으로 보여요" },
         { "value": "되는 날만 모아서", "scene": "다들 되는 날만 골라 위에 모아 주고, 안 되는 날은 접혀 있어요" },
         { "value": "투표처럼", "scene": "후보 날짜 몇 개를 두고 각자 고르면, 가장 많이 고른 날이 맨 위로 올라와요" } ],
+      "recommended": "되는 날만 모아서", "why": "이동 중에 한 손으로 잠깐 볼 때는 겹치는 날만 바로 보이는 게 빠르기 때문입니다.",
       "free": true, "unknown": true },
-    { "id": "Q-11", "kind": "pushback", "skeleton": "Q11", "payload": "pushback", "text": "PRD에는 회신 마감이 '기한'으로만 적혀 있는데, 실제로는 답이 늦는 사람이 꼭 생깁니다. 저는 마감이 지나면 아직 답 없는 사람을 맨 위에 크게 보이고 그 사람들에게만 다시 보내는 쪽(A)이 맞다고 봅니다 — 날짜를 정하려면 결국 그 사람들 답이 필요하기 때문입니다. 그래도 다른 쪽이 나은 경우가 있을까요?", "options": [
+    { "id": "Q-11", "kind": "pushback", "skeleton": "Q11", "payload": "pushback", "text": "지금 계획에는 답장 마감일만 정해져 있고, 마감이 지나도록 답이 없는 사람을 어떻게 할지는 없어요. 실제로는 답이 늦는 사람이 꼭 생깁니다. 저는 마감이 지나면 아직 답 없는 사람을 맨 위에 크게 보이고 그 사람들에게만 다시 보내는 쪽(A)이 맞다고 봅니다 — 날짜를 정하려면 결국 그 사람들 답이 필요하기 때문입니다. 그래도 다른 쪽이 나은 경우가 있을까요?", "options": [
         { "value": "A", "scene": "마감이 지나면 '아직 답 없는 사람 3명'이 맨 위에 크게 보이고, 그 사람들에게만 다시 보낼 수 있어요" },
         { "value": "B", "scene": "마감이 지나면 답한 사람만으로 날짜를 정하고, 못 답한 사람은 나중에 따로 알려요" },
-        { "value": "PRD대로", "scene": "PRD에 적힌 대로 기한만 두고 특별한 처리는 하지 않아요" } ],
+        { "value": "계획대로", "scene": "지금 계획대로 마감일만 두고 따로 챙기지는 않아요" } ],
       "recommended": "A", "why": "날짜를 정하려면 결국 답 없는 사람의 답이 필요해서, 그 사람들이 먼저 보여야 합니다.",
       "free": true, "unknown": true }
   ],
@@ -205,19 +212,20 @@
     renderQuestions(); renderTiles(); renderPairs(); showStep(state.step); updateProgress();
   }
   // 회수 레코드에 질문 → 페이로드 → 소비처 매핑 필드(skeleton·payload·recommended)를 항상 싣는다.
-  function qrec(q, a) { return Object.assign({ id: q.id, kind: q.kind || 'question', skeleton: q.skeleton || '', payload: q.payload || '', recommended: q.recommended || '', question: q.text, free: a.free || '' }, a); }
+  function qrec(q, a) { return Object.assign({ id: q.id, kind: q.kind || 'question', skeleton: q.skeleton || '', payload: q.payload || '', verifies: q.verifies || '', recommended: q.recommended || '', question: q.text, free: a.free || '' }, a); }
   function renderQuestions() {
     const root = $('step0'); root.innerHTML = '';
     DATA.questions.forEach((q) => {
       const a = state.answers[q.id] || {};
       const card = document.createElement('div'); card.className = 'card';
       const hint = q.kind === 'pushback' ? '저희 추천은 표시해 두었습니다 — 실제로 쓸 때를 떠올려 다르게 보이면 골라 주세요.'
-        : q.kind === 'pattern' ? '다른 서비스들이 같은 일을 푸는 방식입니다(서비스 이름은 가렸습니다). 실제로 쓸 때를 떠올려 골라 주세요.' : '';
+        : q.kind === 'pattern' ? '다른 서비스들이 같은 일을 푸는 방식입니다(서비스 이름은 가렸습니다).' + (q.recommended ? ' 저희 추천은 표시해 두었습니다 — ' : ' ') + '실제로 쓸 때를 떠올려 골라 주세요.'
+        : q.verifies ? '앞에서 고르신 것을 다른 장면으로 한 번 더 확인하는 질문이에요. 편하게 다시 골라 주세요.' : '';
       card.innerHTML = '<p class="q">' + esc(q.text) + '</p>' + (hint ? '<p class="hint">' + hint + '</p>' : '');
       const opts = document.createElement('div'); opts.className = 'opts';
       q.options.forEach((o) => {
         const b = document.createElement('button'); b.className = 'opt' + (a.value === o.value ? ' sel' : '');
-        const rec = q.kind === 'pushback' && q.recommended && o.value === q.recommended;
+        const rec = (q.kind === 'pushback' || q.kind === 'pattern') && q.recommended && o.value === q.recommended;
         b.innerHTML = '<b>' + esc(o.value) + '</b>' + (rec ? '<span class="rec">하네스 추천</span>' : '') + '<br><span style="color:var(--ink-2);font-size:14px">' + esc(o.scene) + '</span>'
           + (rec && q.why ? '<br><span style="color:var(--ink-2);font-size:13px">추천 이유: ' + esc(q.why) + '</span>' : '');
         b.onclick = () => { a.value = o.value; a.unknown = false; save(qrec(q, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b);
