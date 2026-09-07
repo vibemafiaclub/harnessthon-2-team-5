@@ -412,3 +412,97 @@ D-10·D-15·D-22(확인 안 하고 확인했다고 함)와 다른 형태 — **�
 ## D-34. "full 프레임 두 벌" 규칙은 현업 관행이 아니었다 (오너 질문으로 정정)
 D-11 에서 높이를 844 로 고정한 것이 잘림(D-26)을 낳았고, D-26 에서 full 프레임을 덧붙인 것은 현업에서 드문 방식(두 벌 유지 부담·불일치). D-11 의 "앱 화면으로 안 보임" 진짜 원인은 높이 차이가 아니라 상태바·탭바 부재와 폭 불일치였다.
 **처치**: 폭 390 고정 + 상태바·탭바 필수, **높이는 내용에 맞춰(최소 844, hug 허용)**, 탭바는 맨 아래 + 프로토타입 고정. 두 벌 금지. 규격 동일성 검사는 폭·상태바·탭바만(높이 제외). A검사 14 = 내용 절단 없음, H-10 = overflow:hidden 절단 없음. 주 행동 첫 화면 안/고정 바 규칙(D-26 ①)은 유지.
+
+---
+
+# 5회차 평가 기준 커버리지 감사 (2026-09-07, 워크플로 wf_4a15bf81-651) — 런이 아니라 문서·스크립트 대조에서 나온 결함
+
+> 출처: `docs/eval-criteria.md` 14개 기준(I-1~I-5·U-1~U-6·V-1~V-3)에 대한 커버리지 감사(감사 14 + 반박 14 + 비평 1). 결과 full 0 / partial 13 / none 1(U-2 레퍼런스 수집). 명세와 규약은 `docs/eval-criteria-coverage.md`.
+> 감사가 짚은 갭은 100건이 넘지만 여기에는 **실행·grep 으로 재현해 확인한 것**만 등록한다. 행 번호는 커밋 9090f4f 기준이다(이 라운드의 수정으로 옮겨진다).
+
+## D-35. 레퍼런스 수집 단계 부재 — 관행 위반 4건(D-11·D-26·D-33·D-34)이 전부 오너의 외부 비교로 잡힘 (구조)
+
+네 결함을 따로 등록했지만 잡힌 방식이 같다.
+
+| 결함 | 하네스가 낸 것 | 잡은 사람·방법 |
+|---|---|---|
+| D-11 | 프레임 높이 400~900px 제각각, 상태바·탭바 없음 | "사용자가 다른 팀 시안과 비교해서야" 드러남 |
+| D-26 | 주 버튼이 844 아래로 잘린 채 승인 | 오너 지적 — "현업 관행은 기기 프레임 고정 + 스크롤 프로토타입" |
+| D-33 | 탭바 아이콘 뒤 회색 상자 | 오너 지적 — "어느 플랫폼 관행에도 없는 모양" |
+| D-34 | full 프레임 두 벌 규칙 | 오너 질문 — "현업에서 드문 방식" |
+
+전부 **"실제 서비스는 이렇게 안 한다"** 가 근거다. 하네스는 그 근거를 어디서도 가질 수 없다:
+
+- `design-judge.md` 21행 규칙 5 "취향을 발명하지 않는다 — brief.md·design.md 에 근거가 없는 기준으로 탈락시키려면 `취향 공백` 으로 사람에게". 판정자가 관행을 알아도 brief 에 없으면 쓸 수 없고, 사람에게 넘기는 것이 규칙이다. 위 4건이 전부 사람 지적으로 잡힌 기전이 이것이다.
+- judge 의 `tools:` 에 WebSearch·WebFetch 가 없고 화이트리스트 강제(D-2)라 외부 자료를 볼 수단 자체가 없다.
+- `templates/state.json` caps 에 `agent_references_*` 키 없음, `check-brief.js` B-1~B-15 에 레퍼런스 항목 없음, brief §11 "같은 카테고리 실제 서비스" 는 서비스명·화면·출처 칸이 없는 한 줄 자유 서술이라 비어 있어도 B-13 PASS.
+- 유일한 유입 경로 Q4(사용자가 편한 앱을 말함)는 fast 세트(`design-interview/SKILL.md` 12행)에 없다. 심사 기본 모드가 fast 다. 있어도 출력이 borrow_scope → §4 판단기준 → UI 심미 축이라 흐름·진입·상태 처리(UX)는 §2 로 들어가지 않는다.
+- `design-harness/SKILL.md` 151행 "이 하네스에 없는 것: 무엇이 좋은 디자인인가에 대한 답" 이 취향의 **값**(색·간격·서체)과 **패턴**(같은 과업을 실제 서비스가 어떻게 푸는가)을 구분하지 않아 패턴 수집까지 배제로 읽힌다. `interview_prompts.md` 37행 "스크린샷을 찍어다 주세요 라고 시키는 순간 실패" 를 하네스가 '레퍼런스 금지' 로 읽었는데, 같은 문서 35행 오너 원문은 "네가 전부 근거 자료를 주거나 아니면 스크린샷 같은 것을 보내 주던가 해야 돼" — 하네스 측 수집을 **요구**하는 문장이다.
+
+결과: 관행 위반은 오너가 밖에서 비교해 와야만 잡히고, 오너가 지적하지 않은 위반은 그대로 산출된다. D-33 의 "AI 슬롭 신호" 분류도 c_checks 내장 항목(C-5·C-8)에 사후에 대응시킨 것이지 이 카테고리 서비스의 관행 대조가 아니다.
+
+**처치**: ①`design-interview` 에 **0-A2 레퍼런스 수집** 신설 — 0-A 와 같은 메시지에 병렬 호출, judge, 입력은 PRD + 웹(브리프에 '레퍼런스 수집 위임' 명시), 출력 `design/references.md` 표(`| REF-n | 서비스 | 화면 | PRD 유저스토리 동사 | 처리 방식(진입·1등 정보·상태 표현·빈 상태) | 출처 | 차용(패턴만) |`), 같은 카테고리 ≥3 + 인접 ≥1, 상한 `agent_references_min/max` 4~10(fast 3~6)·`agent_references_lines_max` 80(fast 40). 색 hex·로고·카피 기록 금지, 서비스명 사용자 노출 금지. ②brief **§9 레퍼런스 UX 패턴** 표 신설, `check-brief.js` **B-18**(행 수 범위·출처 열 공백 0·T-1~T-3 각 '우리 과업' 열 ≥1/≥2·`--refs` 로 references.md 존재·≥10줄). ③`design-judge.md` tools 에 WebSearch·WebFetch, 규칙 0c(레퍼런스 수집 위임에서만 web), 규칙 5 에 "`design/references.md`·c_checks.md·design.md §3 에 근거한 판정은 취향 발명이 아니다". ④harness 151행·interview 169행·judge 21행을 같은 문장으로 — **"없는 것은 취향의 값이다. 값은 사용자 반응에서, 패턴은 0-A2 레퍼런스에서, 바닥선(접근성·규격·슬롭)은 c_checks·design.md §3 에서 온다."** ⑤레퍼런스는 사용자에게 **장면형 선택지**(`kind: pattern`, 서비스명 숨김)로 보이고 답은 raw `A-nn [PATTERN]` 으로 회수, §9 채택 열에 기록. ⑥rule_schema 과적합 경고 분모에서 `REF-n` 제외 — 패턴은 §2 IA·§2b 과업·2-B 축 후보에만 흐르고 **§3 시각 6축 정본에는 흐르지 않는다**(값과 패턴의 경계를 스키마에 고정). 2-B 는 §9 에서 같은 과업을 다르게 푼 REF 갈림을 우선 후보 축으로, 2-D 페르소나 2 는 "§9 REF 대비 실제 서비스처럼 보이는가" 로 판정한다. 명세 계획 5·6·7·8·9·10·13·14·16·19.
+
+## D-36. check-brief 가 빈 템플릿에서 B-4·B-12 PASS (심각)
+
+D-30 처방("세는 일은 스크립트")으로 만든 검사기가 **자기 검출력은 검증된 적이 없다.** 3회차의 원칙 — "결함이 없는 상태에서 PASS 가 나온 것과 검사기가 작동하는 것은 다른 사실" — 을 A검사 7 에는 적용했고 check-brief 에는 적용하지 않았다.
+
+실측(커밋 9090f4f 의 `scripts/check-brief.js` × 같은 커밋의 `templates/brief.md` × 빈 `interview_raw.md`):
+
+| 항목 | 결과 | 내용 | 근거 |
+|---|---|---|---|
+| B-4 | **PASS** | §2b 핵심 과업 3행 (≥3) | T-1 / T-2 / T-3 |
+| B-12 | **PASS** | §10 PRD 반박 1건 (반박 없음 명시) | P-01 |
+
+손대지 않은 템플릿의 `| T-1 |  |  |  |  |` 세 줄과 `| P-01 |  |  |  |  |  |` 한 줄이 데이터로 세어졌다. 원인 둘:
+
+- `tableRows`(31행)의 행 필터 `cells.some((c) => c && !/^(TODO|예:.*)$/.test(c))` 는 셀 하나라도 차 있으면 통과시킨다. ID 셀만 채운 자리 행이 전부 데이터 행이다.
+- `sec()`(29행)가 HTML 주석을 제거하지 않아 84행 `/반박 없음/.test(sec('10'))` 이 템플릿 §10 주석의 안내문 `0건이면 "반박 없음 — 사유" 를 쓴다` 에 매치했다. §10 은 **0행이어도 통과**한다 — 감사 지적('행 수만 센다')보다 더 무력하다.
+
+파급: I-1·I-3·I-5·U-1·U-3·U-6·V-1 일곱 기준의 '스크립트 강제' 주장이 이 위에 서 있었다. B-12 는 §10 의 '하네스 이의·대안'·'사용자 확인 원문' 열이 비어도 보지 않았으므로 I-5 의 "사용자 확인 원문 또는 위임" 요건도 문장뿐이었다.
+
+**처치**: ①`tableRows` 에서 채운 셀이 1개(ID)뿐인 행을 제외, `sec()` 는 `<!-- -->` 를 먼저 제거하고 검사(수정판 77행 `briefSrc.replace(/<!--[\s\S]*?-->/g, '')`). '반박 없음' 정규식은 `반박 없음 — 사유: <텍스트>` 형만 인정(수정판 236행). 수정판 × 워킹트리 템플릿 재실행 → **B-4 FAIL** "§2b 핵심 과업 0행(T-1~T-3)", **B-12 FAIL** "§10 PRD 반박 0건 (1~10, 반박 없음 사유 없음)". 수정판 헤더 주석 6~7행에 이 결함을 기록해 뒀다. ②B-12 확장 — 행마다 이의·대안/**하네스 추천**(신설 열)/사용자 확인 원문(인용·A-nn·`사용자 위임`·`모르겠음`)/결정 채움, 행 수 ≤`agent_prd_pushback_max`, 유형 `누락` ≥1 또는 "누락 없음 — 사유". ③**`scripts/selftest.sh`** — 픽스처 `scripts/fixtures/brief_empty.md`(= templates/brief.md 사본)·`brief_golden.md`·`raw_golden.md`·`interview_golden.html`·`interview_bad.html`·`c_report_bad.json`. check-brief 는 empty 에서 B-3·B-4·B-5·B-12·B-16·B-18 FAIL 이어야 하고 golden 에서 exit 0; check-interview-page 는 bad 에서 P-3·P-4·P-6 FAIL, golden 에서 exit 0; check-c-report 는 bad 에서 CR-5·CR-6 FAIL; forbidden-words 는 14단어 각 1회 매치. 하나라도 어긋나면 exit 1. `design-harness` 시작 절차에 "`bash scripts/selftest.sh` 종료 코드 0 확인" — 검출력이 확인되지 않은 검사기로는 런을 시작하지 않는다. 명세 계획 1·24.
+
+## D-37. SKILL 이 '스크립트가 센다' 고 선언한 163·164행이 check-brief 에 없음 + fast 세트 4곳 3버전 + 금지어 13/14
+
+한 뿌리(문서가 약속한 것을 스크립트·다른 문서가 모른다)의 세 형태.
+
+**(a) 종료조건 문서-스크립트 드리프트.** `design-interview/SKILL.md` 146행 "종료조건 (기계 판정 — `scripts/check-brief.js` 가 센다)", 151행 "아래 목록은 스크립트가 검사하는 항목의 사람용 설명이다". 그런데 163행(회수한 `meta-status.answered` 와 raw 항목 수 일치, 갤러리 반응 ≥5 또는 Q12 위임)·164행(`design/verify/exit_interview_page.md` 존재·전건 PASS)은 check-brief.js 에 없다 — 커밋 9090f4f 의 검사 ID 는 T-0·B-1~B-15 가 전부다(`grep -o 'B-[0-9]*'` 로 확인). 결과: 인터뷰 페이지 발행 전 검사(질문 수 ≤상한·금지어 grep·축 구현)가 **한 번도 안 돌아도 0단계는 PASS** 다. 그 발행 전 검사 ①~⑥ 자체도 worker(Haiku) 절차라 D-30 이 3회 틀렸다고 기록한 것과 같은 형태다.
+
+**(b) fast 질문 세트 4곳 3버전.** 같은 커밋에서:
+
+| 위치 | 세트 | 상한 |
+|---|---|---|
+| `design-interview/SKILL.md` 12행 | Q1·Q2·Q6·Q8·Q11·Q12 — **Q5 없음** | ≤6 |
+| `design-interview/SKILL.md` 65행 | Q1·Q5·Q2·Q6·Q8·Q11 — **Q12 없음** | — |
+| `design-harness/SKILL.md` 19행 | Q1·Q5·Q2·Q6·Q8·Q11·Q12 (7개) | ≤6 |
+| `interview_prompts.md` 83행 | 같은 7개 | 6 |
+
+4회차 검증 3 이 "Q5 를 앞에 둔 이유가 실측됨" 이라 적었는데 12행 세트는 Q5 를 뺀다. 7개 세트는 상한 6 을 이미 넘는다. 65행 세트를 따르면 Q12(위임 탈출구)를 묻지 않아 "이 외는 네가 정해" 의 진입점이 사라진다. full 상한도 harness 19행 ≤8 / interview 12행 ≤12 / `state.json` `human_interview_questions_max` 8(caps_fast 6) 로 셋이 다르다. 정본이 없으니 maker 는 넷 중 아무거나 읽고 worker 는 그중 아무거나로 센다.
+
+**(c) 금지어 13/14.** `interview_prompts.md` 19행 목록은 14개(정보 밀도·위계·톤앤매너·그리드·여백·대비·무드·컨셉·미니멀·모던·레이아웃·컴포넌트·플로우·IA)인데 `design-interview/SKILL.md` 65·79행은 "금지어 13개". 숫자를 보고 grep 패턴을 만드는 worker 가 하나를 빠뜨려도 개수로는 맞는다. 그 grep 도 0-B 페이지 한 곳뿐이고 1-C 세트 설명·2-E 비교 페이지·0-H ack 표·3-F taste_gap 질의문·상한 초과 브리핑에는 없다.
+
+**처치**: (a) check-brief 에 **B-20**(raw `^R-.*(좋다|싫다)` + `^W-n: left|right` ≥5 또는 delegations q12)·**B-21**(`--page-report`, 기본 `design/verify/exit_interview_page.md` 존재·비어 있지 않음·`| FAIL |` 0)·**B-22**(`state.stages.interview.answered` 와 raw A-/R-/W- 합계 일치, 없으면 N/A). 수정판 × 워킹트리 템플릿 실측: B-20 FAIL "자극 반응 0건", B-21 FAIL "인터뷰 페이지 검사 리포트 없음", B-22 N/A. 발행 전 검사 ①~⑥은 **`scripts/check-interview-page.js`**(P-0~P-14, 종료 코드 0/1/2)로 옮겨 worker 는 실행만. SKILL 종료조건 목록은 check-brief 헤더의 B-번호표(T-0, B-1~B-15, B-3b/3c/5/7b/12 확장, B-16~B-26)와 같은 순서로 재작성해 드리프트가 생기면 눈에 보이게 한다. (b) 상한을 페이지 기준으로 재산정 — 검증 3 실측 19항목 3분 31초·타이핑 0줄 — **full 12 / fast 10** 으로 통일(`state.json`·harness 19행·interview 12행). 세트 정본은 **`interview_prompts.md` §6 한 곳**(fast = Q1 → Q5 → Q2 → pattern ≤2 → Q6 → Q7' 확인형 → Q8 → Q11 누락 1 + 문제 1 → Q12), 나머지 세 곳은 값을 복제하지 않고 '§6 참조'. check-interview-page **P-13** 이 페이지의 skeleton 집합을 §6 정본과 대조한다. (c) **`scripts/lib/forbidden-words.js`** 를 정본으로 — `FORBIDDEN_WORDS` 14개(실측 `require` 길이 14)·`FORBIDDEN_RE`·`TASTE_PATTERN`·`scanText`·`scanFile`, CLI 종료 0/1. check-brief B-19·check-html H-13·check-interview-page P-4·design-tokens 종료조건·0-H 표·3-F 질의문·상한 초과 브리핑이 전부 이 모듈을 쓴다. 문서의 '13개' 는 전부 '14개(scripts/lib/forbidden-words.js 정본)' 로. 명세 계획 1·2·3·9·10·11.
+
+## 처리 결과 5 (하네스구현 세션, D-35~D-37)
+
+| 결함 | 처리 | 위치 |
+|---|---|---|
+| D-35 | 0-A2 레퍼런스 수집(0-A 와 병렬, judge + web, `design/references.md`, 상한 `agent_references_*`), brief §9 표 + B-18, judge tools·규칙 0c·규칙 5, '값/패턴/바닥선' 문장 3곳 통일, `kind: pattern` 질문 + `A-nn [PATTERN]` 회수, rule_schema 과적합 분모에서 REF-n 제외, 2-B 축 후보·2-D 페르소나 2 가 §9 참조 | `design-interview` 0-A2·0-B·0-F, `templates/brief.md` §9·§11, `templates/state.json` caps, `scripts/check-brief.js` B-18, `.claude/agents/design-judge.md`, `design-harness` '이 하네스에 없는 것', `rule_schema.md`, `interview_prompts.md` §2·§6, `answer_translation.md`, `design-draft-html` 2-B·2-D |
+| D-36 | tableRows 자리 행 제외 + sec() 주석 제거 + '반박 없음 — 사유' 정규식 → 빈 템플릿에서 B-4·B-12 FAIL 실측. B-12 확장(이의·추천·확인 원문·결정·누락 유형). `scripts/selftest.sh` 픽스처 6종으로 check-brief·check-interview-page·check-c-report·forbidden-words 검출력 시험, 하네스 시작 절차에 종료 코드 0 | `scripts/check-brief.js`, `scripts/selftest.sh`, `scripts/fixtures/`, `design-harness` 시작 절차, `scripts/eval.sh` |
+| D-37 | (a) B-20·B-21·B-22 신설, 발행 전 검사를 `check-interview-page.js` P-0~P-14 로, SKILL 종료조건을 B-번호표 순서로 재작성 (b) full 12 / fast 10 통일, 세트 정본 `interview_prompts.md` §6 한 곳 + P-13 대조 (c) `scripts/lib/forbidden-words.js` 14개 정본, 6개 소비처 공용, '13개' 표기 전부 교체 | `scripts/check-brief.js`, `scripts/check-interview-page.js`, `scripts/lib/forbidden-words.js`, `templates/state.json`, `design-interview/SKILL.md` 12·65·79·종료조건, `design-harness/SKILL.md` 19행, `interview_prompts.md` §1-6·§6 |
+
+## 다음 런에 넘기는 잔여 위험 (2) — 측정 항목
+
+앞의 잔여 위험 3건(components.md 표 형식·슬러그 마이그레이션·미구현 3종)은 그대로다. 이 라운드가 새로 만든 장치는 전부 **"세는 칸"** 이므로, 다음 런에서 아래를 실제로 세어 기록해야 장치가 작동했는지 알 수 있다. 감사가 I-5·U-6·V-1 에서 "실측 공백" 으로 지적한 항목이다 — 지금까지 4개 런 어디에도 이 숫자가 없다.
+
+| # | 측정 항목 | 어디서 세나 | 기준(fast) | 어긋나면 |
+|---|---|---|---|---|
+| 1 | 사람 호출 `H-nn` 건수·`kind` 분포·되묻기 `F-n` 수·4항(결정할 것/선택지/추천/안 정하면) 준수율 | `grep -c '^H-[0-9]' design/interview_raw.md` == `state.human_gates.calls[]` 길이, `grep -o '^H-[0-9]* \[[a-z_]*/[a-z_]*\]' \| sort \| uniq -c`, `grep -c '^F-[0-9]'`; 준수율은 check-brief **B-24**(4라벨 전부 있는 블록 / 전체) | H ≤7(`human_calls_max`), F ≤3, 준수율 100% | 초과 호출은 "그 외에 부르면 결함" 의 첫 실측 — 어느 단계·kind 가 넘었는지 그대로 결함 등록 |
+| 2 | pushback 에서 추천과 다른 선택 건수 | raw `A-nn [PRD-PUSHBACK]: <선택> (추천 <recommended>)` 에서 선택 ≠ 추천인 행 수 / pushback 총수 | 첫 측정 — 기준값 없음 | 2런 연속 0건이면 recommended 배지 앵커링 검토(취향형처럼 후공개할지), 전건 불일치면 0-A 추천 품질 검토 |
+| 3 | 열린 결정 질문 0건 | `grep -nE '무엇을 넣을까요\|몇 개\|어떻게 보이면 좋을까요\|무엇이 보이면 좋겠어요' design/stimuli/interview.html design/interview_raw.md` | 0건 | 걸린 질문의 skeleton 을 적고 §6 정본 쪽 문구를 고친다(페이지만 고치면 다음 런에 재발) |
+| 4 | `design/references.md` 행 수·T-n 매핑·C FAIL 중 REF 인용 비율 | 행 수는 check-brief **B-18**(`agent_references_min`~`max`), brief §9 '우리 과업' 열에 T-1~T-3 각 ≥1; C 비율은 `c_report.json` `checks[]` 중 `fail` 의 `evidence` 에 `REF-` 가 있는 것 / fail 총수 | 행 4~10(fast 3~6), T-1~T-3 각 ≥1, 비율은 첫 측정 | 행 0 이면 0-A2 가 '레퍼런스 없음 — 사유' 를 썼는지 확인. C FAIL 에 REF 인용이 0 이면 판정자가 references.md 를 읽지 않은 것 — D-35 미해소로 재등록 |
+| 5 | 1-C 세트 선택·2-E 축 선택·2-H 승인의 사용자 타이핑 줄 수·되묻기 횟수 | raw 의 `T-01`·`D-<축>`·승인 원문 뒤 사용자 줄 수, 그 호출 뒤 채팅 왕복 수 | 각 ≤3줄·≤1턴 (0단계 실측: 타이핑 0줄·되묻기 3턴) | 넘으면 그 지점의 질문 문구·비교 페이지가 V-1 '쉬운 수준' 미달 — 문구를 raw 에 인용해 결함 등록 |
+| 6 | 위임·탈출구 `delegations[]` 건수·kind 분포 | `state.human_gates.delegations[]` 길이, kind ∈ {unknown, q12, timeout, budget60} 별 수; 0-H 다이제스트의 "제가 대신 정한 것 N개" 의 N 과 일치 | 첫 측정 — 기준값 없음 | N 불일치면 다이제스트가 원장을 안 읽은 것. timeout·budget60 이 1건이라도 있으면 사용자 검증 0 경로를 밟은 것이므로 그 항목이 ack 화면에 실제로 보였는지 스크린샷으로 남긴다 |
+
+측정은 런이 끝난 뒤가 아니라 **단계마다** 한다 — 0단계 끝(1·2·3·6), 1·2단계 끝(5), 3단계 끝(4). 세지 않은 런은 이 라운드의 장치가 작동했다는 증거를 남기지 못한다.
