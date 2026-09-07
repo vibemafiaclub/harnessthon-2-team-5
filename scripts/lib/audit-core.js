@@ -10,9 +10,9 @@
 
 var AUDIT_CATALOG = ['contrast_ratio', 'min_size', 'min_font_size', 'image_fill_present', 'text_overflow', 'saturation_max',
   'color_allowlist', 'color_denylist', 'style_bound', 'multiple_of', 'scale_allowlist', 'reuse_ratio', 'name_pattern', 'variant_states_present',
-  'within_parent_bounds', 'primary_action_visible', 'frame_spec'];
+  'within_parent_bounds', 'primary_action_visible', 'frame_spec', 'icon_foreign_fill'];
 var AUDIT_IMPLEMENTED = ['color_allowlist', 'color_denylist', 'multiple_of', 'scale_allowlist', 'name_pattern', 'min_font_size', 'min_size', 'style_bound', 'variant_states_present',
-  'text_overflow', 'within_parent_bounds', 'primary_action_visible', 'frame_spec'];
+  'text_overflow', 'within_parent_bounds', 'primary_action_visible', 'frame_spec', 'icon_foreign_fill'];
 
 var HEX6 = /^#?[0-9a-fA-F]{6}$/;
 function normHex(v) { if (typeof v !== 'string' || !HEX6.test(v)) return null; return ('#' + v.replace('#', '')).toUpperCase(); }
@@ -120,6 +120,17 @@ var CHECKS = {
     var have = (node.variantValues || []).map(function (v) { return String(v).toLowerCase(); });
     var missing = req.filter(function (r) { var k = String(r).toLowerCase(); return !have.some(function (h) { return h === k || h.indexOf(k) >= 0; }); });
     return missing.length ? [{ property: 'variants', expected: req.join(', '), actual: '누락: ' + missing.join(', ') }] : [];
+  },
+  /* A검사 7b — 아이콘 내부 이물(D-38): 아이콘 컨테이너 안에 VECTOR/BOOLEAN_OPERATION 외의 "보이는 fill 을 가진" RECTANGLE·FRAME·ELLIPSE 가 있으면 위반.
+     opacity 와 무관(0.14 여도 보인다). 덮개(D-10)·배경 칩(D-38) 둘 다 걸린다. 예외: 활성 표시 Indicator, 컨테이너 자신(fill 없음). */
+  icon_foreign_fill: function (node, check) {
+    var iconRe = new RegExp(check.icon_name_pattern || '^Icon/', 'i');
+    var inIcon = (node._ancestorNames || []).some(function (a) { return iconRe.test(a || ''); });
+    if (!inIcon) return [];
+    if (['RECTANGLE', 'FRAME', 'ELLIPSE', 'POLYGON', 'STAR'].indexOf(node.type) < 0) return [];
+    if (/indicator/i.test(node.name || '')) return [];
+    var vis = (node.fills || []).filter(function (f) { return f.visible !== false && f.type !== 'IMAGE' && (f.opacity == null || f.opacity > 0); });
+    return vis.length ? [{ property: 'fills', expected: '아이콘 안에는 벡터만 (판·칩·테두리 금지)', actual: node.type + ' fill ' + (vis[0].hex || vis[0].type) + (vis[0].opacity != null ? ' @' + vis[0].opacity : '') }] : [];
   },
   min_size: function (node, check) {
     if (typeof node.width !== 'number' || typeof node.height !== 'number') return [];

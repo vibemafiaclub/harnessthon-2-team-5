@@ -39,7 +39,7 @@ argument-hint: "<figma file url | --new>"
 
 ## 3-B. 컴포넌트 (`design-maker`)
 
-브리프: **입력 화이트리스트 = `design/drafts/components.md`, 해당 컴포넌트가 쓰인 초안 HTML 1개, `tokens.json`, `figma_nodes.json`, `.claude/skills/design-draft-html/references/aesthetic_rules.md`**(슬롭·균일함 카탈로그 — 만들면서 피한다).
+브리프: **입력 화이트리스트 = `design/drafts/components.md`, 해당 컴포넌트가 쓰인 초안 HTML 1개, `tokens.json`, `figma_nodes.json`, `.claude/skills/design-draft-html/references/aesthetic_rules.md`**(슬롭·균일함 카탈로그 — 만들면서 피한다). 아이콘 컴포넌트 브리프에는 `tokens.json` 의 `icon.definition` 문장을 **그대로** 넣는다 — 스타일 이름(duotone 등)만 넘기면 제작 에이전트가 해석해 틀린다(D-38: 반투명 배경 칩).
 - 컴포넌트마다 별도 호출, 병렬 가능. 페이지 `Components` 에 배치. **배치 좌표는 앞 세트의 `y + height + 여백(64)` 으로 계산**한다 — 고정 간격으로 나열하면 키 큰 세트가 다음 라벨을 덮는다(실측). 각 호출은 자기 산출을 **`design/figma_nodes.<컴포넌트슬러그>.json` 별도 파일**에 쓰고, 병합은 3-B 종료 후 `design-worker` 단일 호출이 한다(D-8: 공유 JSON 동시 쓰기로 파일 무효화 실측).
 - **크기 sanity**: 컴포넌트 크기와 패딩은 초안 HTML 의 대응 요소 ±30% 이내. `spacing.scale` 은 **키가 아니라 값**을 읽는다(실측: 인덱스 20 을 20px 로 착각해 padding 80/64px, 버튼 343×155px).
 - **아이콘**: 벡터 위에 불투명 fill 을 가진 프레임을 두지 않는다. 아이콘 컨테이너 fill 은 없음 또는 투명(뒤에 있어도 회색 상자로 보인다 — D-33). **탭바**: 배경은 surface 토큰 + 상단 1px border 또는 위쪽 그림자, 아이콘 뒤 상자 없음, 활성 탭 표시는 아이콘·라벨 색 변경 또는 브랜드 계열 옅은 알약(`Indicator`) 하나. 네모 테두리로 활성을 표시하지 않는다. 제작 후 **인스턴스를 화면 프레임 안에 넣은 상태**로 스크린샷을 찍어 확인한다 — 마스터에서는 정상으로 보이고 인스턴스에서만 덮이는 사례가 실측됐다(D-10).
@@ -80,6 +80,7 @@ argument-hint: "<figma file url | --new>"
 4. **컴포넌트 재사용률** — Screens 페이지의 시각 요소 중 인스턴스 비율. 기준값 design.md(없으면 ≥70% 를 provisional 기준으로 쓰고 명시).
 5. **레이어 네이밍** — 정규식(기본 `^[A-Z][A-Za-z]+(/[A-Z][A-Za-z0-9 ]+)*`), `Frame \d+|Rectangle \d+|Group \d+` 0건.
 6. **variant 커버리지** — components.md 의 상태가 variant 로 전부 존재.
+7b. **아이콘 내부 이물** (`icon_foreign_fill`, audit.js 구현, warning) — 아이콘 컨테이너 안에 VECTOR/BOOLEAN_OPERATION 외의 보이는 fill 을 가진 RECTANGLE·FRAME·ELLIPSE 가 있으면 위반. **opacity 와 무관**(0.14 배경 칩도 회색 상자로 보인다 — D-38). 덮개(D-10)·배경 칩 둘 다 이 한 줄로 걸린다. 예외: 활성 `Indicator`. 탭바·목록 행처럼 반복되는 아이콘에서 걸리면 거의 실수다.
 7. **아이콘 덮임·배경** — 아이콘 컴포넌트·인스턴스 안에 `visible` 한 VECTOR/BOOLEAN_OPERATION 이 ≥1 이고, 그 벡터의 조상 중 벡터 영역을 덮는 불투명 fill(opacity ≥ 0.9, 크기 ≥ 벡터) 을 가진 FRAME/RECTANGLE 이 없다(D-10: 마스터는 정상, 인스턴스만 네모). **아이콘 컨테이너 프레임(`Icon/*`)에 보이는 fill 이 있으면 FAIL** — 벡터 뒤에 있어 아이콘은 보이더라도 회색 네모가 남는다(D-33: 탭바 4개 전부 회색 상자). 예외는 활성 탭 표시(`Tab/*` 의 `Indicator` 노드, 화면당 1개)뿐. 화면 프레임 안의 **인스턴스**를 검사 대상으로 한다.
 8. **크기 sanity** — 각 컴포넌트 인스턴스의 width/height/padding 이 `drafts/components.md` 에 적힌 초안 HTML 대응 요소 값의 ±30% 이내. 토큰에서 왔는지가 아니라 값이 말이 되는지를 본다(실측: 80px 도 scale 에 있으면 PASS 였다).
 9. **프레임 규격** — Screens 페이지의 모든 화면 프레임이 `design.md` §2 의 폭이고 상태바·탭바가 있다. 높이는 ≥844 이며 내용에 따라 달라도 된다.

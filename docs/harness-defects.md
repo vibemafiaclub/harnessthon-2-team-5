@@ -506,3 +506,8 @@ D-30 처방("세는 일은 스크립트")으로 만든 검사기가 **자기 검
 | 6 | 위임·탈출구 `delegations[]` 건수·kind 분포 | `state.human_gates.delegations[]` 길이, kind ∈ {unknown, q12, timeout, budget60} 별 수; 0-H 다이제스트의 "제가 대신 정한 것 N개" 의 N 과 일치 | 첫 측정 — 기준값 없음 | N 불일치면 다이제스트가 원장을 안 읽은 것. timeout·budget60 이 1건이라도 있으면 사용자 검증 0 경로를 밟은 것이므로 그 항목이 ack 화면에 실제로 보였는지 스크린샷으로 남긴다 |
 
 측정은 런이 끝난 뒤가 아니라 **단계마다** 한다 — 0단계 끝(1·2·3·6), 1·2단계 끝(5), 3단계 끝(4). 세지 않은 런은 이 라운드의 장치가 작동했다는 증거를 남기지 못한다.
+
+## D-38. 아이콘 뒤 반투명 배경 칩(opacity 0.14) — A검사 7 이 통과시킴 (test2 보고, 오너 지적)
+`duo-bg-chip` RECTANGLE 이 탭 아이콘 4종 × variant 4 = 16개에 깔려 회색 상자로 보였다. A검사 7 은 "벡터를 덮는 불투명 fill" 만 봐서(opacity 0.14, 벡터보다 앞) 정의대로 통과. 뿌리는 D-10 과 같다 — `tokens.json` 의 `icon.style: duotone` 이 정의 없이 이름만 있어 제작 에이전트가 "반투명 사각형을 깐다" 로 해석했고, D-10 을 고칠 때 덮개만 지우고 배경 칩은 안 봤다.
+**처치**: ①`icon_foreign_fill` 검사 타입 구현(audit-core, build-rules 규칙 `icon-foreign-fill` warning) — 아이콘 안의 벡터 외 보이는 fill 은 opacity 무관 위반, Indicator 예외. A검사 7b 로 문서화. 합성 케이스(칩 0.14 + Indicator + 깨끗한 아이콘)에서 칩만 1건 검출 확인. ②`tokens.json` `icon.definition` 필드(열거형 스타일 이름에는 정의 문장), 1-D 종료조건, 3-B 브리프에 definition 그대로 전달, build-rules 경고. 검사 스크립트 신설은 다음 런에서 elevation·typography 에서도 재발하면.
+문장으로는 안 막힌다는 test2 의 결론에 동의 — 이 세션에서 결함을 실제로 잡은 것은 A검사·check-brief·0-G 감사 같은 기계 검사였다.

@@ -131,6 +131,8 @@ if (refSystem && refPalette.length === 0) errors.push('meta.reference_system 을
 const clash = colorHex.filter((h) => refPalette.includes(h));
 if (clash.length) errors.push('토큰 색이 참조 팔레트와 같다 — 도출 과정이 없었다는 뜻: ' + clash.join(', '));
 if (errors.length) { console.error('build-rules 거부:\n  ' + errors.join('\n  ')); process.exit(2); }
+/* 스타일 이름만 있고 정의가 없는 토큰 — 제작 에이전트가 해석하고 틀린다(D-38: duotone → 배경 칩). 경고만, 다음 런에서 재발하면 거부로. */
+for (const [grp, key] of [['icon', 'style'], ['elevation', 'style'], ['typography', 'style']]) { const g = T[grp]; if (g && typeof g[key] === 'string' && g[key] && !(g.definition && String(g.definition).trim())) console.error(`[build-rules] 경고: ${grp}.${key}="${g[key]}" 은 스타일 이름인데 ${grp}.definition 이 없다 — 제작 에이전트가 해석한다(D-38)`); }
 
 const src = `tokens.json (${T.meta && T.meta.chosen_set ? 'set ' + T.meta.chosen_set : 'unknown set'})`;
 const out = {
@@ -159,6 +161,9 @@ const out = {
     { id: 'component-reuse-rate', title: '컴포넌트 재사용률', stage: ['design'], severity: 'warning', applies_to: {},
       check: { type: 'reuse_ratio', min: A.reuseMin }, autofix: false, status: 'filled', source: '가정: 기본값 ' + A.reuseMin + ' (provisional)',
       fix_hint: '기존 컴포넌트로 대체 가능한 신규 노드를 인스턴스로.' },
+    { id: 'icon-foreign-fill', title: '아이콘 내부 이물(판·칩·덮개)', stage: ['design'], severity: 'warning', applies_to: {},
+      check: { type: 'icon_foreign_fill', icon_name_pattern: '^Icon/' }, autofix: false, status: 'filled', source: 'D-10·D-38 실측 — 아이콘은 벡터만',
+      fix_hint: '아이콘 컨테이너 안의 RECTANGLE/FRAME/ELLIPSE 를 지우거나 fill 을 없앤다. 활성 표시는 Tab/* 의 Indicator 하나뿐.' },
     { id: 'layer-naming-semantic', title: '레이어 네이밍 semantic', stage: ['wireframe', 'design'], severity: 'warning', applies_to: {},
       check: { type: 'name_pattern', deny: ['^(Frame|Group|Rectangle|Ellipse|Vector|Line)\\s*\\d*$'] }, autofix: true, status: 'filled', source: '하네스 기본 — 인스턴스 내부·의미 있는 부모 아래의 자동 생성 벡터는 제외',
       fix_hint: '역할 기반 이름(Card/MeetingRow, Chip/Status)으로.' },
