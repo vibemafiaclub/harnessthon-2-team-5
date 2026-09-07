@@ -575,3 +575,14 @@ D-47 의 행 패턴 `^(Row|ListItem|…)` 은 `Row/Person` 형식만 잡아 `per
 ## D-49. (판단 기록) 한글 키 tokens.json — build-rules 내부 슬러그화 제안 불채택 (test2 제안, 2026-09-07)
 test2 는 검증 2 의 `design/tokens.json`(한글 키, D-9 이전 산출)을 그대로 두고 `tokens.slug.json` 사본(한글 상태명 → 영문 슬러그 + `label` 로 원명 보존, 값 불변)을 build-rules 에 넘겨 왔다. 제안: build-rules 가 거부 대신 내부에서 슬러그화하고 `source_key` 를 보존하면 사본이 필요 없다.
 **판단**: 불채택. 키가 ASCII 여야 하는 이유는 build-rules 한 곳이 아니라 2-A tokens.css 변수명·3-A Figma Variables 이름·A검사 `binding_name_deny` 가 **같은 이름**을 봐야 하기 때문이다(D-9). 한 소비처만 내부 정규화하면 정본이 둘이 되고, test2 가 스스로 지적한 "사본과 실물 변수 이름이 어긋난다" 가 구조화된다. 규약은 1-D 에서 tokens.json 을 **처음부터 슬러그 키 + label(한글 원명)** 로 내는 것이고 다음 런은 그렇게 생성된다 — brief 근거와의 연결은 label 이 담당한다. 검증 2 자산에 한해 사본 우회를 허용하고, 그 파일에서는 semantic 변수 이름을 지목하는 규칙을 쓰지 않는다(현재 deny 는 `primitive/` 뿐이라 영향 없음). 02 픽스처(한국어 PRD)가 1-D 규약대로 슬러그 키를 내는지가 실측 항목.
+
+## 처리 결과 6 (하네스구현 세션 × test2, D-39~D-49) — 검증 2 자산 A검사 최종치 (커밋 9df0ed6)
+| 항목 | 최종 |
+|---|---|
+| blocker | 24 = `primary-action-visible`(명명 규약 미도입, 소급 안 함) |
+| warning | 267 = `layer-naming-semantic`(applicable 429, 소문자 코드형 이름, 소급 안 함) |
+| 0건 규칙 | auto·touch-target(43)·frame-spec(24)·type-style-reuse(498)·no-primitive-binding(1172)·content-not-cut(1132)·text-not-clipped·no-zero-size·text-size-min·no-reference-color-copy·color-palette·spacing-grid·radius-scale·icon-foreign-fill |
+| 반환 | 14,763B, violations_truncated_cap 10, over_budget 없음 |
+| not_applicable / requires_human_review | touch-target-min·variant-state-coverage / contrast-text-aa·contrast-nontext-aa·image-fill-valid |
+
+이번 사이클에서 A검사가 잡은 **실제 결함 4건**(프레임 잘림 2·02 탭바 3·fontSize 대입 회귀 1·입력칸 높이 6 — 건수 기준 12)은 전부 수정. 나머지는 **규칙 쪽 결함**이었다: A-15 미실행(D-43), 탭바 규칙이 IA 를 모름(15 오탐, D-46), 터치 타깃이 실제 대상을 잘못 지목(19 오탐, D-47), naming allow 가 한글·인스턴스 이름 배제(약 100 오탐, D-48), CR-3 자기 신고 위조(D-42), F-11 스키마 불일치(D-41), 예산 절단 미작동(D-46). **교훈: 검사기가 늘어나는 국면에서는 오탐이 진짜 결함보다 많다.** 규칙 도입 시각(`since`)과 파일 생성 시각 대조로 소급/진짜를 리포트에서 가르는 아이디어는 02 픽스처 런 결과 뒤 판단.
