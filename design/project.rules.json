@@ -231,11 +231,18 @@
         "type": "name_pattern",
         "deny": [
           "^(Frame|Group|Rectangle|Ellipse|Vector|Line)\\s*\\d*$"
+        ],
+        "allow": "^[A-Z][A-Za-z0-9 ]*(/[A-Z][A-Za-z0-9 ]+)*$",
+        "allow_node_types": [
+          "FRAME",
+          "COMPONENT",
+          "COMPONENT_SET",
+          "INSTANCE"
         ]
       },
       "autofix": true,
       "status": "filled",
-      "source": "하네스 기본 — 인스턴스 내부·의미 있는 부모 아래의 자동 생성 벡터는 제외",
+      "source": "하네스 기본 — deny: 자동 이름, allow: 컨테이너는 Semantic 또는 Group/Name 형식(3-D 5 정규식, D-48 실측: deny 만 있어 person-row·btn btn-primary 가 0건으로 통과). 인스턴스 내부·의미 있는 부모 아래의 자동 생성 벡터·TEXT·VECTOR 는 제외",
       "fix_hint": "역할 기반 이름(Card/MeetingRow, Chip/Status)으로."
     },
     {
