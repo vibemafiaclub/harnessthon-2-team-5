@@ -24,7 +24,7 @@
 ## 2. 화면 흐름 (IA) 확정본
 
 <!--
-PRD 분석(design/prd_analysis.md)의 후보 흐름을 시나리오 내러티브로 체험시킨 뒤 확정한 것. §2c 의 9개 여정과 design/references.md(screen_derivation 6b)를 대조한 뒤 확정한다.
+PRD 분석(design/prd_analysis.md)의 후보 흐름을 시나리오 내러티브로 체험시킨 뒤 확정한 것. §2c 의 10개 여정과 design/references.md(screen_derivation 6b)를 대조한 뒤 확정한다.
 역할 열: 이 화면을 보는 역할. §11 '누가 쓰는가' 의 R-n 번호를 쓴다. 역할마다 진입 화면이 하나는 있어야 한다(§2c 역할별 랜딩, B-3c).
 1등 정보 열: 화면을 열었을 때 눈이 가장 먼저 가야 하는 한 가지. 공백이면 FAIL(B-3b). 0-A 후보를 사용자 확인 없이 옮겼으면 [HYPOTHESIS] 를 붙이고 §6 가정 로그에 적는다.
 매핑 열: PRD 기능 번호 또는 §10 P-nn(누락). PRD 에 없는 화면은 `X-nn → §10 P-nn` 으로 적는다(X-nn = PRD 밖 화면 일련번호, P-nn = 그 화면을 요구한 §10 누락 행). 번호 없는 화면은 없어야 한다.

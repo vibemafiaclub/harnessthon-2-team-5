@@ -81,12 +81,12 @@ node -e 'const S=JSON.parse(require("fs").readFileSync("design/stimuli/token_set
 
 세 항목 중 하나라도 FAIL 인 세트는 사용자에게 보이지 않는다. 보정 상한은 세트당 2회; 2회 뒤에도 FAIL 이면 그 세트를 버리고 `human_token_sets` 에 맞게 새 세트를 1-A 로 재생성한다(사용자에게 '세트가 하나 줄었다' 고 알리지 않는다 — 노출 전 일이다).
 
-## 1-C. 세트 선택 (메인 세션 — 취향형 호출, kind `token_set`)
+## 1-C. 세트 선택 (메인 세션 — 취향형 호출, kind `token_choice`)
 
 0. **위임이면 부르지 않는다.** `state.human_gates.token_set_choice.delegated == true`(0-E 가 Q12 답에서 기록)면 `token_sets.json` 의 `ai_pick` 을 자동 채택하고 사용자에게 "이렇게 골랐다" 를 한 줄로 고지만 한다(`ai_pick_reason` 을 쉬운 말로, 금지어 0 — 결정을 되묻지 않는다). 기록: `interview_raw.md` 에 `T-01 <SET> | 사용자 위임(Q12) — ai_pick 자동 채택` 과 `고지: <보낸 문장 원문>`, `state.human_gates.delegations[]` 에 `{stage: "tokens", item: "token_set", kind: "q12", default_taken: "<SET>", ts}`, `token_set_choice.chosen = ai_pick`, `changed_after_reveal = false`. `H-` 원장에는 넣지 않는다(호출이 아니다). 1~5 를 건너뛰고 1-D 로.
-1. 부르기 전에 `design/interview_raw.md` 에 다음 번호로 `H-nn [tokens/token_set]` 한 줄 + 4줄 골격을 append 하고 `state.human_gates.calls[]` 에 `{stage: "tokens", kind: "token_set", ts}` 를 기록한다(design-harness 호출 품질 게이트). 골격의 `선택지:` 줄에는 세트 ID 와 `.set-desc` 를, `(하네스 추천: ①)` 괄호에는 `ai_pick` 을 **미리 적어 두되** 사용자 메시지에서는 괄호를 뺀다 — 취향형은 선택 기록 후 공개. 4줄과 `고지:` 줄은 사용자에게 보이는 문구이므로 금지어 0(K-8 이 `답:` 줄만 빼고 센다).
+1. 부르기 전에 `design/interview_raw.md` 에 다음 번호로 `H-nn [tokens/token_choice]` 한 줄 + 4줄 골격을 append 하고 `state.human_gates.calls[]` 에 `{stage: "tokens", kind: "token_set", ts}` 를 기록한다(design-harness 호출 품질 게이트). 골격의 `선택지:` 줄에는 세트 ID 와 `.set-desc` 를, `(하네스 추천: ①)` 괄호에는 `ai_pick` 을 **미리 적어 두되** 사용자 메시지에서는 괄호를 뺀다 — 취향형은 선택 기록 후 공개. 4줄과 `고지:` 줄은 사용자에게 보이는 문구이므로 금지어 0(K-8 이 `답:` 줄만 빼고 센다).
    ```
-   H-nn [tokens/token_set]
+   H-nn [tokens/token_choice]
    결정할 것: <human_token_sets>가지 화면 느낌 중 이 앱에 맞는 쪽 하나
    선택지: ① SET-A(<set-desc>) ② SET-B(<set-desc>) ③ SET-C(<set-desc>) (하네스 추천: <ai_pick 번호>)
    추천 이유: <ai_pick_reason 을 쉬운 말로 한 줄>
@@ -115,7 +115,7 @@ node -e 'const S=JSON.parse(require("fs").readFileSync("design/stimuli/token_set
 
 ## 종료조건 (`design-worker` — 1-E, 결과 `design/verify/exit_stage1.md`)
 
-아래 K-1~K-12 는 **항목·명령 고정**이다. worker 는 명령 블록을 위에서 아래로 그대로 실행하고 `exit_stage1.md` 에 check-brief 와 같은 표 `| 항목 | 결과 | 내용 | 근거 |` 로 적는다(근거 = 명령·출력 원문). 종료 코드가 0 이 아닌 명령은 그 항목 FAIL. 상한(`human_token_sets`·`agent_design_md_lines_max`)은 `design/state.json` 의 `caps` 에서, `mode` 가 fast 면 `caps_fast` 로 덮어써 읽는다. 하나라도 FAIL 이면 1단계는 끝나지 않는다 — worker 가 판단으로 PASS 를 주지 않는다(D-30).
+아래 K-1~K-12 는 **`node scripts/check-tokens.js --tokens design/tokens.json --state design/state.json --design design/design.md --brief design/brief.md --wcag design/verify/wcag_tokens.md --compare design/stimuli/design_guide_compare.html --sets design/stimuli/token_sets.json --raw design/interview_raw.md --out design/verify/exit_stage1.md` 한 명령이 전부 센다**(worker 는 실행만; 종료 코드 0 이 통과. 아래 명령 블록은 사람이 항목별로 다시 볼 때의 원문이며 스크립트가 정본이다 — selftest 가 골든·변이 3건으로 검출력을 시험한다). 상한(`human_token_sets`·`agent_design_md_lines_max`)은 `design/state.json` 의 `caps` 에서, `mode` 가 fast 면 `caps_fast` 로 덮어써 읽는다. 하나라도 FAIL 이면 1단계는 끝나지 않는다 — worker 가 판단으로 PASS 를 주지 않는다(D-30).
 
 - [ ] **K-1** `design/tokens.json` 유효 JSON, 빈 문자열 값 0개(`_note`·`$schema_note`·`_reference_note` 제외, `meta.reference_system` 이 null 이면 `meta.reference_palette` 도 제외), 6카테고리 `rationale` 전부 비어 있지 않음, `typography.family.fallback` 존재, **`icon.style` 같은 열거형 스타일 이름 토큰에는 `definition`(무엇을 하고 무엇을 하지 않는가) 이 있다** — 이름만 넘기면 제작 에이전트가 해석해 틀린다(D-38: duotone → 배경 칩). build-rules 가 없으면 경고
 - [ ] **K-2** `design/project.rules.json` 존재, `node scripts/audit.js --project design/project.rules.json --compile-only` 종료 코드 0 (명령·출력 원문 첨부). build-rules 가 비ASCII 키로 거부하면 tokens.json 의 키를 영문 슬러그로 바꾸고 한글은 `label` 로 — **1단계에서 확정된 뒤에는 tokens.json·tokens.css·Figma Variables 이름이 서로 물리므로 키를 나중에 바꾸지 않는다**
@@ -124,9 +124,9 @@ node -e 'const S=JSON.parse(require("fs").readFileSync("design/stimuli/token_set
 - [ ] **K-5** `design.md` 안에 hex 색상값 직접 표기 0건(토큰 이름만)
 - [ ] **K-6** `design/stimuli/design_guide_compare.html` 존재, `<section data-set="SET-X">` 의 서로 다른 세트 수 == `human_token_sets`
 - [ ] **K-7** 각 세트 `<section>` 안에 `<div data-section="apply">` 와 `<p class="set-desc">` 둘 다 존재
-- [ ] **K-8** 금지어 0건 — (a) 비교 페이지의 보이는 텍스트 전부(`.set-desc`·`<title>` 포함, `node scripts/lib/forbidden-words.js` 종료 코드 0) (b) raw 의 `H-nn [tokens/token_set]` 블록(`답:` 줄 제외)과 `고지:` 줄
+- [ ] **K-8** 금지어 0건 — (a) 비교 페이지의 보이는 텍스트 전부(`.set-desc`·`<title>` 포함, `node scripts/lib/forbidden-words.js` 종료 코드 0) (b) raw 의 `H-nn [tokens/token_choice]` 블록(`답:` 줄 제외)과 `고지:` 줄
 - [ ] **K-9** `token_sets.json` 세트 쌍마다 `typography.family.body`·`color.primitive.primary.500`·`radius.usage.card`·`spacing.unit` 중 **≥2 다름** (같으면 '세트 체감 동일' FAIL)
-- [ ] **K-10** raw 에 `^T-01 ` 줄 1개(`SET-X | 이유: <원문>` / `SET-X | 사용자 위임…` / `없음 | 이유: <원문>` 중 하나, 이유 원문 공백 불가), 마지막 `T-0n` 줄의 세트 == `state.token_set_choice.chosen`, `H-nn [tokens/token_set]` 수 == 1(위임이면 0)
+- [ ] **K-10** raw 에 `^T-01 ` 줄 1개(`SET-X | 이유: <원문>` / `SET-X | 사용자 위임…` / `없음 | 이유: <원문>` 중 하나, 이유 원문 공백 불가), 마지막 `T-0n` 줄의 세트 == `state.token_set_choice.chosen`, `H-nn [tokens/token_choice]` 수 == 1(위임이면 0)
 - [ ] **K-11** `design.md` §5 행 수 == brief §2 화면 수, 1등 정보 셀 공백 0, 표 아래 `상태 강조 순위:` 줄 존재
 - [ ] **K-12** 상태 파일 `human_gates.token_set_choice.chosen` 이 `SET-X` 형식으로 기입. `delegated == true` 면 `delegations[]` 에 `{stage:"tokens", item:"token_set", kind:"q12"}` 항목 정확히 1개, `default_taken == chosen == ai_pick`
 
@@ -152,7 +152,7 @@ awk '/^H-[0-9]+ \[tokens\/token_set\]/{p=1;next} p&&/^$/{p=0} p&&!/^답:/{print}
 # K-9
 node -e 'const S=JSON.parse(require("fs").readFileSync("design/stimuli/token_sets.json","utf8"));const g=(o,p)=>p.split(".").reduce((a,k)=>a&&a[k],o);const K=["typography.family.body","color.primitive.primary.500","radius.usage.card","spacing.unit"];let f=0;for(let i=0;i<S.sets.length;i++)for(let j=i+1;j<S.sets.length;j++){const d=K.filter(k=>String(g(S.sets[i].tokens,k)).toLowerCase()!==String(g(S.sets[j].tokens,k)).toLowerCase());console.log(S.sets[i].id+" vs "+S.sets[j].id+": 다른 키 "+d.length+" ["+d.join(",")+"] "+(d.length>=2?"PASS":"FAIL 세트 체감 동일"));if(d.length<2)f++}process.exit(f||S.sets.length<2?1:0)'
 # K-10
-node -e 'const fs=require("fs");const raw=fs.readFileSync("design/interview_raw.md","utf8").split("\n");const st=require("./design/state.json").human_gates.token_set_choice;const t=raw.filter(l=>/^T-0[1-9] /.test(l));const t1=t.filter(l=>/^T-01 (SET-[A-Z] \| (이유: \S.*|사용자 위임.*)|없음 \| 이유: \S.*)$/.test(l)).length;const last=t[t.length-1]||"";const set=(last.match(/^T-0[1-9] (SET-[A-Z])/)||[])[1];const h=raw.filter(l=>/^H-[0-9]{2} \[tokens\/token_set\]/.test(l)).length;const ok=t1===1&&!!set&&set===st.chosen&&(st.delegated?h===0:h===1);console.log("T-01 유효",t1,"/ 최종 T 세트",set,"/ state.chosen",st.chosen,"/ H-nn [tokens/token_set]",h,"(위임:",st.delegated+")",ok?"PASS":"FAIL");process.exit(ok?0:1)'
+node -e 'const fs=require("fs");const raw=fs.readFileSync("design/interview_raw.md","utf8").split("\n");const st=require("./design/state.json").human_gates.token_set_choice;const t=raw.filter(l=>/^T-0[1-9] /.test(l));const t1=t.filter(l=>/^T-01 (SET-[A-Z] \| (이유: \S.*|사용자 위임.*)|없음 \| 이유: \S.*)$/.test(l)).length;const last=t[t.length-1]||"";const set=(last.match(/^T-0[1-9] (SET-[A-Z])/)||[])[1];const h=raw.filter(l=>/^H-[0-9]{2} \[tokens\/token_set\]/.test(l)).length;const ok=t1===1&&!!set&&set===st.chosen&&(st.delegated?h===0:h===1);console.log("T-01 유효",t1,"/ 최종 T 세트",set,"/ state.chosen",st.chosen,"/ H-nn [tokens/token_choice]",h,"(위임:",st.delegated+")",ok?"PASS":"FAIL");process.exit(ok?0:1)'
 # K-11
 node -e 'const fs=require("fs");const sec=(f,n)=>{const t=fs.readFileSync(f,"utf8");const i=t.search(new RegExp("^## "+n+"\\. ","m"));if(i<0)return "";const r=t.slice(i).split("\n").slice(1);const e=r.findIndex(l=>/^## /.test(l));return (e<0?r:r.slice(0,e)).join("\n")};const tbl=s=>{const L=s.split("\n").filter(l=>/^\|/.test(l));if(!L.length)return{rows:[],idx:-1};const H=L[0].split("|").map(x=>x.trim());return{rows:L.slice(2).filter(l=>l.replace(/[|\s]/g,"").length),idx:H.findIndex(c=>/1등 정보/.test(c))}};const b=tbl(sec("design/brief.md","2")),d=tbl(sec("design/design.md","5"));const blank=d.rows.filter(l=>!(l.split("|").map(x=>x.trim())[d.idx]||"").length);const rank=/^상태 강조 순위[^:]*: \S/m.test(sec("design/design.md","5"));const ok=b.rows.length>0&&b.rows.length===d.rows.length&&blank.length===0&&d.idx>=0&&rank;console.log("brief §2 화면",b.rows.length,"/ design.md §5 행",d.rows.length,"/ 1등 정보 공백",blank.length,"/ 상태 강조 순위 줄",rank?"있음":"없음",ok?"PASS":"FAIL");process.exit(ok?0:1)'
 # K-12

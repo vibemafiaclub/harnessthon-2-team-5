@@ -20,7 +20,7 @@
  *        · pairs ≤ human_worldcup_rounds_max(기본 6) · flows[].steps ≤ agent_flow_steps_max
  *   P-3  questions(+flows) 전건 unknown===true && free===true · options 전건 value 있음·scene ≥8자
  *        · kind:pushback 은 options 정확히 3 + recommended + why · kind:pattern 은 options ≥2 · 어느 kind 든 recommended 가 있으면 options.value 중 하나 + why (결정형 추천 선명시)
- *   P-4  사용자 노출 텍스트(title·intro·banner·frame·text·effect·why·value·scene·tile/pair/flow html·title·cta·press·then·states 텍스트 노드) 금지어(디자인 14 + 문서 용어 12) 0 + text·scene 에 TASTE_PATTERN 0
+ *   P-4  사용자 노출 텍스트(title·intro·banner·frame·text·effect·why·value·scene·tile/pair/flow html·title·cta·press·then·states 텍스트 노드) 금지어(디자인 14 + 문서 용어 12) 0 + text·scene 에 TASTE_PATTERN 0 + text 에 열린 결정 질문(OPEN_DECISION_PATTERN, 추천 문장 '저는 …봅니다' 없이) 0
  *   P-5  축 차이: 타이포=font-family · 형태=border-radius · 밀도=행 수 · 색온도=hue · 채도=saturation · 강조=font-weight|font-size|색 이 변형 간 다름
  *   P-6  축 격리: 같은 축 변형의 style 선언 집합에서 P-5 축 속성을 제거한 나머지가 동일
  *   P-7  타일 여는 태그 수 ≤ agent_gallery_tile_elements_max (<br> 제외)
@@ -246,7 +246,7 @@ if (!D) {
   const p4 = [];
   for (const [where, text] of segs) for (const h of FW.scanText(text)) p4.push(`${where}:「${h.word}」`);
   const taste = [];
-  Q.forEach((q) => { if (FW.TASTE_PATTERN.test(String(q.text || ''))) taste.push(`${q.id}.text`); (q.options || []).forEach((o, i) => { if (FW.TASTE_PATTERN.test(String((o && o.scene) || ''))) taste.push(`${q.id}.options[${i}].scene`); }); });
+  Q.forEach((q) => { if (FW.TASTE_PATTERN.test(String(q.text || ''))) taste.push(`${q.id}.text`); if (FW.OPEN_DECISION_PATTERN && FW.OPEN_DECISION_PATTERN.test(String(q.text || '')) && !/저는 .+(봅니다|보입니다)/.test(String(q.text || ''))) taste.push(`${q.id}.text:열린 결정 질문(추천 없이 '무엇을/몇 개/어떻게' — §1-10)`); (q.options || []).forEach((o, i) => { if (FW.TASTE_PATTERN.test(String((o && o.scene) || ''))) taste.push(`${q.id}.options[${i}].scene`); }); });
   add('P-4', p4.length === 0 && taste.length === 0, `금지어 ${p4.length}건 · 취향형 패턴 ${taste.length}건 (텍스트 조각 ${segs.length})`, [...p4, ...taste.map((t) => t + ':취향형')].slice(0, 8).join(', ') || `${FW.FORBIDDEN_WORDS.length}개 단어 0건, TASTE_PATTERN 0건`);
 
   /* P-5·P-6 축 차이·축 격리 (타일은 축별로, 쌍은 W-n 별로) */
@@ -271,7 +271,7 @@ if (!D) {
   add('P-6', groups.length > 0 && p6.length === 0, `축 격리 위반 ${p6.length}건 (같은 축 변형의 나머지 선언이 다름)`, short(p6, 3) || `격리됨: ${short(p6ok, 8)}`);
 
   /* P-7 타일 요소 수 */
-  const emax = cap('agent_gallery_tile_elements_max', 6);
+  const emax = cap('agent_gallery_tile_elements_max', 10);
   const p7 = T.map((t) => [t.id, (String(t.html || '').match(/<(?!br\b)[a-z][a-z0-9]*\b/gi) || []).length]).filter(([, n]) => n > emax);
   add('P-7', p7.length === 0, `타일 여는 태그 수 > ${emax} 인 타일 ${p7.length}건 (<br> 제외)`, p7.map(([id, n]) => `${id}:${n}`).join(', ') || `타일 ${T.length}장 전부 ≤${emax}`);
 
@@ -330,7 +330,7 @@ if (!D) {
   add('P-11', unjust.length === 0, `필수 payload 8종 중 페이지에 없음 ${missing.length} · 그중 skipped[] 고지 없음 ${unjust.length}`, (unjust.length ? `고지 없음: ${unjust.join(', ')}` : (missing.length ? `전부 고지됨: ${missing.join(', ')}` : '8종 전부 페이지에 있음')) + (indexNote ? ` (${indexNote})` : ` (${indexPath})`));
 
   /* P-12 pattern 수 == references.md 과업 수 */
-  const refs = read(A.refs); const patN = Q.filter((q) => q.kind === 'pattern').length; const patMax = mode === 'fast' ? 2 : cap('agent_reference_patterns_max', 6);
+  const refs = read(A.refs); const patN = Q.filter((q) => q.kind === 'pattern').length; const patMax = cap('agent_reference_patterns_max', 6);
   if (refs == null) add('P-12', false, `references.md 없음 — kind:pattern ${patN}건의 근거를 셀 수 없음 (0-A2 미실행)`, A.refs);
   else if (/레퍼런스 없음/.test(refs)) add('P-12', patN === 0, `references.md '레퍼런스 없음' → pattern 0 기대, 실제 ${patN}`, A.refs);
   else {

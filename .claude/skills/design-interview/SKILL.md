@@ -56,7 +56,7 @@ argument-hint: "<PRD 경로> [--budget 40m]"
 8. **핵심 과업 3개** — PRD 유저스토리에서 "첫 사용자가 반드시 해낼 수 있어야 하는 일" 3개(예: 무엇을 등록하고 → 누구를 묶고 → 날짜를 확정한다). 과업마다 시작 화면·기대 경로. T-1 의 시작 화면은 항목 9 의 (a) 첫 진입 화면과 같아야 한다. 채점 3축 중 **UX(직관적인가)** 의 검증 대상이 된다.
 9. **필수 플로우 대조표** — `screen_derivation.md` 8단계의 7항목((a) 첫 진입·온보딩 (b) 초대 보내기·공유 (c) 초대받은 쪽 첫 진입(미가입·링크) (d) 역할별 랜딩 (e) 알림·리마인드 진입 (f) 설정·탈퇴 (g) 계정 진입 — 가입·로그인·비로그인 시작) 각각에 화면 # 또는 "해당 없음 — 사유"(PRD 원문 인용). **(g) 는 판단이다(D-50)**: PRD 명시 / 침묵이지만 필요(기기 이동·타인 데이터·공유·결제·개인정보·서버 알림 신호) / 불필요(단일 기기 개인 도구·링크 게스트) 셋 중 하나를 근거와 함께 고르고, **필요 인데 없을 때만** 추천 방식(카카오·애플·구글 등 — 정본은 screen_derivation (g))을 넣은 `누락` 반박으로 Q11 에 간다. 나머지 둘은 묻지 않고 §2c 행·§6 가정으로 끝낸다. PRD 에 없는데 필요한 항목은 `X-nn` 화면으로 항목 1 표에 올리고 항목 6 에 `누락` 반박을 만든다. **사용자가 둘 이상인 PRD 에서 (b)·(c) 가 "해당 없음" 이면 FAIL.** 이 표가 brief §2c 의 씨앗이다.
 
-종료조건(`design-worker`, 하한·상한 모두 검사 — 결과는 `design/verify/exit_prd_analysis.md` 에 명령·출력 원문과 함께): 위 9개 섹션이 전부 존재 · 화면 표의 모든 행에 **PRD 기능 번호 또는 §10 P-nn** 매핑 · 상태 순위표 ≥2행(1순위 `[HYPOTHESIS]`) · 역할별 진입표 존재 · 반박 항목마다 "물을 쉬운 말" + **하네스 추천·이유** 존재 · **§6 의 물을 쉬운 말 전건 금지어 0건** — worker 가 §6 의 물을 쉬운 말 줄만 `/tmp/prd_ask.txt` 로 뽑아 `node scripts/lib/forbidden-words.js --taste /tmp/prd_ask.txt` 종료 코드 0(금지어 26개(scripts/lib/forbidden-words.js 정본, 디자인 14 + 문서 용어 12) + 취향형 패턴) · `누락` ≥1 또는 "누락 없음 — 사유" · 필수 플로우 대조표 6행(역할 둘 이상이면 (b)·(c) 에 화면 #) · **전체 줄 수 ≤`agent_prd_analysis_lines_max`** · 반박 ≤`agent_prd_pushback_max` · 미확정 ≤`agent_prd_open_questions_max` · 흐름 후보 ≤`agent_flow_candidates_max` · 시나리오 ≤`agent_scenarios_max`. 상한 초과는 FAIL — 같은 서브에 "상한 이내로 압축, 추가 금지" 1회 되돌림.
+종료조건(`design-worker`, 하한·상한 모두 검사 — 결과는 `design/verify/exit_prd_analysis.md` 에 명령·출력 원문과 함께; 필수 플로우 대조표는 (a)~(g) 7행): 위 9개 섹션이 전부 존재 · 화면 표의 모든 행에 **PRD 기능 번호 또는 §10 P-nn** 매핑 · 상태 순위표 ≥2행(1순위 `[HYPOTHESIS]`) · 역할별 진입표 존재 · 반박 항목마다 "물을 쉬운 말" + **하네스 추천·이유** 존재 · **§6 의 물을 쉬운 말 전건 금지어 0건** — worker 가 §6 의 물을 쉬운 말 줄만 `/tmp/prd_ask.txt` 로 뽑아 `node scripts/lib/forbidden-words.js --taste /tmp/prd_ask.txt` 종료 코드 0(금지어 26개(scripts/lib/forbidden-words.js 정본, 디자인 14 + 문서 용어 12) + 취향형 패턴) · `누락` ≥1 또는 "누락 없음 — 사유" · 필수 플로우 대조표 6행(역할 둘 이상이면 (b)·(c) 에 화면 #) · **전체 줄 수 ≤`agent_prd_analysis_lines_max`** · 반박 ≤`agent_prd_pushback_max` · 미확정 ≤`agent_prd_open_questions_max` · 흐름 후보 ≤`agent_flow_candidates_max` · 시나리오 ≤`agent_scenarios_max`. 상한 초과는 FAIL — 같은 서브에 "상한 이내로 압축, 추가 금지" 1회 되돌림.
 
 ## 0-A2. 레퍼런스 수집 (`design-judge`, 0-A 와 같은 메시지에 병렬 호출)
 
@@ -134,7 +134,7 @@ node scripts/check-interview-page.js --page design/stimuli/interview.html --temp
 | `kind: pair` | `W-n: <left|right|none> (chosen <id>) — "<reason>"` (`always` 쌍인지는 `gallery_index.json` 으로 구분) |
 | 되묻기(0-E) | `F-n: <원문> (Q-nn)` / `A-F-n: <답>` |
 | 고지(0-H) | `N-<축>: 고지 — "말씀은 A, 고르신 건 B → B" / <답>` |
-| 사람 호출 | `H-nn [<stage>/<kind>]` 다음 4줄 골격 `결정할 것: / 선택지: ① ② (하네스 추천: ①) / 추천 이유: / 안 정하면:`, 사용자의 답 원문은 같은 블록 바로 아래 `답: <원문>` — kind 는 check-brief B-24 허용 집합 10종: interview_page · followup(0-H 한 화면) · constraint · token_choice · axis_choice · draft_approval · taste_gap · cap_exceeded · repeat_brief · final_ack. 되묻기 `F-n` 과 반응 `R-`·`W-` 는 H- 원장에 넣지 않는다(각각 B-23·B-20 이 센다) |
+| 사람 호출 | `H-nn [<stage>/<kind>]` 다음 4줄 골격 `결정할 것: / 선택지: ① ② (하네스 추천: ①) / 추천 이유: / 안 정하면:`, 사용자의 답 원문은 같은 블록 바로 아래 `답: <원문>` — kind 는 check-brief B-24 허용 집합 11종(정본 check-brief KINDS): interview_page · followup(0-H 한 화면) · constraint · blocked · token_choice · axis_choice · draft_approval · taste_gap · cap_exceeded · repeat_brief · final_ack. 되묻기 `F-n` 과 반응 `R-`·`W-` 는 H- 원장에 넣지 않는다(각각 B-23·B-20 이 센다) |
 
 `meta-status.summary` 의 세 묶음(직접 답한 것 / 추천대로 둔 것 / 대신 정할 것)은 0-H (a) 다이제스트의 초안이다 — 페이지가 이미 사용자에게 보였으므로 0-H 는 같은 묶음 이름을 쓴다. `meta-status` 의 `answered/total` 을 `state.stages.interview.answered` 에 기록한다(check-brief B-22 가 raw 의 A-/R-/W- 합계와 대조). `gallery_index.json` 으로 타일·쌍의 축·변형을 붙인다(0-G 감사 입력의 "자극의 객관적 속성"). 회수 문서 수와 `ts` 분포가 사용자 세션 시간대와 맞는지 확인한다.
 
@@ -160,7 +160,7 @@ node scripts/check-interview-page.js --page design/stimuli/interview.html --temp
 4. 사용자가 특정 앱을 언급한 기준은 `borrow_scope` 판정. 전체 스타일 차용은 사용자 명시 승인이 raw 에 없으면 `proposed`. 과적합 경고의 분모는 사용자가 언급한 앱(Q4·borrow_scope)만 — 하네스가 수집한 레퍼런스(`REF-n`)는 계수하지 않는다.
 5. 기준 개수는 `agent_rules_min`~`agent_rules_max`(full 8~20, fast 6~12). 상한을 넘으면 근거가 약한 것부터 **버린다**(provisional 로 내려도 개수에 포함된다). brief 전체는 `agent_brief_lines_max` 줄 이내.
 6. 가정 로그(§6)에는 인터뷰에서 "모르겠음"·미응답·추론으로 채운 것을 **전부** 적는다 — `state.human_gates.delegations[]` 와 1:1.
-7. **§2c·§2d·§9·§10·§11 을 산술로 채운다.** §2 표에 역할 열(§11 의 R-n)과 1등 정보 열(사용자 확인 없이 0-A 후보를 옮겼으면 `[HYPOTHESIS]` + §6). §2c 는 고정 9행 — prd_analysis 항목 9 대조표에 시나리오·상태·역할 행을 더하고, 담당 화면이 없으면 사유(PRD 원문 또는 `A-nn` 인용). PRD 에 없는 화면은 `X-nn → §10 P-nn`. §2d 는 Q5 원문 ID(`A-05`)로 1순위를 확정한다. §9 는 `references.md` 행 중 §2b 과업(T-n)에 붙는 것만 옮기고 `A-nn [PATTERN]` 반응·채택/보류를 적는다 — **채택 행은 §2 IA·§2b 과업·2-B 축 후보에만 흐르고 §3 시각 6축 정본에는 흐르지 않는다.** §10 행마다 하네스 추천(0-A §6 그대로)과 사용자 확인 원문(`A-nn [PRD-PUSHBACK]`) 또는 `사용자 위임`/`모르겠음`. §11 의 "사용자 수준(익숙함·연령·기기)" 줄은 Q7 원문 또는 PRD 인용으로, 둘 다 없으면 `[HYPOTHESIS]` + §6.
+7. **§2c·§2d·§9·§10·§11 을 산술로 채운다.** §2 표에 역할 열(§11 의 R-n)과 1등 정보 열(사용자 확인 없이 0-A 후보를 옮겼으면 `[HYPOTHESIS]` + §6). §2c 는 고정 10행 — prd_analysis 항목 9 대조표에 시나리오·상태·역할 행을 더하고, 담당 화면이 없으면 사유(PRD 원문 또는 `A-nn` 인용). PRD 에 없는 화면은 `X-nn → §10 P-nn`. §2d 는 Q5 원문 ID(`A-05`)로 1순위를 확정한다. §9 는 `references.md` 행 중 §2b 과업(T-n)에 붙는 것만 옮기고 `A-nn [PATTERN]` 반응·채택/보류를 적는다 — **채택 행은 §2 IA·§2b 과업·2-B 축 후보에만 흐르고 §3 시각 6축 정본에는 흐르지 않는다.** §10 행마다 하네스 추천(0-A §6 그대로)과 사용자 확인 원문(`A-nn [PRD-PUSHBACK]`) 또는 `사용자 위임`/`모르겠음`. §11 의 "사용자 수준(익숙함·연령·기기)" 줄은 Q7 원문 또는 PRD 인용으로, 둘 다 없으면 `[HYPOTHESIS]` + §6.
 
 ## 0-G. 인용 정합성 감사 (`design-judge`, 별도 호출)
 
@@ -227,7 +227,7 @@ worker(Haiku)의 판단으로 세게 하면 섹션 경계(§2 vs §2b)·조사 �
 - [ ] **B-13** §11 적합성 단서 2~6줄
 - [ ] **B-14** 감사가 제거한 수치가 §5/§7/§8 에 잔존하지 않음(`--audit` 있을 때)
 - [ ] **B-15** `interview_raw.md` 답변 수 ≥ 질문 수 (답 없는 질문은 `[UNANSWERED]` 태그)
-- [ ] **B-16** §2c 고정 9행 전부 존재, 각 행 담당 화면 # 가 §2 번호 집합에 있거나 사유 열 비어 있지 않음; 초대·초대받은 쪽 행이 둘 다 "해당 없음" 인데 §2 역할 열 값이 2종 이상이면 FAIL
+- [ ] **B-16** §2c 고정 10행 전부 존재, 각 행 담당 화면 # 가 §2 번호 집합에 있거나 사유 열 비어 있지 않음; 초대·초대받은 쪽 행이 둘 다 "해당 없음" 인데 §2 역할 열 값이 2종 이상이면 FAIL
 - [ ] **B-17** §2d 상태 순위 ≥2행, raw 에 `A-05` 가 있으면 1순위 행이 `A-05` 를 참조
 - [ ] **B-18** §9 레퍼런스 행 수 `agent_references_min`~`agent_references_max`, 출처 열 공백 0, T-1~T-3 각각 "우리 과업" 열에 ≥1(fast)/≥2(full); `--refs` 의 `design/references.md` 존재·≥10줄
 - [ ] **B-19** §4 각 RULE 에 `plain:` 존재, plain 에 금지어 26개(scripts/lib/forbidden-words.js 정본, 디자인 14 + 문서 용어 12) 0건

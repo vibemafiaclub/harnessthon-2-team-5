@@ -353,7 +353,8 @@ const overQ = Object.entries(byQ).filter(([, n]) => n > 2);
 add('B-23', fLines.length <= 3 && overQ.length === 0, `되묻기 F- ${fLines.length}건 (≤3), 같은 원 질문 3회 이상 ${overQ.length}`, overQ.map(([q, n]) => `${q}×${n}`).join(', ') || (fLines.length ? Object.entries(byQ).map(([q, n]) => `${q}×${n}`).join(', ') : '되묻기 없음'));
 
 /* B-24 사람 호출 원장 H-nn [<stage>/<kind>] */
-const KINDS = ['interview_page', 'followup', 'constraint', 'token_choice', 'axis_choice', 'draft_approval', 'taste_gap', 'cap_exceeded', 'repeat_brief', 'final_ack'];
+/* 사람 호출 kind 정본(11종) — 스킬 문서는 이 목록을 복제하지 않고 참조한다. scripts/fixtures/check-kinds.js 가 문서에 쓰인 kind ⊆ 이 목록을 selftest 에서 대조한다. */
+const KINDS = ['interview_page', 'followup', 'constraint', 'blocked', 'token_choice', 'axis_choice', 'draft_approval', 'taste_gap', 'cap_exceeded', 'repeat_brief', 'final_ack'];
 const hBlocks = [];
 for (let i = 0; i < rawLines.length; i++) {
   if (!/^H-\d+/.test(rawLines[i])) continue;

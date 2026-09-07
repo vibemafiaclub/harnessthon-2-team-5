@@ -67,6 +67,8 @@ const wordOf = (hit) => { for (const [w, re] of ANCHORED) if (re.test(hit)) retu
 
 /* 취향형·라벨형 질문 패턴(interview_prompts §1-2·§1-8: "어떤 느낌이 좋으세요" 는 나쁜 질문). 질문 text·scene 에만 적용. */
 const TASTE_PATTERN = /느낌이 좋|어떤 느낌|선호|취향|스타일이/;
+/* 열린 결정 질문(interview_prompts §1-10: "무엇을 넣을까요 / 몇 개가 좋을까요 / 어떻게 보이면 좋을까요") — 비전공자에게 설계를 시키는 질문. 결정형은 추천을 먼저 밝히고 묻는다(평가 기준 I-4 예시). 질문 text 에만 적용. */
+const OPEN_DECISION_PATTERN = /(무엇|뭘|어떤 ?[가-힣]{1,6})(을|를)? ?(넣|추가|포함|둘|쓸|둘까)|몇 ?개(로|가|를)?|어떻게 (보이|하면|만들)|무엇으로 (할|정할)/;
 
 const context = (str, index, len) => {
   const s = Math.max(0, index - 20), e = Math.min(str.length, index + len + 20);
@@ -114,7 +116,7 @@ function lineCol(text, index) {
   return { line, col: index - before.lastIndexOf('\n') };
 }
 
-module.exports = { FORBIDDEN_WORDS, DOC_WORDS, ALL_WORDS, FORBIDDEN_RE, TASTE_PATTERN, scanText, scanFile, scanTaste, stripTags, fresh };
+module.exports = { FORBIDDEN_WORDS, DOC_WORDS, ALL_WORDS, FORBIDDEN_RE, TASTE_PATTERN, OPEN_DECISION_PATTERN, scanText, scanFile, scanTaste, stripTags, fresh };
 
 /* ---- CLI ---- */
 if (require.main === module) {

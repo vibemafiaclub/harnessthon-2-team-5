@@ -1,0 +1,79 @@
+{
+ "sets": [
+  {
+   "id": "SET-A",
+   "tokens": {
+    "typography": {
+     "family": {
+      "body": "Pretendard"
+     }
+    },
+    "color": {
+     "primitive": {
+      "primary": {
+       "500": "#0F6E63"
+      }
+     }
+    },
+    "radius": {
+     "usage": {
+      "card": 12
+     }
+    },
+    "spacing": {
+     "unit": 8
+    }
+   }
+  },
+  {
+   "id": "SET-B",
+   "tokens": {
+    "typography": {
+     "family": {
+      "body": "Noto Sans KR"
+     }
+    },
+    "color": {
+     "primitive": {
+      "primary": {
+       "500": "#2B6CB0"
+      }
+     }
+    },
+    "radius": {
+     "usage": {
+      "card": 16
+     }
+    },
+    "spacing": {
+     "unit": 8
+    }
+   }
+  },
+  {
+   "id": "SET-C",
+   "tokens": {
+    "typography": {
+     "family": {
+      "body": "Pretendard"
+     }
+    },
+    "color": {
+     "primitive": {
+      "primary": {
+       "500": "#B7791F"
+      }
+     }
+    },
+    "radius": {
+     "usage": {
+      "card": 4
+     }
+    },
+    "spacing": {
+     "unit": 4
+    }
+   }
+  }
+ ]
+}
