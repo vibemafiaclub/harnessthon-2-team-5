@@ -35,7 +35,8 @@
       "done_at": "",
       "exit_check": "",
       "c_rounds": 0,
-      "c_fail_reasons": []
+      "c_fail_reasons": [],
+      "c_detector": null
     }
   },
   "human_gates": {

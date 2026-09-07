@@ -188,6 +188,10 @@ expect_pass "골든(html_good/, WARN 허용)" "$TMP/ch_good.md" $CH --drafts "$F
 expect_fail_subset "결함(html_bad/ + 빈 brief)" "H-6 H-8 H-11 H-12 H-13 H-15 H-16 H-17" "$TMP/ch_bad.md" $CH --drafts "$FX/html_bad/drafts" --brief "$FX/brief_empty.md" --out "$TMP/ch_bad.md"
 expect_rc "없는 drafts 경로 → 종료 2" 2 $CH --drafts "$TMP/nope"
 
+echo "## 6b. check-html H-18 변이 — data-next 삭제"
+rm -rf "$TMP/html_m18"; cp -R "$FX/html_good" "$TMP/html_m18"; sed -i '' 's/ data-next="02"//' "$TMP/html_m18/drafts/screen_01_home.html"
+expect_fail_exact "H-18 이동 요소(data-next) 삭제" "H-18" "$TMP/ch_m18.md" $CH --drafts "$TMP/html_m18/drafts" --brief "$TMP/html_m18/brief.md" --stimuli "$TMP/html_m18/stimuli" --out "$TMP/ch_m18.md"
+
 echo "## 7. check-figma (F-10 이 check-c-report 를 실제로 부른다)"
 mkdir -p "$TMP/shots"; for p in 01_normal 01_empty 01_long 02_normal 02_empty 02_long 02_error; do : > "$TMP/shots/$p.png"; done
 expect_pass "골든(figma_good/)" "$TMP/cf_good.md" node scripts/check-figma.js --figma "$FG/figma.md" --state "$S" --nodes "$FG/figma_nodes.json" --brief "$FG/brief.md" --drafts "$FG/drafts" --audit "$FG/verify/audit_screens.json,$FG/verify/audit_components.json" --shots "$TMP/shots" --review "$FG/verify/final_review.md" --tokens "$FG/tokens.json" --c-report "$FG/verify/c_report.json" --shots-index "$FG/verify/shots/index.md" --out "$TMP/cf_good.md"
@@ -201,7 +205,13 @@ printf '| 화면 | C-id | 분류 | 처리 | 근거 |\n|---|---|---|---|---|\n| 0
 # D-41: 정본 스키마가 아닌 c_report(최상위 fails[]) 는 F-11 이 조용히 PASS 하면 안 된다 — F-10(check-c-report CR-1·CR-4)·F-11 둘 다 FAIL
 rm -rf "$TMP/verify_f11c"; cp -R "$FG/verify" "$TMP/verify_f11c"; printf '{"stage":"C","fails":[{"id":"F-1","check":"C-6","diagnosis":"local","screen":"03_answering.png"}],"routing":"local"}' > "$TMP/verify_f11c/c_report.json"
 expect_fail_exact "F-11 구 스키마(fails[]) c_report → 조용한 PASS 금지" "F-10 F-11" "$TMP/cf_f11c.md" node scripts/check-figma.js "${CFARGS[@]}" --c-report "$TMP/verify_f11c/c_report.json" --c-routing "$TMP/c_routing_ok.md" --out "$TMP/cf_f11c.md"
+# F-12: final_review 에서 '대신 정한 것' 절 삭제 → F-12 만 FAIL
+mkdir -p "$TMP/m12"; awk '/^## 대신 정한 것/{exit} {print}' "$FG/verify/final_review.md" > "$TMP/m12/final_review.md"
+expect_fail_exact "F-12 대신 정한 것 절 삭제" "F-12" "$TMP/cf_m12.md" node scripts/check-figma.js "${CFARGS[@]}" --review "$TMP/m12/final_review.md" --c-report "$FG/verify/c_report.json" --c-routing "$TMP/c_routing_ok.md" --out "$TMP/cf_m12.md"
 expect_pass "F-11 처리 원장 있음(수정+커밋)" "$TMP/cf_f11b.md" node scripts/check-figma.js "${CFARGS[@]}" --c-report "$TMP/verify_f11/c_report.json" --c-routing "$TMP/c_routing_ok.md" --out "$TMP/cf_f11b.md"
+
+echo "## 8. audit-core 규칙 검출력 (fixtures/audit/cases.json)"
+if node scripts/fixtures/run-audit-cases.js > "$TMP/audit_cases.log" 2>&1; then ok "audit-core 케이스 $(tail -1 "$TMP/audit_cases.log")"; else ng "audit-core 케이스 — $(grep NG "$TMP/audit_cases.log" | head -3 | tr '\n' ' ')"; fi
 
 echo
 echo "selftest 결과: 기대 일치 $PASS_N / 불일치 $FAIL_N"

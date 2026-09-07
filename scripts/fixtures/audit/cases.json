@@ -1,0 +1,846 @@
+[
+ {
+  "name": "A-15 primitive 직접 바인딩 1건 / semantic 통과",
+  "rules": [
+   {
+    "id": "no-primitive-binding",
+    "severity": "warning",
+    "stage": [
+     "design"
+    ],
+    "applies_to": {},
+    "check": {
+     "type": "binding_name_deny",
+     "deny": [
+      "(^|/)primitive/"
+     ]
+    }
+   }
+  ],
+  "nodes": [
+   {
+    "id": "r",
+    "name": "01 Home / normal",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "b",
+      "name": "Button/Primary",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 350,
+      "height": 52,
+      "children": [],
+      "boundVariableNames": [
+       "fills=color/primitive/neutral/300"
+      ]
+     },
+     {
+      "id": "c",
+      "name": "Card/Row",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 350,
+      "height": 56,
+      "children": [],
+      "boundVariableNames": [
+       "fills=color/semantic/bg/surface"
+      ]
+     }
+    ]
+   }
+  ],
+  "expect": {
+   "violations": {
+    "no-primitive-binding": 1
+   },
+   "actual_contains": [
+    "color/primitive/neutral/300"
+   ]
+  }
+ },
+ {
+  "name": "A-17 Info/Top 지배 — 통과 / 작음 / 없음 / [no-top-info]",
+  "rules": [
+   {
+    "id": "top-info-dominant",
+    "severity": "warning",
+    "stage": [
+     "design"
+    ],
+    "applies_to": {
+     "root_only": true,
+     "node_types": [
+      "FRAME"
+     ]
+    },
+    "check": {
+     "type": "top_info_dominant",
+     "name": "^Info\\/Top$",
+     "fold": 844
+    }
+   }
+  ],
+  "nodes": [
+   {
+    "id": "a",
+    "name": "01 Home / normal",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "t",
+      "name": "Info/Top",
+      "type": "FRAME",
+      "x": 0,
+      "y": 100,
+      "width": 390,
+      "height": 60,
+      "children": [
+       {
+        "id": "t1",
+        "name": "3명",
+        "type": "TEXT",
+        "fontSize": 28,
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 20,
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "o",
+      "name": "제목",
+      "type": "TEXT",
+      "fontSize": 20,
+      "x": 0,
+      "y": 60,
+      "width": 100,
+      "height": 20,
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "b",
+    "name": "02 Detail / normal",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "t2",
+      "name": "Info/Top",
+      "type": "FRAME",
+      "x": 0,
+      "y": 100,
+      "width": 390,
+      "height": 60,
+      "children": [
+       {
+        "id": "t3",
+        "name": "9/20",
+        "type": "TEXT",
+        "fontSize": 16,
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 20,
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "o2",
+      "name": "큰 제목",
+      "type": "TEXT",
+      "fontSize": 24,
+      "x": 0,
+      "y": 60,
+      "width": 100,
+      "height": 20,
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "c",
+    "name": "03 Done / normal [no-top-info]",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "x",
+      "name": "완료",
+      "type": "TEXT",
+      "fontSize": 20,
+      "x": 0,
+      "y": 0,
+      "width": 100,
+      "height": 20,
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "d",
+    "name": "04 List / normal",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "y",
+      "name": "목록",
+      "type": "TEXT",
+      "fontSize": 20,
+      "x": 0,
+      "y": 0,
+      "width": 100,
+      "height": 20,
+      "children": []
+     }
+    ]
+   }
+  ],
+  "expect": {
+   "violations": {
+    "top-info-dominant": 2
+   },
+   "applicable": {
+    "top-info-dominant": 4
+   }
+  }
+ },
+ {
+  "name": "A-9 탭바 IA 기준 양방향 + 번호 없는 프레임",
+  "rules": [
+   {
+    "id": "frame-spec",
+    "severity": "blocker",
+    "stage": [
+     "design"
+    ],
+    "applies_to": {
+     "root_only": true,
+     "node_types": [
+      "FRAME"
+     ]
+    },
+    "check": {
+     "type": "frame_spec",
+     "width": 390,
+     "min_height": 844,
+     "required_children": [
+      "^(?:Bar/Status|StatusBar)",
+      "^(?:Bar/Tab|TabBar)"
+     ],
+     "tab_screens": [
+      "01",
+      "03"
+     ]
+    }
+   }
+  ],
+  "nodes": [
+   {
+    "id": "a",
+    "name": "01 Home / normal",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "s1",
+      "name": "Bar/Status",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "children": []
+     },
+     {
+      "id": "t1",
+      "name": "Bar/TabBar",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "b",
+    "name": "02 Detail / normal",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "s2",
+      "name": "Bar/Status",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "children": []
+     },
+     {
+      "id": "t2",
+      "name": "Bar/TabBar",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "c",
+    "name": "03 Contacts / normal",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "s3",
+      "name": "Bar/Status",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "d",
+    "name": "05 Edit / empty",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "s4",
+      "name": "Bar/Status",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "e",
+    "name": "Guest / normal",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "s5",
+      "name": "Bar/Status",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "children": []
+     }
+    ]
+   }
+  ],
+  "expect": {
+   "violations": {
+    "frame-spec": 3
+   },
+   "actual_contains": [
+    "탭바 있음",
+    "없음",
+    "번호"
+   ]
+  }
+ },
+ {
+  "name": "A-4 터치 타깃 — 행 안 24px 통과(person-row·Row/Contact), 단독 위반, 입력칸 40 위반",
+  "rules": [
+   {
+    "id": "touch",
+    "severity": "warning",
+    "stage": [
+     "design"
+    ],
+    "applies_to": {
+     "interactive_only": true
+    },
+    "check": {
+     "type": "min_size",
+     "width": 44,
+     "height": 44
+    }
+   }
+  ],
+  "nodes": [
+   {
+    "id": "r",
+    "name": "06 GroupCompose / selecting",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "pr",
+      "name": "person-row",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 358,
+      "height": 68,
+      "children": [
+       {
+        "id": "cb",
+        "name": "Checkbox",
+        "type": "FRAME",
+        "x": 0,
+        "y": 0,
+        "width": 24,
+        "height": 24,
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "row",
+      "name": "Row/Contact",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 358,
+      "height": 56,
+      "children": [
+       {
+        "id": "cb2",
+        "name": "Checkbox",
+        "type": "FRAME",
+        "x": 0,
+        "y": 0,
+        "width": 24,
+        "height": 24,
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "cb3",
+      "name": "Checkbox/standalone",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 24,
+      "height": 24,
+      "children": []
+     },
+     {
+      "id": "in",
+      "name": "Input/name",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 358,
+      "height": 40,
+      "children": []
+     }
+    ]
+   }
+  ],
+  "expect": {
+   "violations": {
+    "touch": 2
+   },
+   "actual_contains": [
+    "Checkbox/standalone",
+    "Input/name"
+   ]
+  }
+ },
+ {
+  "name": "네이밍 2규칙 분리 — semantic(컨테이너·한글·Tab/home 허용) / auto(Frame 12)",
+  "rules": [
+   {
+    "id": "layer-naming-semantic",
+    "severity": "warning",
+    "stage": [
+     "design"
+    ],
+    "applies_to": {
+     "node_types": [
+      "FRAME",
+      "COMPONENT",
+      "COMPONENT_SET",
+      "INSTANCE"
+     ],
+     "descendants_only": true,
+     "exclude_instance_children": true
+    },
+    "check": {
+     "type": "name_pattern",
+     "allow": "^[A-Z][^/]*(/[^/]+)*$",
+     "allow_node_types": [
+      "FRAME",
+      "COMPONENT",
+      "COMPONENT_SET",
+      "INSTANCE"
+     ]
+    }
+   },
+   {
+    "id": "layer-naming-auto",
+    "severity": "warning",
+    "stage": [
+     "design"
+    ],
+    "applies_to": {},
+    "check": {
+     "type": "name_pattern",
+     "deny": [
+      "^(Frame|Group|Rectangle|Ellipse|Vector|Line)\\s*\\d*$"
+     ]
+    }
+   }
+  ],
+  "nodes": [
+   {
+    "id": "r",
+    "name": "06 GroupCompose / selecting",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "c",
+      "name": "Content",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "children": [
+       {
+        "id": "pl",
+        "name": "person-list",
+        "type": "FRAME",
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "children": [
+         {
+          "id": "pr",
+          "name": "person-row",
+          "type": "FRAME",
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 844,
+          "children": [
+           {
+            "id": "t",
+            "name": "이름",
+            "type": "TEXT",
+            "fontSize": 15,
+            "x": 0,
+            "y": 0,
+            "width": 100,
+            "height": 20,
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "tab",
+        "name": "Tab/home",
+        "type": "INSTANCE",
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "children": []
+       },
+       {
+        "id": "tag",
+        "name": "Tag/신랑측 지훈",
+        "type": "INSTANCE",
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "children": []
+       },
+       {
+        "id": "row",
+        "name": "Row/Meeting - 대학 동기 모임",
+        "type": "INSTANCE",
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "children": []
+       },
+       {
+        "id": "f",
+        "name": "Frame 12",
+        "type": "FRAME",
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "children": []
+       },
+       {
+        "id": "chip",
+        "name": "chip",
+        "type": "FRAME",
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "children": []
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "expect": {
+   "violations": {
+    "layer-naming-semantic": 3,
+    "layer-naming-auto": 1
+   },
+   "applicable": {
+    "layer-naming-semantic": 8
+   },
+   "actual_contains": [
+    "person-row",
+    "chip",
+    "Frame 12"
+   ]
+  }
+ },
+ {
+  "name": "A-14 내용 절단 — y+height > 프레임 높이 위반",
+  "rules": [
+   {
+    "id": "content-not-cut",
+    "severity": "blocker",
+    "stage": [
+     "design"
+    ],
+    "applies_to": {
+     "descendants_only": true,
+     "root_node_types": [
+      "FRAME"
+     ]
+    },
+    "check": {
+     "type": "within_parent_bounds",
+     "axis": "y",
+     "tolerance": 1
+    }
+   }
+  ],
+  "nodes": [
+   {
+    "id": "r",
+    "name": "03 Guest / answering",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "cta",
+      "name": "Button/Primary",
+      "type": "FRAME",
+      "x": 0,
+      "y": 820,
+      "width": 350,
+      "height": 59,
+      "children": []
+     },
+     {
+      "id": "ok",
+      "name": "Card/Row",
+      "type": "FRAME",
+      "x": 0,
+      "y": 100,
+      "width": 350,
+      "height": 56,
+      "children": []
+     }
+    ]
+   }
+  ],
+  "expect": {
+   "violations": {
+    "content-not-cut": 1
+   },
+   "actual_contains": [
+    "Button/Primary"
+   ]
+  }
+ },
+ {
+  "name": "A-13 주 행동 — Bar/Action 안 통과, 잘림 위반, [no-primary] 제외",
+  "rules": [
+   {
+    "id": "primary-action-visible",
+    "severity": "blocker",
+    "stage": [
+     "design"
+    ],
+    "applies_to": {
+     "root_only": true,
+     "node_types": [
+      "FRAME"
+     ]
+    },
+    "check": {
+     "type": "primary_action_visible",
+     "name": "^Action\\/Primary$",
+     "bar": "^Bar\\/Action",
+     "fold": 844,
+     "no_primary_marker": "no-primary"
+    }
+   }
+  ],
+  "nodes": [
+   {
+    "id": "a",
+    "name": "01 Home / normal",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "bar",
+      "name": "Bar/Action",
+      "type": "FRAME",
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "children": [
+       {
+        "id": "p",
+        "name": "Action/Primary",
+        "type": "FRAME",
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 52,
+        "children": []
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "b",
+    "name": "02 Detail / normal",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "p2",
+      "name": "Action/Primary",
+      "type": "FRAME",
+      "x": 0,
+      "y": 830,
+      "width": 390,
+      "height": 52,
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "c",
+    "name": "03 Done / normal [no-primary]",
+    "type": "FRAME",
+    "x": 0,
+    "y": 0,
+    "width": 390,
+    "height": 844,
+    "children": [
+     {
+      "id": "x",
+      "name": "완료",
+      "type": "TEXT",
+      "fontSize": 20,
+      "x": 0,
+      "y": 0,
+      "width": 100,
+      "height": 20,
+      "children": []
+     }
+    ]
+   }
+  ],
+  "expect": {
+   "violations": {
+    "primary-action-visible": 1
+   },
+   "applicable": {
+    "primary-action-visible": 3
+   }
+  }
+ }
+]

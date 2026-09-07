@@ -10,7 +10,8 @@
  *        --out design/verify/figma_audit.js [--cap 25] [--max-nodes 4000] [--page Screens] \
  *        [--design design/design.md] [--brief design/brief.md | --tab-screens 01,03] [--frame-width 390] [--frame-min-height 844] \
  *        [--bars "Bar/Status|StatusBar,Bar/Tab|TabBar"] [--no-builtin] \
- *        [--budget 18000] [--text-per-frame 60] [--reactions-max 120]
+ *        [--budget 18000] [--text-per-frame 60] [--reactions-max 120] [--texts-only]
+ *   --texts-only: 판정 없이 text_inventory 만(프레임당 200개·60자) 돌려주는 번들 — design/verify/text_inventory.json 으로 저장해 check-c-report CR-12(판정자 인용 대조)가 쓴다. 예산에 걸려 잘린 감사 번들의 text_inventory 는 CR-12 에 못 쓴다(감사 지적).
  *   → 생성된 파일 본문을 use_figma 코드로 1회 실행(호출 전 figma-use 스킬 로드). 반환 JSON 을
  *     design/verify/audit_screens.json 에 저장하고 `node scripts/audit.js --render design/verify/audit_screens.json` 으로 읽는다.
  *
@@ -112,6 +113,7 @@ var MAX_NODES = ${Number(A['max-nodes'])};
 var PAGE_NAME = ${JSON.stringify(A.page || null)};
 var BUDGET = ${Number(A.budget)};
 var TEXT_PER_FRAME = ${Number(A['text-per-frame'])};
+var TEXTS_ONLY = ${A['texts-only'] ? 'true' : 'false'};
 var REACTIONS_MAX = ${Number(A['reactions-max'])};
 var page = figma.currentPage;
 if (PAGE_NAME) { var p = figma.root.children.find(function (x) { return x.name === PAGE_NAME; }); if (!p) return JSON.stringify({ error: '페이지 없음: ' + PAGE_NAME, pages: figma.root.children.map(function (x) { return x.name; }) }); await figma.setCurrentPageAsync(p); page = p; }
@@ -120,6 +122,7 @@ var counter = { n: 0 };
 var tree;
 try { tree = Array.prototype.map.call(roots, function (r) { return dumpTree(r, figma.mixed, MAX_NODES, counter); }); }
 catch (e) { return JSON.stringify({ error: String(e && e.message || e), nodes_seen: counter.n }); }
+if (TEXTS_ONLY) { var tr = { page: page.name, generated_at: ${JSON.stringify(new Date().toISOString())}, text_inventory: textInventory(tree, { perFrame: 200, maxChars: 60 }) }; var tper = 200; while (utf8Len(JSON.stringify(tr)) > BUDGET && tper > 8) { tper = Math.floor(tper / 2); tr.text_inventory = textInventory(tree, { perFrame: tper, maxChars: 60 }); tr.text_inventory_truncated = true; } tr.bytes = utf8Len(JSON.stringify(tr)); return JSON.stringify(tr); }
 var report = audit({ rules: RULES, stage: STAGE, nodes: tree, target: page.name, perRuleCap: CAP });
 report.page = page.name; report.roots = roots.length; report.generated_at = ${JSON.stringify(new Date().toISOString())};
 report.builtin_rules = ${JSON.stringify(builtin.map((r) => r.id))};

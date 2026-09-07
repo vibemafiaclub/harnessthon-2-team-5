@@ -245,11 +245,13 @@ var CHECKS = {
     var tabScreens = Array.isArray(check.tab_screens) ? check.tab_screens.map(String) : null;
     var optOut = /\[no-tabbar\]/i.test(nm) || nm.indexOf(check.tabbar_optout_marker || 'no-tabbar') >= 0;
     var isTab = function (pat) { return /tab/i.test(pat); };
+    if (tabScreens && nn == null) { out.push({ property: 'name', expected: "이름 앞 두 자리 번호(brief §2 #, 예: '03 GuestReply / normal') — 탭바 IA 판정에 필요", actual: nm || '(unnamed)' }); }
     (check.required_children || []).forEach(function (pat) {
       var re = new RegExp(pat); var present = desc.some(function (d) { return re.test(d.name || ''); });
       if (isTab(pat)) {
         if (tabScreens) {
-          var wantTab = nn != null && tabScreens.indexOf(nn) >= 0;
+          if (nn == null) return; /* 번호 없는 프레임은 위에서 이름 위반으로 잡았다 — 탭바 방향은 판정하지 않는다(오탐 방지) */
+          var wantTab = tabScreens.indexOf(nn) >= 0;
           if (wantTab && !present) out.push({ property: 'children', expected: '탭바(/' + pat + '/) — brief §2 진입 경로가 탭인 화면 ' + nn, actual: '없음' });
           if (!wantTab && present) out.push({ property: 'children', expected: '탭바 없음 — brief §2 진입 경로가 탭이 아닌(push·modal·외부) 화면' + (nn ? ' ' + nn : ''), actual: '탭바 있음' });
         } else if (!optOut && !present) out.push({ property: 'children', expected: '이름이 /' + pat + '/ 인 보이는 자손 ≥1 (없어야 하는 화면은 이름 접미사 [no-tabbar])', actual: '없음' });

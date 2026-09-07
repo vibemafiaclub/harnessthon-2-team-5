@@ -6,7 +6,7 @@
  *   R-2  출처 열 공백 0 (URL 또는 앱명+화면명)
  *   R-3  같은 카테고리(직접) ≥3 + 인접 카테고리(간접) ≥1 — '유형' 열(직접/간접)
  *   R-4  과업(동사/T-n) 열마다 ≥2 서비스 — 한 서비스만 보면 관행인지 그 앱의 버릇인지 모른다
- *   R-5  스크린샷 열: 행마다 design/references/ 아래 파일 ≥1 존재 또는 '미확보 — 사유'. 전체 행이 미확보면 FAIL(수집이 안 된 것)
+ *   R-5  스크린샷 열: 행마다 design/references/ 아래 파일 ≥1 존재 또는 '미확보 — 사유'. 파일 있는 행이 전체의 절반 미만이면 FAIL(감사 지적: 1행만 있어도 통과하던 하한을 올림)
  *   R-6  처리 방식 열 금지어 0 (scripts/lib/forbidden-words.js) — 서비스·화면명 열은 고유명사라 제외
  */
 'use strict';
@@ -48,7 +48,8 @@ else {
   rows.forEach((r) => { const cell = String(iShot >= 0 ? r[iShot] : '').trim(); const files = (cell.match(/[\w.\-\/]+\.(png|jpe?g|webp)/gi) || []).map((f) => f.split('/').pop());
     if (files.length) { const missing = files.filter((f) => !fs.existsSync(path.join(refDir, f))); if (missing.length) bad5.push(`${r[0]}: 파일 없음 ${missing.join(',')}`); else withFile++; }
     else if (/미확보\s*[—-]\s*\S+/.test(cell)) withReason++; else bad5.push(`${r[0]}: 스크린샷 파일도 '미확보 — 사유' 도 없음`); });
-  add('R-5', iShot >= 0 && bad5.length === 0 && withFile >= 1, `스크린샷 파일 있는 행 ${withFile}, 미확보(사유) ${withReason}, 위반 ${bad5.length}` + (withFile === 0 && bad5.length === 0 ? ' — 전 행 미확보(수집 안 됨)' : ''), bad5.join('; ') || (iShot >= 0 ? `${refDir}/` : '스크린샷 열 없음'));
+  const needShots = Math.max(1, Math.ceil(rows.length / 2));
+  add('R-5', iShot >= 0 && bad5.length === 0 && withFile >= needShots, `스크린샷 파일 있는 행 ${withFile} (≥${needShots} = 행의 절반), 미확보(사유) ${withReason}, 위반 ${bad5.length}` + (withFile < needShots && bad5.length === 0 ? ' — 스크린샷이 절반 미만(수집 부족)' : ''), bad5.join('; ') || (iShot >= 0 ? `${refDir}/` : '스크린샷 열 없음'));
   const hits = []; rows.forEach((r) => FW.scanText(String(iHow >= 0 ? r[iHow] : '')).forEach((h) => hits.push(`${r[0]}:「${h.word}」`)));
   add('R-6', iHow >= 0 && hits.length === 0, `처리 방식 열 금지어 ${hits.length}건`, hits.slice(0, 6).join(', ') || (iHow >= 0 ? '0건' : '처리 방식 열 없음'));
 }

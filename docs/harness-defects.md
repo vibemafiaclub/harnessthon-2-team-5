@@ -595,3 +595,7 @@ test2 는 검증 2 의 `design/tokens.json`(한글 키, D-9 이전 산출)을 �
 ## D-51. UX·UI 9항목 재평가 뒤 상향 처치 묶음 (오너 지시, 2026-09-07)
 평가: U-1 중상·U-2 중·U-3 중·U-4 중상·U-5 중·U-6 중상·V-1 상·V-2 상·V-3 중상. 오너 "모두 상이 되도록 추천 방향으로 수정".
 **처치**: ① U-1 check-html H-18 — brief §2b 기대 경로의 화면 파일 + 연속 쌍마다 `data-next` 이동 요소(핵심 과업이 초안에서 실제로 이어지는지 산술). ② U-2 `check-references.js` R-1~R-6 + 0-A2 스크린샷 curl 저장(`design/references/`)·유형(직접/간접) 열. ③ U-3 패턴 선택지 `options[].html` 을 폰 프레임 그림으로(P-17). ④ U-5 A검사 17 `top_info_dominant`(Info/Top 1개·첫 화면 안·최대 글자). ⑤ U-6 final_review '대신 정한 것' 합본(F-12) + design-harness external catch 원장. ⑥ V-3 CR-11 검출력 시험 결과 요구(full·fast 공통으로 확대), CR-12 fail 인용 문자열 ↔ text_inventory 대조(오독 차단), 2콜에 레퍼런스 스크린샷 병행. selftest 61/61. **전부 미실측** — 다음 런이 첫 실측.
+
+## D-52. 1라운드 독립 감사(서브에이전트, 기준표 14항목) 반영 (2026-09-07 저녁)
+감사 판정: I-1 중상·I-2 중상·I-3 중·I-4 중·U-1 중상·U-2 중상·U-3 중·U-4 중상·U-5 중·U-6 중상·V-1 중상·V-2 중상·V-3 중. 놓친 것 8·모순 5.
+**처치**: ① P-3 결정형(Q2·Q10·Q11·Q11b·pattern) recommended 필수 + 취향형(Q1·Q5·Q3·Q6a) recommended 금지(재검증 질문 제외) — 골든 Q-02 가 무검 통과하던 문서↔코드 드리프트. ② P-18 재검증 존재(fast Q5 / full Q5·Q2). ③ P-19 references.md 서비스명 페이지 비노출. ④ B-27 raw [ACCEPTED] == §6 '추천 수락' == delegations accepted. ⑤ selftest 8절 audit-core 케이스 7종(A-15·A-17·탭바 양방향+번호 없음·터치 타깃 행·네이밍 2규칙·A-14·A-13) — 신규 A검사의 검출력 증명. ⑥ P-12·P-17·F-12·H-18 결함 변이. ⑦ state.json stages.figma.c_detector 자리. ⑧ CR-12: 텍스트 전용 번들(`--texts-only` → verify/text_inventory.json) 우선, 잘린 목록은 N/A 가 아니라 FAIL. ⑨ R-5 하한 = 행의 절반. ⑩ 탭바 IA 판정에서 번호 없는 프레임은 자동 '탭 아님' 이 아니라 이름 위반으로. 모순 정리: pattern 은 결정형(취향형 문구 폐기), §1-3 화면 조각 나열 → 투어. selftest 70/70.

@@ -25,7 +25,7 @@
  *   CR-8  top_info.match===true 전 화면 (declared·blind_first 비어 있지 않음)
  *   CR-9  diagnosis repeat(또는 repeat:true) 이면 state.stages.figma.c_fail_reasons 에 같은 화면·같은 검사 id
  *   CR-11 C 검출력 시험(3-E, full·fast 공통): state.stages.figma.c_detector === 'PASS' + 리포트(--detector, 기본 리포트 폴더/c_detector_test.md) 존재 — 판정자가 심은 슬롭을 잡았다는 증거 없이 실제 화면 판정을 채택하지 않는다(V-3)
- *   CR-12 fail 의 evidence 에 따옴표(「」·'' ·"")로 인용한 화면 문자열이 --audit(audit_screens.json) text_inventory 에 실제로 있어야 한다 — 판정자 오독(없는 오타 '서배') 차단. 인용이 없거나 inventory 가 잘렸으면 N/A
+ *   CR-12 fail 의 evidence 에 따옴표(「」·'' ·"")로 인용한 화면 문자열이 --texts(text_inventory.json, --texts-only 번들) 또는 --audit 의 text_inventory 에 실제로 있어야 한다 — 판정자 오독(없는 오타 '서배') 차단. 인용이 없으면 N/A, 목록이 잘렸으면 FAIL(텍스트 전용 번들로 다시)
  *   CR-10 화면마다 SLOP-SWEEP 항목(checks[] id "SLOP-SWEEP" 의 evidence/elements 또는 screen.slop_sweep) 존재
  *
  * c_report.json 스키마(3-E 고정 스키마 + 계획 22 확장):
@@ -46,9 +46,9 @@ function args(argv) { const o = {}; for (let i = 2; i < argv.length; i++) { cons
 const A = args(process.argv);
 if (!A.report) { console.error('--report <c_report.json> 필요'); process.exit(2); }
 if (!fs.existsSync(A.report)) { console.error('파일 없음: ' + A.report); process.exit(2); }
-const DEF = { shots: 'design/verify/shots/index.md', state: 'design/state.json', brief: 'design/brief.md', detector: 'design/verify/c_detector_test.md', audit: 'design/verify/audit_screens.json' };
+const DEF = { shots: 'design/verify/shots/index.md', state: 'design/state.json', brief: 'design/brief.md', detector: 'design/verify/c_detector_test.md', audit: 'design/verify/audit_screens.json', texts: 'design/verify/text_inventory.json' };
 /* detector·audit 의 기본 경로는 리포트(c_report.json)와 같은 폴더 — 픽스처·복사본 폴더에서도 같이 움직이게 */
-function input(k) { let p = A[k] || DEF[k]; if (!A[k] && (k === 'detector' || k === 'audit') && A.report) p = path.join(path.dirname(A.report), path.basename(DEF[k])); const exists = fs.existsSync(p); return { path: p, explicit: !!A[k], text: exists ? fs.readFileSync(p, 'utf8') : null }; }
+function input(k) { let p = A[k] || DEF[k]; if (!A[k] && (k === 'detector' || k === 'audit' || k === 'texts') && A.report) p = path.join(path.dirname(A.report), path.basename(DEF[k])); const exists = fs.existsSync(p); return { path: p, explicit: !!A[k], text: exists ? fs.readFileSync(p, 'utf8') : null }; }
 const shotsIn = input('shots'), stateIn = input('state'), briefIn = input('brief');
 let state = null; if (stateIn.text != null) { try { state = JSON.parse(stateIn.text); } catch (e) { stateIn.err = e.message; } }
 
@@ -229,12 +229,13 @@ if (!parseErr) {
 }
 /* ---- CR-12 인용 문자열 ↔ text_inventory ---- */
 {
-  const au = input('audit'); let inv = null, truncated = false;
+  /* 우선순위: --texts(텍스트 전용 번들, 잘리지 않음) → --audit 의 text_inventory(예산에 잘렸으면 N/A) */
+  const tx = input('texts'); const au = tx.text != null ? tx : input('audit'); let inv = null, truncated = false;
   if (au.text != null) { try { const j = JSON.parse(au.text); inv = (j.text_inventory || []).flatMap((f) => f.texts || []); truncated = !!j.text_inventory_truncated; } catch (e) { inv = null; } }
   const quotes = []; for (const sc of screens) for (const c of arr(sc.checks)) { if (!/^fail$/i.test(String(c.verdict || ''))) continue; const ev = String(c.evidence || ''); const re = /「([^」]{2,40})」|'([^'\n]{2,40})'|"([^"\n]{2,40})"|‘([^’\n]{2,40})’/g; let m; while ((m = re.exec(ev))) { const q = (m[1] || m[2] || m[3] || m[4] || '').trim(); if (/[가-힣A-Za-z]/.test(q)) quotes.push({ tag: `${sc.id}/${c.id}`, q }); } }
   if (!quotes.length) add('CR-12', true, 'fail evidence 에 인용 문자열 없음 — N/A', '인용 0건');
   else if (inv == null) add('CR-12', !au.explicit, `인용 ${quotes.length}건인데 audit text_inventory 없음 — ${au.explicit ? 'FAIL(지정 파일 없음)' : 'N/A(입력 없음)'}`, au.path);
-  else if (truncated) add('CR-12', true, `text_inventory 가 잘려(truncated) 대조 불가 — N/A (인용 ${quotes.length}건)`, '번들 --text-per-frame 을 올려 다시 생성하면 판정 가능');
+  else if (truncated) add('CR-12', false, `text_inventory 가 잘려(truncated) 대조 불가 (인용 ${quotes.length}건)`, `make-figma-audit --texts-only 로 ${DEF.texts} 를 만들어 넘긴다 — 잘린 목록으로는 오독을 못 가른다`);
   else { const bad = quotes.filter(({ q }) => !inv.some((t) => t.includes(q) || q.includes(t) && t.length >= 4)); add('CR-12', bad.length === 0, `인용 ${quotes.length}건 중 화면 텍스트에 없는 것 ${bad.length}`, bad.slice(0, 5).map((b) => `${b.tag}:「${b.q}」`).join(', ') || '전건 화면 텍스트와 일치'); }
 }
 

@@ -3,8 +3,8 @@
 | REF-n | 서비스 | 화면 | 우리 과업 T-n | 처리 방식 | 출처 | 유형 | 스크린샷 |
 |---|---|---|---|---|---|---|---|
 | REF-1 | 서비스A | 첫 실행 | T-1 | 빈 상태에 '첫 반려동물 등록' 하나만 | https://example.com/a | 직접 | REF-1-1.png |
-| REF-2 | 서비스B | 약 등록 | T-2 | 약 이름 옆 동물 배지 + '이미 먹임' 잠금 | https://example.com/b | 직접 | 미확보 — 스토어 페이지에 캡처 없음 |
-| REF-3 | 서비스C | 홈 | T-3 | 놓친 복약 수 최상단 | https://example.com/c | 직접 | 미확보 — 로그인 뒤 화면 |
+| REF-2 | 서비스B | 약 등록 | T-2 | 약 이름 옆 동물 배지 + '이미 먹임' 잠금 | https://example.com/b | 직접 | REF-2-1.png |
+| REF-3 | 서비스C | 홈 | T-3 | 놓친 복약 수 최상단 | https://example.com/c | 직접 | REF-3-1.png |
 | REF-4 | 서비스D | 홈 | T-1, T-2 | 등록 후 바로 오늘 보드 | https://example.com/d | 간접 | 미확보 — 웹 서비스 |
 | REF-5 | 서비스E | 알림 | T-3 | 놓친 건만 모아 보기 | https://example.com/e | 직접 | 미확보 — 캡처 실패 |
 
