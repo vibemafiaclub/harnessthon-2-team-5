@@ -1,0 +1,666 @@
+<title>자극 반응 보드</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  :root{
+    --ground:#F5F4F0;
+    --surface:#FFFFFF;
+    --surface-sunk:#EDEBE4;
+    --ink:#23211C;
+    --ink-soft:#6B675E;
+    --ink-faint:#9C978C;
+    --line:#DEDBD2;
+    --accent:#414A85;
+    --accent-soft:#E5E7F2;
+    --good:#2E6A4E;
+    --good-soft:#DFEDE5;
+    --bad:#9A3B3B;
+    --bad-soft:#F3E1E1;
+    --mid:#7A6420;
+    --mid-soft:#F0E9D3;
+    --shadow:0 1px 2px rgba(35,33,28,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#1A1917;
+      --surface:#242320;
+      --surface-sunk:#131211;
+      --ink:#EDEAE2;
+      --ink-soft:#A9A399;
+      --ink-faint:#77726A;
+      --line:#38352F;
+      --accent:#9AA3DC;
+      --accent-soft:#2B2E45;
+      --good:#7BC49B;
+      --good-soft:#1E3A2C;
+      --bad:#E09090;
+      --bad-soft:#3D2424;
+      --mid:#D8BE72;
+      --mid-soft:#3A3220;
+      --shadow:0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#1A1917;
+    --surface:#242320;
+    --surface-sunk:#131211;
+    --ink:#EDEAE2;
+    --ink-soft:#A9A399;
+    --ink-faint:#77726A;
+    --line:#38352F;
+    --accent:#9AA3DC;
+    --accent-soft:#2B2E45;
+    --good:#7BC49B;
+    --good-soft:#1E3A2C;
+    --bad:#E09090;
+    --bad-soft:#3D2424;
+    --mid:#D8BE72;
+    --mid-soft:#3A3220;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--ground);color:var(--ink);
+    font-family:"IBM Plex Sans KR",system-ui,-apple-system,sans-serif;
+    font-size:14px;line-height:1.6;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 96px;}
+
+  header.top{
+    padding:36px 0 20px;border-bottom:1px solid var(--line);margin-bottom:28px;
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:10px;
+  }
+  h1{
+    font-family:"Gowun Batang",Georgia,serif;
+    font-size:32px;font-weight:700;line-height:1.25;margin:0 0 10px;
+    text-wrap:balance;
+  }
+  .lede{margin:0;max-width:62ch;color:var(--ink-soft);}
+  .lede strong{color:var(--ink);font-weight:600;}
+
+  .rulebar{
+    display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;
+    margin-top:18px;padding:12px 14px;
+    background:var(--accent-soft);border-radius:8px;
+    font-size:13px;color:var(--ink);
+  }
+  .rulebar b{font-weight:600;}
+
+  .statusline{
+    position:sticky;top:0;z-index:20;
+    display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;
+    padding:11px 14px;margin:0 0 24px;
+    background:var(--surface);border:1px solid var(--line);border-radius:8px;
+    box-shadow:var(--shadow);
+    font-size:13px;
+  }
+  .count{font-family:"IBM Plex Mono",monospace;font-weight:500;font-variant-numeric:tabular-nums;}
+  .count b{color:var(--accent);font-size:15px;}
+  .savestate{margin-left:auto;color:var(--ink-faint);font-size:12px;}
+  .savestate[data-state="saved"]{color:var(--good);}
+  .savestate[data-state="local"]{color:var(--mid);}
+
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));
+    gap:22px;
+  }
+  .cell{
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .cell[data-done="1"]{border-color:var(--accent);}
+  .stage{padding:14px 14px 0;}
+  .cellfoot{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px;}
+  .cellhead{
+    display:flex;align-items:baseline;gap:10px;
+    padding:10px 14px 0;
+  }
+  .gid{
+    font-family:"IBM Plex Mono",monospace;font-weight:500;
+    font-size:13px;letter-spacing:.06em;color:var(--ink);
+  }
+  .a11y{
+    margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:11px;
+    padding:2px 7px;border-radius:4px;font-variant-numeric:tabular-nums;
+    background:var(--good-soft);color:var(--good);
+  }
+  .a11y[data-fail="1"]{background:var(--bad-soft);color:var(--bad);}
+
+  .verdicts{display:flex;gap:6px;}
+  .vbtn{
+    flex:1;padding:8px 4px;border:1px solid var(--line);border-radius:7px;
+    background:var(--surface);color:var(--ink-soft);
+    font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;
+    transition:background .12s,border-color .12s,color .12s;
+  }
+  .vbtn:hover{border-color:var(--ink-faint);}
+  .vbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .vbtn[aria-pressed="true"][data-v="good"]{background:var(--good-soft);border-color:var(--good);color:var(--good);font-weight:600;}
+  .vbtn[aria-pressed="true"][data-v="bad"]{background:var(--bad-soft);border-color:var(--bad);color:var(--bad);font-weight:600;}
+  .vbtn[aria-pressed="true"][data-v="mid"]{background:var(--mid-soft);border-color:var(--mid);color:var(--mid);font-weight:600;}
+
+  .reason{
+    width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:7px;
+    background:var(--surface-sunk);color:var(--ink);
+    font-family:inherit;font-size:13px;
+  }
+  .reason::placeholder{color:var(--ink-faint);}
+  .reason:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+
+  /* QA 카드 — 판정을 누른 뒤에만 나타난다(앵커링 방지) */
+  .qa{
+    border-top:1px dashed var(--line);padding-top:10px;
+    display:flex;flex-direction:column;gap:7px;
+  }
+  .qa[hidden]{display:none !important;}
+  .qa-head{
+    display:flex;align-items:baseline;gap:8px;
+    font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    font-family:"IBM Plex Mono",monospace;color:var(--accent);
+  }
+  .qa-head .avg{
+    margin-left:auto;letter-spacing:0;text-transform:none;
+    color:var(--ink-soft);font-variant-numeric:tabular-nums;
+  }
+  .qa-axis{display:grid;grid-template-columns:auto 1fr;gap:4px 9px;align-items:center;}
+  .qa-name{font-size:12px;color:var(--ink-soft);white-space:nowrap;}
+  .qa-dots{display:flex;gap:3px;align-items:center;}
+  .dot{
+    width:9px;height:9px;border-radius:2px;background:var(--surface-sunk);
+    border:1px solid var(--line);
+  }
+  .dot[data-on="1"]{background:var(--accent);border-color:var(--accent);}
+  .qa-axis[data-low="1"] .dot[data-on="1"]{background:var(--bad);border-color:var(--bad);}
+  .qa-note{
+    grid-column:1 / -1;font-size:11.5px;line-height:1.5;color:var(--ink-faint);
+    margin:0 0 2px;
+  }
+  .qa-summary{
+    font-size:12.5px;color:var(--ink);margin:2px 0 0;
+    padding:7px 9px;background:var(--surface-sunk);border-radius:6px;
+  }
+  .qa-hint{font-size:11.5px;color:var(--ink-faint);}
+
+  section.closing{
+    margin-top:36px;padding:20px;border:1px solid var(--line);border-radius:10px;
+    background:var(--surface);
+  }
+  section.closing h2{
+    font-family:"Gowun Batang",Georgia,serif;font-size:19px;margin:0 0 6px;font-weight:700;
+  }
+  section.closing p{margin:0 0 12px;color:var(--ink-soft);font-size:13px;}
+  .freeform{
+    width:100%;min-height:88px;resize:vertical;padding:11px 12px;
+    border:1px solid var(--line);border-radius:8px;
+    background:var(--surface-sunk);color:var(--ink);
+    font-family:inherit;font-size:14px;line-height:1.6;
+  }
+  .freeform:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+
+  .offline{
+    margin-top:14px;padding:10px 12px;border-radius:7px;
+    background:var(--mid-soft);color:var(--mid);font-size:12.5px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+
+  /* ============================================================
+     자극 타일 — 원본 gallery.html 과 픽셀 단위로 같아야 한다.
+     보드 UI 의 폰트·색이 여기 스며들면 자극이 오염되므로
+     아래 블록은 system-ui 로 못박고 위 토큰을 일절 쓰지 않는다.
+     ============================================================ */
+  .tile{
+    width:100%;aspect-ratio:3/4;padding:16px;
+    display:flex;flex-direction:column;overflow:hidden;
+    font-family:system-ui,-apple-system,sans-serif;
+    font-size:14px;line-height:1.6;
+    background:#F7F7F5;color:#2A2A28;
+    border-radius:10px;border:1px solid #E4E4E1;
+  }
+  .tile .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .tile .list{flex:1;display:flex;flex-direction:column;}
+  .tile .row{display:flex;flex-direction:column;padding:10px 0;border-bottom:1px solid #E4E4E1;font-size:13px;line-height:1.5;}
+  .tile .row:last-child{border-bottom:none;}
+  .tile .title{font-size:16px;font-weight:700;}
+  .tile .chip{font-size:11px;padding:4px 9px;border-radius:999px;font-weight:600;background:#E7EFEC;color:#1F4B3B;}
+  .tile .btn{align-self:flex-start;border:none;cursor:default;margin-top:10px;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;background:#2A2A28;color:#FFFFFF;}
+
+  #t01{background:#FBF3EA;border-color:#EAD9C4;color:#3A2E22;}
+  #t01 .row{border-bottom-color:#EAD9C4;color:#3A2E22;}
+  #t01 .title{color:#3A2E22;}
+  #t01 .chip{background:#F3DCC2;color:#6B4A12;}
+  #t01 .btn{background:#3A2E22;color:#FFF9F2;}
+
+  #t02{border-radius:20px;}
+  #t02 .row{border-bottom:none;background:#FFFFFF;border-radius:14px;padding:10px 12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+  #t02 .row:last-child{margin-bottom:0;}
+  #t02 .btn{border-radius:999px;}
+
+  #t03 .title{font-size:26px;font-weight:800;background:#2A2A28;color:#FFF7E6;padding:8px 12px;border-radius:6px;display:inline-block;}
+
+  #t04 .row{padding:14px 0;display:flex;justify-content:space-between;gap:10px;line-height:1.6;}
+
+  #t05 .chip{background:#E4E6E2;color:#484A45;}
+  #t05 .btn{background:#5A5D57;color:#FFFFFF;}
+
+  #t06 .title,#t06 .row,#t06 .btn{font-family:Georgia,"Times New Roman",serif;}
+  #t06 .title{font-weight:700;letter-spacing:0;}
+  #t06 .row{letter-spacing:0;}
+
+  #t07{background:#EDF2F6;border-color:#D3E0EA;color:#1F2A33;}
+  #t07 .row{border-bottom-color:#D3E0EA;color:#1F2A33;}
+  #t07 .title{color:#1F2A33;}
+  #t07 .chip{background:#D6E4EF;color:#204A6B;}
+  #t07 .btn{background:#1F2A33;color:#F3F8FC;}
+
+  #t08 .title{font-size:15px;font-weight:600;border:1px solid #2A2A28;border-radius:5px;padding:4px 10px;display:inline-block;}
+
+  #t09{border-radius:0;}
+  #t09 .row{border-bottom:1px solid #2A2A28;padding:10px 2px;}
+  #t09 .btn{border-radius:0;}
+
+  #t10 .chip{background:#FFD9CC;color:#8A2200;}
+  #t10 .btn{background:#E4472A;color:#FFFFFF;}
+
+  #t11 .row{padding:3px 0;border-bottom:none;font-size:11.5px;line-height:1.25;}
+  #t11 .list{gap:0;}
+
+  #t12 .title{font-weight:500;letter-spacing:.01em;font-size:17px;}
+  #t12 .row{font-weight:400;letter-spacing:.01em;}
+  #t12 .btn{border-radius:14px;font-weight:500;}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">청첩장모임 스케줄러 · 0단계 인터뷰</div>
+    <h1>어느 쪽이 눈에 들어오나요</h1>
+    <p class="lede">아래 12장은 <strong>내용이 전부 똑같습니다.</strong> 같은 모임 목록을 보여 주는 화면이고, 한 장씩 딱 한 가지만 다르게 만들었습니다. 무엇이 다른지 맞히실 필요는 없습니다 — 눈에 들어오는 대로 반응만 남겨 주세요.</p>
+    <div class="rulebar">
+      <span><b>보는 법</b> 글자 뜻이 아니라 보이는 느낌만</span>
+      <span><b>분량</b> 눈에 띄는 3~4장이면 충분</span>
+      <span><b>애매</b> 도 정식 답입니다</span>
+      <span><b>점수</b> 판정을 누르면 그 자리에서 하네스 QA 점수가 열립니다</span>
+    </div>
+  </header>
+
+  <div class="statusline">
+    <span class="count"><b id="doneCount">0</b> / 12 장에 반응함</span>
+    <span class="count" style="color:var(--ink-soft)">이유 <b id="reasonCount" style="color:var(--ink-soft)">0</b>줄 · 점수 보고 바꾼 것 <b id="scoreCount" style="color:var(--ink-soft)">0</b>장</span>
+    <span class="savestate" id="saveState" data-state="idle">불러오는 중…</span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <section class="closing">
+    <h2>그 밖에 하고 싶은 말</h2>
+    <p>위 항목에 안 들어가는 것 — 전체적인 인상, 걸리는 점, "이건 이 서비스랑 안 맞는 것 같다" 같은 것을 자유롭게 적어 주세요.</p>
+    <textarea class="freeform" id="freeform" placeholder="예: 전체적으로 너무 차가워 보인다. 어른들이 보기엔 글씨가 작을 것 같다."></textarea>
+    <div class="offline" id="offlineNote" hidden>저장 기능에 연결하지 못했습니다. 입력한 내용은 이 브라우저에만 남습니다 — 창을 닫기 전에 알려 주세요.</div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var TILE_IDS = ["G-01","G-02","G-03","G-04","G-05","G-06","G-07","G-08","G-09","G-10","G-11","G-12"];
+  var AXES = [
+    {key:"color",   label:"컬러 일관성"},
+    {key:"type",    label:"타이포그래피"},
+    {key:"spacing", label:"간격 및 여백"},
+    {key:"align",   label:"정렬"}
+  ];
+
+  /* 하네스가 매긴 QA 점수. 사용자가 판정을 누른 뒤에만 공개한다.
+     먼저 보여 주면 사용자 반응이 이 점수의 메아리가 된다. */
+  var QA = {"scale":"1~5, 1=나쁨 5=좋음","axes":{"color":"컬러 일관성","type":"타이포그래피","spacing":"간격 및 여백","align":"정렬"},"tiles":{"G-01":{"color":{"score":5,"note":"배경·테두리·칩·버튼 모두 베이지 한 갈래"},"type":{"score":4,"note":"16/13/11 3단계 위계 유지, 기본값 그대로"},"spacing":{"score":4,"note":"타일 16, 행 10, 버튼 10 — 두 값 척도"},"align":{"score":4,"note":"제목·행·버튼 모두 좌측 16px 기준선"},"summary":"따뜻한 팔레트가 전 요소에 일관"},"G-02":{"color":{"score":3,"note":"칩 #E7EFEC 초록만 중립 회색 팔레트에서 이탈"},"type":{"score":4,"note":"16/13/11 3단계 위계 유지, 기본값 그대로"},"spacing":{"score":3,"note":"행 패딩 10/12에 간격 8 추가 — 8/10/12 혼재"},"align":{"score":2,"note":"행만 좌 12px 안쪽, 제목 기준선과 어긋남"},"summary":"카드화 여유는 좋으나 행 정렬 이탈"},"G-03":{"color":{"score":2,"note":"제목 글자 #FFF7E6 크림이 중립+초록과 무관"},"type":{"score":3,"note":"26/800 대비는 크나 16→26 단계 근거 없음"},"spacing":{"score":3,"note":"제목 패딩 8/12 추가로 헤더만 불룩"},"align":{"score":2,"note":"제목이 12px 안쪽, 행 좌측선보다 밀림"},"summary":"강조는 세나 팔레트·정렬 깨짐"},"G-04":{"color":{"score":3,"note":"칩 #E7EFEC 초록만 중립 회색 팔레트에서 이탈"},"type":{"score":4,"note":"16/13/11 3단계 위계 유지, 기본값 그대로"},"spacing":{"score":4,"note":"행 패딩 14, 행간 1.6 — 여유롭고 값 하나로 통일"},"align":{"score":4,"note":"제목·행·버튼 좌측 16px 동일"},"summary":"간격만 넉넉해진 안전한 변형"},"G-05":{"color":{"score":5,"note":"칩·버튼을 회녹 중립으로 통일, 튀는 색 없음"},"type":{"score":4,"note":"16/13/11 3단계 위계 유지, 기본값 그대로"},"spacing":{"score":4,"note":"타일 16, 행 10, 버튼 10 — 두 값 척도"},"align":{"score":4,"note":"제목·행·버튼 모두 좌측 16px 기준선"},"summary":"저채도로 팔레트 이탈 색 제거"},"G-06":{"color":{"score":3,"note":"칩 #E7EFEC 초록만 중립 회색 팔레트에서 이탈"},"type":{"score":3,"note":"제목·행·버튼만 세리프, 칩은 산세리프로 혼재"},"spacing":{"score":4,"note":"기본 척도 유지, 세리프 행간만 미세 변동"},"align":{"score":4,"note":"제목·행·버튼 모두 좌측 16px 기준선"},"summary":"격식 있으나 칩 서체 불일치"},"G-07":{"color":{"score":5,"note":"배경·테두리·칩·버튼 모두 한랭 블루 한 갈래"},"type":{"score":4,"note":"16/13/11 3단계 위계 유지, 기본값 그대로"},"spacing":{"score":4,"note":"타일 16, 행 10, 버튼 10 — 두 값 척도"},"align":{"score":4,"note":"제목·행·버튼 모두 좌측 16px 기준선"},"summary":"차가운 팔레트가 전 요소에 일관"},"G-08":{"color":{"score":3,"note":"제목 테두리 #2A2A28이 타일 테두리 #E4E4E1와 충돌"},"type":{"score":2,"note":"제목 15px가 본문 13px과 2px 차 — 위계 붕괴"},"spacing":{"score":3,"note":"제목 패딩 4/10 신규 값, 10/16 척도 이탈"},"align":{"score":2,"note":"제목만 10px 안쪽으로 밀려 좌측선 어긋남"},"summary":"절제 지나쳐 제목이 눌림"},"G-09":{"color":{"score":2,"note":"행 구분선 #2A2A28이 테두리 #E4E4E1와 무게 충돌"},"type":{"score":4,"note":"16/13/11 3단계 위계 유지, 기본값 그대로"},"spacing":{"score":3,"note":"행 패딩 10px 2px — 2px가 척도에 근거 없음"},"align":{"score":3,"note":"행만 좌 2px 들여써 제목 기준선과 미세 이탈"},"summary":"각진 맛은 있으나 선 무게 과함"},"G-10":{"color":{"score":2,"note":"버튼 #E4472A·칩 주황이 중립 회색 팔레트와 무관"},"type":{"score":4,"note":"16/13/11 3단계 위계 유지, 기본값 그대로"},"spacing":{"score":4,"note":"타일 16, 행 10, 버튼 10 — 두 값 척도"},"align":{"score":4,"note":"제목·행·버튼 모두 좌측 16px 기준선"},"summary":"주황 강조만 홀로 튐"},"G-11":{"color":{"score":3,"note":"칩 #E7EFEC 초록만 중립 회색 팔레트에서 이탈"},"type":{"score":2,"note":"본문 11.5px가 칩 11px과 거의 같아 위계 소실"},"spacing":{"score":2,"note":"행 패딩 3px·행간 1.25가 타일 패딩 16과 괴리"},"align":{"score":4,"note":"행 좌측 0 유지로 기준선 자체는 정렬됨"},"summary":"밀도 과해 숨 막히고 위계 소실"},"G-12":{"color":{"score":3,"note":"칩 #E7EFEC 초록만 중립 회색 팔레트에서 이탈"},"type":{"score":3,"note":"제목 17px/500은 본문 대비 약하고 17은 임의 값"},"spacing":{"score":4,"note":"타일 16, 행 10, 버튼 10 — 두 값 척도"},"align":{"score":4,"note":"제목·행·버튼 모두 좌측 16px 기준선"},"summary":"부드럽지만 제목 위계가 약함"}}};
+  var VERDICTS = [
+    {v:"good", label:"좋다"},
+    {v:"bad",  label:"싫다"},
+    {v:"mid",  label:"애매"}
+  ];
+
+  var TILE_MARKUP =
+    '<div class="top"><span class="title">이번 주말</span><span class="chip">조율 중</span></div>' +
+    '<div class="list">' +
+      '<div class="row">대학 동기 모임 · 토 저녁 · 회신 4/6</div>' +
+      '<div class="row">회사 선배 모임 · 토 낮 · 회신 2/5</div>' +
+      '<div class="row">동네 친구 모임 · 일 점심 · 확정</div>' +
+    '</div>' +
+    '<button class="btn" tabindex="-1">모임 만들기</button>';
+
+  var state = {};   // tileId -> {verdict, reason, scores:{}}
+  var db = null;
+  var freeformEl = document.getElementById("freeform");
+  var saveEl = document.getElementById("saveState");
+
+  function rec(id){
+    if(!state[id]) state[id] = {
+      verdict:"", reason:"",
+      firstVerdict:"",          // QA 공개 전에 누른 첫 판정
+      changedAfterReveal:false  // 점수를 보고 판정을 바꿨는가 — 이것 자체가 데이터
+    };
+    return state[id];
+  }
+
+  /* ---------- 접근성 대비: 사람에게 묻지 않고 계산한다 ---------- */
+  function srgb(c){ c = c/255; return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); }
+  function lum(rgb){ return 0.2126*srgb(rgb[0]) + 0.7152*srgb(rgb[1]) + 0.0722*srgb(rgb[2]); }
+  function parseRGB(s){
+    var m = String(s).match(/(\d+(?:\.\d+)?)/g);
+    return m && m.length >= 3 ? [ +m[0], +m[1], +m[2] ] : null;
+  }
+  function ratio(fg, bg){
+    var a = lum(fg), b = lum(bg);
+    var hi = Math.max(a,b), lo = Math.min(a,b);
+    return (hi + 0.05) / (lo + 0.05);
+  }
+  function measureContrast(tileEl){
+    var row = tileEl.querySelector(".row");
+    if(!row) return null;
+    var fg = parseRGB(getComputedStyle(row).color);
+    var bgEl = tileEl, bg = null;
+    while(bgEl){
+      var c = parseRGB(getComputedStyle(bgEl).backgroundColor);
+      var alpha = String(getComputedStyle(bgEl).backgroundColor).match(/[\d.]+\)$/);
+      if(c && !(alpha && parseFloat(alpha[0]) === 0)){ bg = c; break; }
+      bgEl = bgEl.parentElement;
+    }
+    if(!fg || !bg) return null;
+    return ratio(fg, bg);
+  }
+
+  /* ---------- 렌더 ---------- */
+  function buildCell(id, index){
+    var cell = document.createElement("div");
+    cell.className = "cell";
+    cell.dataset.id = id;
+
+    var head = document.createElement("div");
+    head.className = "cellhead";
+    head.innerHTML = '<span class="gid">' + id + '</span>' +
+                     '<span class="a11y" title="본문 글자와 배경의 명암 대비. 4.5 미만이면 어른들이 읽기 어렵습니다.">–</span>';
+    cell.appendChild(head);
+
+    var stage = document.createElement("div");
+    stage.className = "stage";
+    var tile = document.createElement("div");
+    tile.className = "tile";
+    tile.id = "t" + String(index + 1).padStart(2, "0");
+    tile.setAttribute("aria-hidden", "true");
+    tile.innerHTML = TILE_MARKUP;
+    stage.appendChild(tile);
+    cell.appendChild(stage);
+
+    var foot = document.createElement("div");
+    foot.className = "cellfoot";
+
+    var vwrap = document.createElement("div");
+    vwrap.className = "verdicts";
+    vwrap.setAttribute("role", "group");
+    vwrap.setAttribute("aria-label", id + " 판정");
+    VERDICTS.forEach(function(o){
+      var b = document.createElement("button");
+      b.className = "vbtn";
+      b.type = "button";
+      b.dataset.v = o.v;
+      b.textContent = o.label;
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function(){
+        var r = rec(id);
+        var wasRevealed = !!r.firstVerdict;
+        r.verdict = (r.verdict === o.v) ? "" : o.v;
+        if(!wasRevealed && r.verdict){
+          r.firstVerdict = r.verdict;              // 이 순간 QA 가 공개된다
+        }else if(wasRevealed && r.verdict !== r.firstVerdict){
+          r.changedAfterReveal = true;             // 점수를 보고 마음이 바뀐 경우
+        }
+        paint(id);
+        save(id);
+      });
+      vwrap.appendChild(b);
+    });
+    foot.appendChild(vwrap);
+
+    var reason = document.createElement("input");
+    reason.className = "reason";
+    reason.type = "text";
+    reason.placeholder = "왜 그런지 한 줄 (선택)";
+    reason.setAttribute("aria-label", id + " 이유");
+    reason.addEventListener("input", function(){ rec(id).reason = reason.value; paintCounts(); });
+    reason.addEventListener("change", function(){ save(id); });
+    reason.addEventListener("blur", function(){ save(id); });
+    foot.appendChild(reason);
+
+    foot.appendChild(buildQA(id));
+
+    cell.appendChild(foot);
+    return cell;
+  }
+
+  function buildQA(id){
+    var box = document.createElement("div");
+    box.className = "qa";
+    box.hidden = true;
+
+    var tile = QA && QA.tiles && QA.tiles[id];
+    if(!tile){
+      box.innerHTML = '<p class="qa-hint">이 시안의 QA 점수는 아직 없습니다.</p>';
+      return box;
+    }
+
+    var vals = AXES.map(function(ax){
+      return tile[ax.key] && typeof tile[ax.key].score === "number" ? tile[ax.key].score : 0;
+    }).filter(function(n){ return n > 0; });
+    var avg = vals.length ? (vals.reduce(function(a,b){ return a+b; }, 0) / vals.length) : 0;
+
+    var head = document.createElement("div");
+    head.className = "qa-head";
+    head.innerHTML = '<span>하네스 QA</span>' +
+      '<span class="avg">평균 ' + avg.toFixed(1) + ' / 5</span>';
+    box.appendChild(head);
+
+    AXES.forEach(function(ax){
+      var a = tile[ax.key];
+      if(!a) return;
+      var row = document.createElement("div");
+      row.className = "qa-axis";
+      if(a.score <= 2) row.dataset.low = "1";
+
+      var name = document.createElement("span");
+      name.className = "qa-name";
+      name.textContent = ax.label;
+      row.appendChild(name);
+
+      var dots = document.createElement("span");
+      dots.className = "qa-dots";
+      dots.setAttribute("role", "img");
+      dots.setAttribute("aria-label", ax.label + " " + a.score + "점 만점 5점");
+      for(var n = 1; n <= 5; n++){
+        var d = document.createElement("span");
+        d.className = "dot";
+        d.dataset.on = n <= a.score ? "1" : "0";
+        dots.appendChild(d);
+      }
+      row.appendChild(dots);
+
+      if(a.note){
+        var note = document.createElement("p");
+        note.className = "qa-note";
+        note.textContent = a.note;
+        row.appendChild(note);
+      }
+      box.appendChild(row);
+    });
+
+    if(tile.summary){
+      var s = document.createElement("p");
+      s.className = "qa-summary";
+      s.textContent = tile.summary;
+      box.appendChild(s);
+    }
+
+    var hint = document.createElement("p");
+    hint.className = "qa-hint";
+    hint.textContent = "이 점수와 생각이 다르면 판정을 바꾸셔도 됩니다. 바꾸신 것도 기록됩니다.";
+    box.appendChild(hint);
+
+    return box;
+  }
+
+  function paint(id){
+    var cell = document.querySelector('.cell[data-id="' + id + '"]');
+    if(!cell) return;
+    var r = rec(id);
+    cell.querySelectorAll(".vbtn").forEach(function(b){
+      b.setAttribute("aria-pressed", String(b.dataset.v === r.verdict));
+    });
+    var input = cell.querySelector(".reason");
+    if(input && input.value !== r.reason) input.value = r.reason || "";
+    var qa = cell.querySelector(".qa");
+    if(qa) qa.hidden = !r.firstVerdict;   // 첫 판정 뒤에만 공개
+    cell.dataset.done = r.verdict ? "1" : "0";
+    paintCounts();
+  }
+
+  function paintCounts(){
+    var done = 0, reasons = 0, changed = 0;
+    TILE_IDS.forEach(function(id){
+      var r = state[id];
+      if(!r) return;
+      if(r.verdict) done++;
+      if(r.reason && r.reason.trim()) reasons++;
+      if(r.changedAfterReveal) changed++;
+    });
+    document.getElementById("doneCount").textContent = done;
+    document.getElementById("reasonCount").textContent = reasons;
+    document.getElementById("scoreCount").textContent = changed;
+  }
+
+  function setSave(stateName, text){
+    saveEl.dataset.state = stateName;
+    saveEl.textContent = text;
+  }
+
+  /* ---------- 저장 ---------- */
+  var pending = {};
+  var timer = null;
+  function save(id){
+    pending[id] = true;
+    if(timer) clearTimeout(timer);
+    timer = setTimeout(flush, 400);
+  }
+  function flush(){
+    var ids = Object.keys(pending);
+    pending = {};
+    if(!ids.length) return;
+    try{ localStorage.setItem("gallery-reactions", JSON.stringify(state)); }catch(e){}
+    if(!db){ setSave("local", "이 브라우저에만 저장됨"); return; }
+    setSave("idle", "저장 중…");
+    Promise.all(ids.map(function(id){
+      var r = rec(id);
+      return db.doc("reactions/" + id).set({
+        tile: id,
+        verdict: r.verdict || "",
+        reason: r.reason || "",
+        firstVerdict: r.firstVerdict || "",
+        changedAfterReveal: !!r.changedAfterReveal,
+        updatedAt: new Date().toISOString()
+      });
+    })).then(function(){
+      setSave("saved", "저장됨");
+    }).catch(function(e){
+      setSave("local", "저장 실패 (" + ((e && e.code) || "unknown") + ") — 이 브라우저에만 남음");
+    });
+  }
+
+  var ffTimer = null;
+  freeformEl.addEventListener("input", function(){
+    if(ffTimer) clearTimeout(ffTimer);
+    ffTimer = setTimeout(function(){
+      try{ localStorage.setItem("gallery-freeform", freeformEl.value); }catch(e){}
+      if(!db){ setSave("local", "이 브라우저에만 저장됨"); return; }
+      db.doc("notes/freeform").set({
+        text: freeformEl.value,
+        updatedAt: new Date().toISOString()
+      }).then(function(){ setSave("saved", "저장됨"); })
+        .catch(function(e){ setSave("local", "저장 실패 (" + ((e && e.code) || "unknown") + ") — 이 브라우저에만 남음"); });
+    }, 600);
+  });
+
+  /* ---------- 시작 ---------- */
+  var grid = document.getElementById("grid");
+  TILE_IDS.forEach(function(id, i){ grid.appendChild(buildCell(id, i)); });
+
+  // 대비 배지 — 계산해서 보여 준다. 사람에게 묻지 않는다.
+  TILE_IDS.forEach(function(id){
+    var cell = document.querySelector('.cell[data-id="' + id + '"]');
+    var badge = cell.querySelector(".a11y");
+    var r = measureContrast(cell.querySelector(".tile"));
+    if(r === null){ badge.textContent = "–"; return; }
+    badge.textContent = "대비 " + r.toFixed(1) + ":1";
+    badge.dataset.fail = r < 4.5 ? "1" : "0";
+    badge.title = r < 4.5
+      ? "본문 대비 " + r.toFixed(2) + ":1 — 기준 4.5:1 미달. 어른들이 읽기 어렵습니다."
+      : "본문 대비 " + r.toFixed(2) + ":1 — 기준 4.5:1 통과.";
+  });
+
+  // 로컬 백업 먼저 그린다(연결 실패해도 화면이 산다)
+  try{
+    var cached = JSON.parse(localStorage.getItem("gallery-reactions") || "{}");
+    Object.keys(cached).forEach(function(k){ state[k] = cached[k]; });
+    var cachedFF = localStorage.getItem("gallery-freeform");
+    if(cachedFF) freeformEl.value = cachedFF;
+  }catch(e){}
+  TILE_IDS.forEach(paint);
+
+  function goOffline(why){
+    db = null;
+    setSave("local", "이 브라우저에만 저장됨");
+    var note = document.getElementById("offlineNote");
+    note.hidden = false;
+    if(why) note.textContent += " (" + why + ")";
+  }
+
+  claude.use("db").then(function(ns){
+    if(!ns){ goOffline("not_granted"); return; }
+    db = ns;
+    setSave("saved", "저장 준비됨");   // 쓰기는 이 시점부터 가능하다
+
+    // 이전 방문분 복원. 여기서 실패해도 저장 자체는 살아 있다.
+    return db.collection("reactions").get().then(function(snap){
+      var docs = (snap && snap.docs) || [];
+      docs.forEach(function(d){
+        if(!d || !d.exists) return;
+        var data = d.data() || {};
+        var id = data.tile || d.id;
+        if(TILE_IDS.indexOf(id) === -1) return;
+        state[id] = {
+          verdict: data.verdict || "",
+          reason: data.reason || "",
+          firstVerdict: data.firstVerdict || "",
+          changedAfterReveal: !!data.changedAfterReveal
+        };
+      });
+      return db.doc("notes/freeform").get();
+    }).then(function(doc){
+      if(doc && doc.exists){
+        var data = doc.data() || {};
+        if(typeof data.text === "string" && !freeformEl.value) freeformEl.value = data.text;
+      }
+      TILE_IDS.forEach(paint);
+    }).catch(function(e){
+      // 읽기만 실패한 것 — 저장은 그대로 쓸 수 있으므로 offline 으로 내리지 않는다
+      setSave("saved", "저장 준비됨 (이전 기록은 못 불러옴)");
+    });
+  }).catch(function(e){
+    goOffline(e && e.code ? e.code : "load_failed");
+  });
+})();
+</script>

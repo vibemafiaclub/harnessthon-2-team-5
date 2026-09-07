@@ -1,0 +1,71 @@
+{
+  "stage": "C",
+  "captured_at": "2026-09-07T02:00:00Z",
+  "judged_at": "2026-09-07",
+  "screens_total": 24,
+  "screens_opened": 24,
+  "c_not_run": [],
+  "verdict": "FAIL",
+  "scores": {
+    "ui_aesthetic": 3,
+    "ux_intuition": 3,
+    "fitness": 5
+  },
+  "screen_purposes": {
+    "00_onboarding": {"purpose": "input", "pass": true},
+    "01_home": {"purpose": "status_scan", "pass": false, "fail_ids": ["F-7"]},
+    "02_meetingdetail": {"purpose": "status_scan", "pass": true},
+    "03_guestreply": {"purpose": "input", "pass": false, "fail_ids": ["F-1"]},
+    "04_contacts": {"purpose": "status_scan", "pass": false, "fail_ids": ["F-6"]},
+    "05_contactedit": {"purpose": "input", "pass": true},
+    "06_groupcompose": {"purpose": "selection", "pass": true},
+    "07_datepropose": {"purpose": "selection", "pass": true}
+  },
+  "fails": [
+    {"id": "F-1", "check": "C-6", "diagnosis": "local", "screen": "03_guestreply_answering.png",
+     "measure": "green CTA #0D7A64 visible y=820-843 of 844 frame, visible height 24px, label text 0px; 03_guestreply_empty.png same button ends at y=835",
+     "statement": "primary CTA clipped by frame bottom, submit label invisible"},
+    {"id": "F-2", "check": "C-6", "diagnosis": "local", "screen": "01_home_normal.png",
+     "measure": "row ink y=694-704, opaque CTA bar top y=705, no scrim/fade/bottom padding; row copy typo '서배' should be '선배'",
+     "statement": "last list row cut mid-glyph by floating CTA"},
+    {"id": "F-3", "check": "C-9", "diagnosis": "local", "screen": "05_contactedit_edit.png",
+     "measure": "chips read '신부 쪽 / 신부 쪽 / 양가 공동'; 05_contactedit_new.png and 05_contactedit_oneonone.png read '신부 쪽 / 신랑 쪽 / 양가 공동'",
+     "statement": "duplicated option label, and the wrong chip is the selected one"},
+    {"id": "F-4", "check": "C-8", "diagnosis": "local", "screen": "05_contactedit_oneonone.png,06_groupcompose_selecting.png,07_datepropose_selected.png",
+     "measure": "3 selection treatments: light-green fill+green border; white fill+red border; neutral gray fill (reads as disabled); checkbox green square without checkmark vs green circle with white checkmark",
+     "statement": "selected state rendered three different ways, one of them achromatic"},
+    {"id": "F-5", "check": "C-8", "diagnosis": "local", "screen": "01_home_normal.png,02_meetingdetail_normal.png,02_meetingdetail_deadline.png,02_meetingdetail_confirmed.png",
+     "measure": "badges 확정임박/대기/완료/확정 share identical pill shape and font size, icon count 0",
+     "statement": "different meanings differ by color only, no icon"},
+    {"id": "F-6", "check": "C-2+attraction_key_number", "diagnosis": "direction", "screen": "04_contacts_normal.png",
+     "measure": "1st-rank info '17명은 아직 모임에 안 묶였어요' rendered at body size, about 1/2 of title '지인'; row-right '아직 안 묶임' identical gray/size/position to secondary '모임 2건'",
+     "statement": "screen's 1st-rank info is its weakest element; hierarchy carried by color alone"},
+    {"id": "F-7", "check": "purpose_status_scan+C-2", "diagnosis": "direction", "screen": "01_home_normal.png",
+     "measure": "reply counts 12/15, 8/10, 5/9 all same-size gray text, 0 progress bars; 02_meetingdetail_normal.png renders the same data as 3 green bars; strongest element is the 358px-wide green CTA",
+     "statement": "comparable numbers listed as text only; first fixation is not the 1st-rank info"},
+    {"id": "F-8", "check": "C-4", "diagnosis": "local", "screen": "00_onboarding_connected.png",
+     "measure": "last ink y=325, empty run y=326-844 = 518px = 61.4% of frame (threshold 60%); 00_onboarding_start.png 55.6%, 00_onboarding_invite.png 54.9% pass",
+     "statement": "content top-loaded, over 60% blank"},
+    {"id": "F-9", "check": "C-1", "diagnosis": "local", "screen": "06_groupcompose_none.png,07_datepropose_empty.png",
+     "measure": "disabled CTA = gray fill + dark gray label (06) vs white fill + light gray border/label (07)",
+     "statement": "two disabled-CTA treatments for the same meaning"}
+  ],
+  "fail_counts": {"local": 7, "direction": 2, "taste_gap": 0, "repeat": 0},
+  "passed_checks": {
+    "C-1": "surfaces #F8F9F8 / #FFFFFF; only hue delta (120 vs 170.8) sits at 7.7% saturation, 1 RGB step - not a real hue split",
+    "C-3": "05_contactedit_new.png ink gaps: label-to-input 25px, input-to-next-group 26px (rule requires strictly smaller; borderline)",
+    "C-5": "max 1 cliche item per screen (dashed border only); gradient/glassmorphism/emoji/dark-default/left-color-border/filler-stats all 0",
+    "C-6": "4 empty states with next action, error state 06_groupcompose_noname.png has cause+remedy, 2 loading skeletons",
+    "C-8_black": "darkest text rgb(23,27,24), no #000",
+    "RULE-02": "brand #0D7A64 = HSL(167.9, 80.7%, 26.5%), high chroma, paired with #FFF3DC"
+  },
+  "attraction": {
+    "unique_to_this_product": true,
+    "key_number_dominant": false,
+    "different_info_different_form": false,
+    "surface_layers": true,
+    "brand_device_alive": true,
+    "visuals_earn_their_place": true
+  },
+  "routing": {"local": "fix attribute, re-run C", "direction": "re-diverge stage 2 information-expression axis"}
+}

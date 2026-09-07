@@ -1,0 +1,298 @@
+{
+  "layer": "project",
+  "version": "0.2.0",
+  "_note": "scripts/build-rules.js 가 design/tokens.slug.json 에서 생성. 손으로 고치지 않는다 — tokens.json 을 고치고 다시 생성한다.",
+  "tokens": {
+    "color": {
+      "allowed": [
+        "#EAF7F5",
+        "#D2EFEA",
+        "#4DBFA8",
+        "#0D7A64",
+        "#095C4D",
+        "#063D33",
+        "#FFE3D9",
+        "#FF6F45",
+        "#C94A26",
+        "#FFFFFF",
+        "#F8F9F8",
+        "#EFF1F0",
+        "#DCE3E2",
+        "#CDD1CE",
+        "#909391",
+        "#6D7570",
+        "#414944",
+        "#171B18",
+        "#E6F5EA",
+        "#146C2E",
+        "#FFF3DC",
+        "#8A5A00",
+        "#FCE9E6",
+        "#B03A22",
+        "#E7F1FD",
+        "#1849A9",
+        "#E6EEEC",
+        "#2A4A44"
+      ],
+      "status": "filled",
+      "source": "tokens.json (set SET-B)"
+    },
+    "spacing": {
+      "scale": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        32,
+        40,
+        48,
+        64,
+        80,
+        96,
+        2
+      ],
+      "status": "filled",
+      "source": "tokens.json (set SET-B)"
+    },
+    "typography": {
+      "scale": [
+        "display",
+        "heading-1",
+        "heading-2",
+        "heading-3",
+        "body-large",
+        "body",
+        "body-small",
+        "caption",
+        "overline"
+      ],
+      "status": "filled",
+      "source": "tokens.json (set SET-B)"
+    },
+    "radius": {
+      "scale": [
+        0,
+        6,
+        12,
+        16,
+        20,
+        28,
+        9999
+      ],
+      "status": "filled",
+      "source": "tokens.json (set SET-B)"
+    },
+    "_reference_palette": {
+      "source_system": null,
+      "values": [],
+      "status": "filled",
+      "_note": "참조 시스템 미선언 — 금지 목록 없음"
+    }
+  },
+  "rules": [
+    {
+      "id": "color-palette-allowlist",
+      "title": "컬러 팔레트 일관성",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {},
+      "check": {
+        "type": "color_allowlist",
+        "allowed": "$tokens.color.allowed"
+      },
+      "autofix": false,
+      "status": "filled",
+      "source": "tokens.json (set SET-B)",
+      "fix_hint": "팔레트 밖 색은 가장 가까운 토큰으로 교체. 새 색을 만들지 않는다."
+    },
+    {
+      "id": "spacing-grid",
+      "title": "Spacing 스케일 준수",
+      "stage": [
+        "wireframe",
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "has_auto_layout": true
+      },
+      "check": {
+        "type": "scale_allowlist",
+        "scale": "$tokens.spacing.scale",
+        "properties": [
+          "itemSpacing",
+          "paddingTop",
+          "paddingRight",
+          "paddingBottom",
+          "paddingLeft"
+        ]
+      },
+      "autofix": true,
+      "status": "filled",
+      "source": "tokens.json (set SET-B)",
+      "fix_hint": "가장 가까운 스케일 값으로. 중간이면 작은 쪽."
+    },
+    {
+      "id": "radius-scale",
+      "title": "Radius 스케일 준수",
+      "stage": [
+        "design"
+      ],
+      "severity": "warning",
+      "applies_to": {
+        "exclude_node_types": [
+          "COMPONENT_SET"
+        ]
+      },
+      "check": {
+        "type": "scale_allowlist",
+        "scale": "$tokens.radius.scale",
+        "properties": [
+          "cornerRadius"
+        ]
+      },
+      "autofix": true,
+      "status": "filled",
+      "source": "tokens.json (set SET-B)",
+      "fix_hint": "가장 가까운 radius 토큰으로."
+    },
+    {
+      "id": "type-style-reuse",
+      "title": "타이포 스타일 재사용",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "node_types": [
+          "TEXT"
+        ]
+      },
+      "check": {
+        "type": "style_bound",
+        "style_kind": "text"
+      },
+      "autofix": false,
+      "status": "filled",
+      "source": "tokens.json (set SET-B)",
+      "_note": "바인딩 여부만 검사. 스타일 이름이 스케일 안인지는 3-A 생성 시점에 보장된다.",
+      "fix_hint": "인라인 폰트 설정을 스케일 내 텍스트 스타일 바인딩으로."
+    },
+    {
+      "id": "component-reuse-rate",
+      "title": "컴포넌트 재사용률",
+      "stage": [
+        "design"
+      ],
+      "severity": "warning",
+      "applies_to": {},
+      "check": {
+        "type": "reuse_ratio",
+        "min": 0.7
+      },
+      "autofix": false,
+      "status": "filled",
+      "source": "가정: 기본값 0.7 (provisional)",
+      "fix_hint": "기존 컴포넌트로 대체 가능한 신규 노드를 인스턴스로."
+    },
+    {
+      "id": "layer-naming-semantic",
+      "title": "레이어 네이밍 semantic",
+      "stage": [
+        "wireframe",
+        "design"
+      ],
+      "severity": "warning",
+      "applies_to": {},
+      "check": {
+        "type": "name_pattern",
+        "deny": [
+          "^(Frame|Group|Rectangle|Ellipse|Vector|Line)\\s*\\d*$"
+        ]
+      },
+      "autofix": true,
+      "status": "filled",
+      "source": "하네스 기본 — 인스턴스 내부·의미 있는 부모 아래의 자동 생성 벡터는 제외",
+      "fix_hint": "역할 기반 이름(Card/MeetingRow, Chip/Status)으로."
+    },
+    {
+      "id": "variant-state-coverage",
+      "title": "Variant 상태 커버리지",
+      "stage": [
+        "design"
+      ],
+      "severity": "blocker",
+      "applies_to": {
+        "node_types": [
+          "COMPONENT_SET"
+        ]
+      },
+      "check": {
+        "type": "variant_states_present",
+        "required": [
+          "Waiting",
+          "Closing",
+          "Confirmed",
+          "Done",
+          "Yes",
+          "No",
+          "Pending",
+          "Default",
+          "Disabled",
+          "Overlap",
+          "Deadline",
+          "Unselected",
+          "Selected-Yes",
+          "Selected-No",
+          "Normal",
+          "Long-text",
+          "Skeleton"
+        ],
+        "required_by_component": {
+          "Chip/Status": [
+            "Waiting",
+            "Closing",
+            "Confirmed",
+            "Done"
+          ],
+          "Chip/Response": [
+            "Yes",
+            "No",
+            "Pending"
+          ],
+          "Button/Primary": [
+            "Default",
+            "Disabled"
+          ],
+          "Banner/Alert": [
+            "Overlap",
+            "Deadline"
+          ],
+          "Field/DateOption": [
+            "Unselected",
+            "Selected-Yes",
+            "Selected-No"
+          ],
+          "Row/Meeting": [
+            "Normal",
+            "Long-text",
+            "Skeleton"
+          ]
+        }
+      },
+      "autofix": false,
+      "status": "filled",
+      "source": "design/drafts/components.md",
+      "fix_hint": "누락 상태 variant 추가. 품질은 C단계."
+    }
+  ],
+  "project_specific": {
+    "_note": "L3 — design.md §4A 중 기계 판정 가능한 도메인 규칙을 여기에 추가한다(사람 또는 judge 가 작성).",
+    "rules": []
+  }
+}

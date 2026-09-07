@@ -1,0 +1,238 @@
+<title>자극 갤러리</title>
+<style>
+  :root{
+    --bg-page:#FAFAF8;
+    --text-page:#2A2A28;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg-page);color:var(--text-page);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;}
+  .banner{
+    position:sticky;top:0;z-index:10;
+    background:#2A2A28;color:#FFFFFF;
+    text-align:center;padding:10px 12px;
+    font-size:13px;letter-spacing:.02em;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:20px;
+    padding:20px;
+    max-width:1200px;margin:0 auto;
+  }
+  .cell{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .tile{
+    width:100%;aspect-ratio:3/4;
+    padding:16px;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+    font-family:system-ui,-apple-system,sans-serif;
+  }
+  .tile .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .tile .list{flex:1;display:flex;flex-direction:column;}
+  .tile .row{display:flex;flex-direction:column;}
+  .tile .btn{align-self:flex-start;border:none;cursor:default;}
+  .tile-id{font-size:12px;font-weight:700;color:#6b6b68;letter-spacing:.05em;}
+
+  /* ---------- baseline shared values (used unless a tile's own axis overrides) ---------- */
+  .tile{
+    background:#F7F7F5;color:#2A2A28;
+    border-radius:10px;border:1px solid #E4E4E1;
+  }
+  .tile .row{padding:10px 0;border-bottom:1px solid #E4E4E1;font-size:13px;line-height:1.5;}
+  .tile .row:last-child{border-bottom:none;}
+  .tile .title{font-size:16px;font-weight:700;}
+  .tile .chip{font-size:11px;padding:4px 9px;border-radius:999px;font-weight:600;background:#E7EFEC;color:#1F4B3B;}
+  .tile .btn{margin-top:10px;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;background:#2A2A28;color:#FFFFFF;}
+
+  /* ---------- G-01 / axis1-A 색온도·무드: 따뜻 ---------- */
+  #t01{background:#FBF3EA;border-color:#EAD9C4;color:#3A2E22;}
+  #t01 .row{border-bottom-color:#EAD9C4;color:#3A2E22;}
+  #t01 .title{color:#3A2E22;}
+  #t01 .chip{background:#F3DCC2;color:#6B4A12;}
+  #t01 .btn{background:#3A2E22;color:#FFF9F2;}
+
+  /* ---------- G-02 / axis3-A 형태: 부드러운 라운드 카드 ---------- */
+  #t02{border-radius:20px;}
+  #t02 .row{border-bottom:none;background:#FFFFFF;border-radius:14px;padding:10px 12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+  #t02 .row:last-child{margin-bottom:0;}
+  #t02 .btn{border-radius:999px;}
+
+  /* ---------- G-03 / axis5-B 강조: 크고 화려한 배너 ---------- */
+  #t03 .title{font-size:26px;font-weight:800;background:#2A2A28;color:#FFF7E6;padding:8px 12px;border-radius:6px;display:inline-block;}
+
+  /* ---------- G-04 / axis2-A 정보 밀도: 정돈됨(여유 간격+정렬) ---------- */
+  #t04 .row{padding:14px 0;display:flex;justify-content:space-between;gap:10px;line-height:1.6;}
+
+  /* ---------- G-05 / axis6-A 채도: 저채도(차분) ---------- */
+  #t05 .chip{background:#E4E6E2;color:#484A45;}
+  #t05 .btn{background:#5A5D57;color:#FFFFFF;}
+
+  /* ---------- G-06 / axis4-B 타이포 성격: 세리프·격식(차가움) ---------- */
+  #t06 .title,#t06 .row,#t06 .btn{font-family:Georgia,"Times New Roman",serif;}
+  #t06 .title{font-weight:700;letter-spacing:0;}
+  #t06 .row{letter-spacing:0;}
+
+  /* ---------- G-07 / axis1-B 색온도·무드: 차가움 ---------- */
+  #t07{background:#EDF2F6;border-color:#D3E0EA;color:#1F2A33;}
+  #t07 .row{border-bottom-color:#D3E0EA;color:#1F2A33;}
+  #t07 .title{color:#1F2A33;}
+  #t07 .chip{background:#D6E4EF;color:#204A6B;}
+  #t07 .btn{background:#1F2A33;color:#F3F8FC;}
+
+  /* ---------- G-08 / axis5-A 강조: 차분한 라벨형 강조 ---------- */
+  #t08 .title{font-size:15px;font-weight:600;border:1px solid #2A2A28;border-radius:5px;padding:4px 10px;display:inline-block;}
+
+  /* ---------- G-09 / axis3-B 형태: 각진 구분선(딱딱) ---------- */
+  #t09{border-radius:0;}
+  #t09 .row{border-bottom:1px solid #2A2A28;padding:10px 2px;}
+  #t09 .btn{border-radius:0;}
+
+  /* ---------- G-10 / axis6-B 채도: 고채도(쨍한) ---------- */
+  #t10 .chip{background:#FFD9CC;color:#8A2200;}
+  #t10 .btn{background:#E4472A;color:#FFFFFF;}
+
+  /* ---------- G-11 / axis2-B 정보 밀도: 빽빽함(밀집) ---------- */
+  #t11 .row{padding:3px 0;border-bottom:none;font-size:11.5px;line-height:1.25;}
+  #t11 .list{gap:0;}
+
+  /* ---------- G-12 / axis4-A 타이포 성격: 둥근 산세리프(따뜻) ---------- */
+  #t12 .title{font-weight:500;letter-spacing:.01em;font-size:17px;}
+  #t12 .row{font-weight:400;letter-spacing:.01em;}
+  #t12 .btn{border-radius:14px;font-weight:500;}
+</style>
+
+<div class="banner">내용(글자 뜻)이 아니라 보이는 느낌만 평가해 주세요.</div>
+
+<div class="grid">
+  <!-- G-01 -->
+  <div class="cell"><div class="tile" id="t01">
+    <div class="top"><span class="title">이번 주말</span><span class="chip">조율 중</span></div>
+    <div class="list">
+      <div class="row">대학 동기 모임 · 토 저녁 · 회신 4/6</div>
+      <div class="row">회사 선배 모임 · 토 낮 · 회신 2/5</div>
+      <div class="row">동네 친구 모임 · 일 점심 · 확정</div>
+    </div>
+    <button class="btn">모임 만들기</button>
+  </div><div class="tile-id">G-01</div></div>
+
+  <!-- G-02 -->
+  <div class="cell"><div class="tile" id="t02">
+    <div class="top"><span class="title">이번 주말</span><span class="chip">조율 중</span></div>
+    <div class="list">
+      <div class="row">대학 동기 모임 · 토 저녁 · 회신 4/6</div>
+      <div class="row">회사 선배 모임 · 토 낮 · 회신 2/5</div>
+      <div class="row">동네 친구 모임 · 일 점심 · 확정</div>
+    </div>
+    <button class="btn">모임 만들기</button>
+  </div><div class="tile-id">G-02</div></div>
+
+  <!-- G-03 -->
+  <div class="cell"><div class="tile" id="t03">
+    <div class="top"><span class="title">이번 주말</span><span class="chip">조율 중</span></div>
+    <div class="list">
+      <div class="row">대학 동기 모임 · 토 저녁 · 회신 4/6</div>
+      <div class="row">회사 선배 모임 · 토 낮 · 회신 2/5</div>
+      <div class="row">동네 친구 모임 · 일 점심 · 확정</div>
+    </div>
+    <button class="btn">모임 만들기</button>
+  </div><div class="tile-id">G-03</div></div>
+
+  <!-- G-04 -->
+  <div class="cell"><div class="tile" id="t04">
+    <div class="top"><span class="title">이번 주말</span><span class="chip">조율 중</span></div>
+    <div class="list">
+      <div class="row">대학 동기 모임 · 토 저녁 · 회신 4/6</div>
+      <div class="row">회사 선배 모임 · 토 낮 · 회신 2/5</div>
+      <div class="row">동네 친구 모임 · 일 점심 · 확정</div>
+    </div>
+    <button class="btn">모임 만들기</button>
+  </div><div class="tile-id">G-04</div></div>
+
+  <!-- G-05 -->
+  <div class="cell"><div class="tile" id="t05">
+    <div class="top"><span class="title">이번 주말</span><span class="chip">조율 중</span></div>
+    <div class="list">
+      <div class="row">대학 동기 모임 · 토 저녁 · 회신 4/6</div>
+      <div class="row">회사 선배 모임 · 토 낮 · 회신 2/5</div>
+      <div class="row">동네 친구 모임 · 일 점심 · 확정</div>
+    </div>
+    <button class="btn">모임 만들기</button>
+  </div><div class="tile-id">G-05</div></div>
+
+  <!-- G-06 -->
+  <div class="cell"><div class="tile" id="t06">
+    <div class="top"><span class="title">이번 주말</span><span class="chip">조율 중</span></div>
+    <div class="list">
+      <div class="row">대학 동기 모임 · 토 저녁 · 회신 4/6</div>
+      <div class="row">회사 선배 모임 · 토 낮 · 회신 2/5</div>
+      <div class="row">동네 친구 모임 · 일 점심 · 확정</div>
+    </div>
+    <button class="btn">모임 만들기</button>
+  </div><div class="tile-id">G-06</div></div>
+
+  <!-- G-07 -->
+  <div class="cell"><div class="tile" id="t07">
+    <div class="top"><span class="title">이번 주말</span><span class="chip">조율 중</span></div>
+    <div class="list">
+      <div class="row">대학 동기 모임 · 토 저녁 · 회신 4/6</div>
+      <div class="row">회사 선배 모임 · 토 낮 · 회신 2/5</div>
+      <div class="row">동네 친구 모임 · 일 점심 · 확정</div>
+    </div>
+    <button class="btn">모임 만들기</button>
+  </div><div class="tile-id">G-07</div></div>
+
+  <!-- G-08 -->
+  <div class="cell"><div class="tile" id="t08">
+    <div class="top"><span class="title">이번 주말</span><span class="chip">조율 중</span></div>
+    <div class="list">
+      <div class="row">대학 동기 모임 · 토 저녁 · 회신 4/6</div>
+      <div class="row">회사 선배 모임 · 토 낮 · 회신 2/5</div>
+      <div class="row">동네 친구 모임 · 일 점심 · 확정</div>
+    </div>
+    <button class="btn">모임 만들기</button>
+  </div><div class="tile-id">G-08</div></div>
+
+  <!-- G-09 -->
+  <div class="cell"><div class="tile" id="t09">
+    <div class="top"><span class="title">이번 주말</span><span class="chip">조율 중</span></div>
+    <div class="list">
+      <div class="row">대학 동기 모임 · 토 저녁 · 회신 4/6</div>
+      <div class="row">회사 선배 모임 · 토 낮 · 회신 2/5</div>
+      <div class="row">동네 친구 모임 · 일 점심 · 확정</div>
+    </div>
+    <button class="btn">모임 만들기</button>
+  </div><div class="tile-id">G-09</div></div>
+
+  <!-- G-10 -->
+  <div class="cell"><div class="tile" id="t10">
+    <div class="top"><span class="title">이번 주말</span><span class="chip">조율 중</span></div>
+    <div class="list">
+      <div class="row">대학 동기 모임 · 토 저녁 · 회신 4/6</div>
+      <div class="row">회사 선배 모임 · 토 낮 · 회신 2/5</div>
+      <div class="row">동네 친구 모임 · 일 점심 · 확정</div>
+    </div>
+    <button class="btn">모임 만들기</button>
+  </div><div class="tile-id">G-10</div></div>
+
+  <!-- G-11 -->
+  <div class="cell"><div class="tile" id="t11">
+    <div class="top"><span class="title">이번 주말</span><span class="chip">조율 중</span></div>
+    <div class="list">
+      <div class="row">대학 동기 모임 · 토 저녁 · 회신 4/6</div>
+      <div class="row">회사 선배 모임 · 토 낮 · 회신 2/5</div>
+      <div class="row">동네 친구 모임 · 일 점심 · 확정</div>
+    </div>
+    <button class="btn">모임 만들기</button>
+  </div><div class="tile-id">G-11</div></div>
+
+  <!-- G-12 -->
+  <div class="cell"><div class="tile" id="t12">
+    <div class="top"><span class="title">이번 주말</span><span class="chip">조율 중</span></div>
+    <div class="list">
+      <div class="row">대학 동기 모임 · 토 저녁 · 회신 4/6</div>
+      <div class="row">회사 선배 모임 · 토 낮 · 회신 2/5</div>
+      <div class="row">동네 친구 모임 · 일 점심 · 확정</div>
+    </div>
+    <button class="btn">모임 만들기</button>
+  </div><div class="tile-id">G-12</div></div>
+</div>

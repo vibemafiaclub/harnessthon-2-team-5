@@ -1,0 +1,21 @@
+{"stage":"design","target":"Screens","nodes_inspected":1289,"passed":false,
+"violations":[
+{"rule":"touch-target-min","node":"Chip/Status / size","node_id":"14:14","expected":"44x44","actual":"39x26","severity":"blocker","autofix":true,"fix_hint":"패딩·히트영역 확장"},
+{"rule":"touch-target-min","node":"Icon/Home / size","node_id":"I54:417;45:317","expected":"44x44","actual":"24x24","severity":"blocker","autofix":true,"fix_hint":"패딩·히트영역 확장"},
+{"rule":"color-palette-allowlist","node":"RowLabel/0/title / fill","node_id":"65:417","expected":"팔레트 내 토큰","actual":"#171C1A","severity":"blocker","autofix":false,"fix_hint":"가장 가까운 토큰으로"},
+{"rule":"color-palette-allowlist","node":"RowLabel/0/sub / fill","node_id":"65:418","expected":"팔레트 내 토큰","actual":"#6B736E","severity":"blocker","autofix":false,"fix_hint":"가장 가까운 토큰으로"},
+{"rule":"spacing-grid","node":"Content / paddingBottom","node_id":"35:199","expected":80,"actual":88,"severity":"blocker","autofix":true,"fix_hint":"가장 가까운 스케일"},
+{"rule":"layer-naming-semantic","node":"Vector / name","node_id":"I54:417;45:316","expected":"deny 패턴 위반 없음","actual":"Vector","severity":"warning","autofix":true,"fix_hint":"역할 기반 이름"}
+],
+"violations_per_rule":{"touch-target-min":128,"no-zero-size-node":0,"text-size-min":0,"no-reference-color-copy":0,"color-palette-allowlist":16,"spacing-grid":1,"radius-scale":0,"layer-naming-semantic":90},
+"truncated_per_rule_cap":25,
+"unchecked_blockers":[
+{"rule":"contrast-text-aa","title":"본문 텍스트 대비율 WCAG AA","reason":"skipped_unimplemented","requires_human_review":true},
+{"rule":"contrast-nontext-aa","title":"비텍스트 UI 요소 대비율","reason":"skipped_unimplemented","requires_human_review":true},
+{"rule":"image-fill-valid","title":"이미지 깨짐 없음","reason":"skipped_unimplemented","requires_human_review":true},
+{"rule":"text-not-clipped","title":"텍스트 잘림 없음","reason":"skipped_unimplemented","requires_human_review":true},
+{"rule":"type-style-reuse","title":"타이포 스타일 재사용","reason":"skipped_unimplemented","requires_human_review":true},
+{"rule":"variant-state-coverage","title":"Variant 상태 커버리지","reason":"skipped_unimplemented","requires_human_review":true}
+],
+"summary":{"blocker":145,"warning":90,"skipped_out_of_stage":0,"skipped_unimplemented":7},
+"page":"Screens","roots":40,"nodes_dumped":1289}

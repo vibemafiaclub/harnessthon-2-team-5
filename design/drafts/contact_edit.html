@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>지인 추가·편집 — 청첩장모임 스케줄러</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--color-semantic-bg-surface);
+    font-family: var(--typography-family-fallback);
+    color: var(--color-semantic-text-primary);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-scale-6);
+    padding: var(--spacing-scale-6);
+  }
+  .screen {
+    width: 390px;
+    height: 844px;
+    overflow: hidden;
+    background: var(--color-semantic-bg-page);
+    border-radius: var(--radius-scale-md);
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--elevation-scale-md-offset) var(--elevation-scale-md-blur) var(--elevation-scale-md-spread) rgba(23,27,24,var(--elevation-scale-md-opacity));
+  }
+  .statusbar {
+    height: 44px;
+    flex: none;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 var(--spacing-scale-4) var(--spacing-scale-1);
+    font-size: var(--typography-scale-caption-size);
+    font-weight: 600;
+  }
+  .topbar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-scale-2) var(--spacing-scale-4) var(--spacing-scale-3);
+    border-bottom: 1px solid var(--color-semantic-border-default);
+  }
+  .topbar-left { display: flex; align-items: center; gap: var(--spacing-scale-2); }
+  .back-arrow { font-size: var(--typography-scale-heading-3-size); }
+  .topbar-title { font-size: var(--typography-scale-heading-3-size); font-weight: 600; }
+  .save-link { font-size: var(--typography-scale-body-size); font-weight: 600; color: var(--color-semantic-brand-default); }
+
+  .content { flex: 1; overflow: hidden; padding: var(--spacing-scale-4); }
+
+  .summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-scale-1);
+    margin-bottom: var(--spacing-scale-6);
+  }
+  .summary-name { font-size: var(--typography-scale-heading-2-size); font-weight: 700; }
+  .summary-tags { font-size: var(--typography-scale-body-small-size); color: var(--color-semantic-text-secondary); }
+
+  .field-label {
+    font-size: var(--typography-scale-body-small-size);
+    font-weight: 600;
+    color: var(--color-semantic-text-secondary);
+    margin-bottom: var(--spacing-scale-2);
+  }
+  .field-input {
+    width: 100%;
+    font-size: var(--typography-scale-body-size);
+    color: var(--color-semantic-text-primary);
+    background: var(--color-semantic-bg-surface);
+    border: 1px solid var(--color-semantic-border-default);
+    border-radius: var(--radius-scale-lg);
+    padding: var(--spacing-component-padding-input-y) var(--spacing-component-padding-input-x);
+    margin-bottom: var(--spacing-scale-5);
+  }
+  .field-input::placeholder { color: var(--color-semantic-text-secondary); }
+
+  .relation-hint {
+    font-size: var(--typography-scale-caption-size);
+    color: var(--color-semantic-text-secondary);
+    margin-bottom: var(--spacing-scale-2);
+  }
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-scale-2);
+    margin-bottom: var(--spacing-scale-3);
+  }
+  .chip {
+    font-size: var(--typography-scale-body-small-size);
+    font-weight: 600;
+    padding: var(--spacing-scale-2) var(--spacing-scale-4);
+    border-radius: var(--radius-scale-full);
+    border: 1px solid var(--color-semantic-border-default);
+    color: var(--color-semantic-text-secondary);
+    background: var(--color-semantic-bg-page);
+  }
+  .chip-selected {
+    border-color: var(--color-semantic-brand-default);
+    color: var(--color-semantic-brand-default);
+    background: var(--color-semantic-brand-subtle);
+  }
+  .chip-alert {
+    border-color: var(--color-semantic-alert-deadline-text);
+    color: var(--color-semantic-alert-deadline-text);
+    background: var(--color-semantic-alert-deadline-bg);
+  }
+  .chip-add {
+    color: var(--color-semantic-text-secondary);
+    border-style: dashed;
+  }
+
+  .dup-notice {
+    display: flex;
+    gap: var(--spacing-scale-2);
+    background: var(--color-semantic-alert-overlap-bg);
+    color: var(--color-semantic-alert-overlap-text);
+    border-radius: var(--radius-scale-md);
+    padding: var(--spacing-scale-3) var(--spacing-scale-4);
+    font-size: var(--typography-scale-body-small-size);
+    line-height: var(--typography-scale-body-small-lineheight);
+    margin-bottom: var(--spacing-scale-5);
+  }
+
+  .side-group { display: flex; gap: var(--spacing-scale-2); margin-bottom: var(--spacing-scale-5); }
+  .side-option {
+    flex: 1;
+    text-align: center;
+    font-size: var(--typography-scale-body-small-size);
+    font-weight: 600;
+    padding: var(--spacing-scale-3) var(--spacing-scale-2);
+    border-radius: var(--radius-scale-md);
+    border: 1px solid var(--color-semantic-border-default);
+    color: var(--color-semantic-text-secondary);
+  }
+  .side-selected {
+    border-color: var(--color-semantic-brand-default);
+    color: var(--color-semantic-text-on-primary);
+    background: var(--color-semantic-brand-default);
+  }
+
+  .bottom-bar {
+    flex: none;
+    padding: var(--spacing-scale-4);
+    border-top: 1px solid var(--color-semantic-border-default);
+  }
+  .save-button {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background: var(--color-semantic-brand-default);
+    color: var(--color-semantic-text-on-primary);
+    font-size: var(--typography-scale-body-large-size);
+    font-weight: 600;
+    padding: var(--spacing-component-padding-button-y) var(--spacing-component-padding-button-x);
+    border-radius: var(--radius-scale-lg);
+    border: none;
+  }
+
+  .state-caption {
+    width: 390px;
+    font-size: var(--typography-scale-overline-size);
+    letter-spacing: var(--typography-scale-overline-letterspacing);
+    text-transform: uppercase;
+    color: var(--color-semantic-text-secondary);
+    margin-bottom: var(--spacing-scale-2);
+  }
+  .col { display: flex; flex-direction: column; }
+</style>
+</head>
+<body>
+
+<div class="col">
+  <div class="state-caption">상태 1 — 편집 (관계 2개, 중복 소속 안내)</div>
+  <div class="screen">
+    <div class="statusbar"><span>9:41</span><span>LTE 100%</span></div>
+    <div class="topbar">
+      <div class="topbar-left"><span class="back-arrow">←</span><span class="topbar-title">지인 편집</span></div>
+      <span class="save-link">저장</span>
+    </div>
+    <div class="content">
+      <div class="summary">
+        <span class="summary-name">이지수</span>
+        <span class="summary-tags">대학동기 · 동네친구 · 신부측</span>
+      </div>
+      <div class="field-label">이름</div>
+      <input class="field-input" value="이지수" readonly>
+      <div class="field-label">연락처</div>
+      <input class="field-input" value="010-2837-5510" readonly>
+      <div class="field-label">관계</div>
+      <div class="relation-hint">여러 개 고를 수 있어요</div>
+      <div class="chip-row">
+        <span class="chip chip-selected">대학동기</span>
+        <span class="chip chip-selected">동네친구</span>
+        <span class="chip">직장동료</span>
+        <span class="chip">양가어른</span>
+        <span class="chip">1:1 필요</span>
+        <span class="chip chip-add">+ 새 그룹</span>
+      </div>
+      <div class="dup-notice">이지수님은 두 그룹에 있어요. 청첩장 모임에는 한 번만 초대되고, 어느 모임에 넣을지는 편성할 때 골라요.</div>
+      <div class="field-label">누구 쪽 지인인가</div>
+      <div class="side-group">
+        <span class="side-option">신부 쪽</span>
+        <span class="side-option side-selected">신부 쪽</span>
+        <span class="side-option">양가 공동</span>
+      </div>
+    </div>
+    <div class="bottom-bar"><button class="save-button">저장하기</button></div>
+  </div>
+</div>
+
+<div class="col">
+  <div class="state-caption">상태 2 — 신규 추가 (빈 폼)</div>
+  <div class="screen">
+    <div class="statusbar"><span>9:41</span><span>LTE 100%</span></div>
+    <div class="topbar">
+      <div class="topbar-left"><span class="back-arrow">←</span><span class="topbar-title">지인 추가</span></div>
+      <span class="save-link">저장</span>
+    </div>
+    <div class="content">
+      <div class="field-label">이름</div>
+      <input class="field-input" placeholder="이름을 입력하세요">
+      <div class="field-label">연락처</div>
+      <input class="field-input" placeholder="010-0000-0000">
+      <div class="field-label">관계</div>
+      <div class="relation-hint">여러 개 고를 수 있어요</div>
+      <div class="chip-row">
+        <span class="chip">대학동기</span>
+        <span class="chip">동네친구</span>
+        <span class="chip">직장동료</span>
+        <span class="chip">양가어른</span>
+        <span class="chip">1:1 필요</span>
+        <span class="chip chip-add">+ 새 그룹</span>
+      </div>
+      <div class="field-label">누구 쪽 지인인가</div>
+      <div class="side-group">
+        <span class="side-option">신부 쪽</span>
+        <span class="side-option">신랑 쪽</span>
+        <span class="side-option">양가 공동</span>
+      </div>
+    </div>
+    <div class="bottom-bar"><button class="save-button">저장하기</button></div>
+  </div>
+</div>
+
+<div class="col">
+  <div class="state-caption">상태 3 — "1:1 필요" 표시</div>
+  <div class="screen">
+    <div class="statusbar"><span>9:41</span><span>LTE 100%</span></div>
+    <div class="topbar">
+      <div class="topbar-left"><span class="back-arrow">←</span><span class="topbar-title">지인 편집</span></div>
+      <span class="save-link">저장</span>
+    </div>
+    <div class="content">
+      <div class="summary">
+        <span class="summary-name">박정만</span>
+        <span class="summary-tags">양가어른 · 1:1 필요 · 양가 공동</span>
+      </div>
+      <div class="field-label">이름</div>
+      <input class="field-input" value="박정만" readonly>
+      <div class="field-label">연락처</div>
+      <input class="field-input" value="010-9142-3367" readonly>
+      <div class="field-label">관계</div>
+      <div class="relation-hint">여러 개 고를 수 있어요</div>
+      <div class="chip-row">
+        <span class="chip">대학동기</span>
+        <span class="chip">동네친구</span>
+        <span class="chip">직장동료</span>
+        <span class="chip chip-selected">양가어른</span>
+        <span class="chip chip-alert">1:1 필요</span>
+        <span class="chip chip-add">+ 새 그룹</span>
+      </div>
+      <div class="field-label">누구 쪽 지인인가</div>
+      <div class="side-group">
+        <span class="side-option">신부 쪽</span>
+        <span class="side-option">신랑 쪽</span>
+        <span class="side-option side-selected">양가 공동</span>
+      </div>
+    </div>
+    <div class="bottom-bar"><button class="save-button">저장하기</button></div>
+  </div>
+</div>
+
+</body>
+</html>
