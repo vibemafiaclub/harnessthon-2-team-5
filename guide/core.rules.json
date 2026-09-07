@@ -1,7 +1,7 @@
 {
   "$schema": "./README.md",
   "layer": "core",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "L1 — 프로젝트와 무관하게 항상 적용되는 객관적 품질 하한선. 이 파일은 하네스가 소유하며 프로젝트별로 수정하지 않는다.",
   "rules": [
     {
@@ -71,7 +71,8 @@
         "type": "min_size",
         "width": 44,
         "height": 44,
-        "include_padding": true
+        "include_padding": true,
+        "container_pattern": "^(Row|ListItem|List\\s?Item|Cell|Item|Option|Card)\\b"
       },
       "autofix": true,
       "fix_hint": "노드 크기를 키우지 말고 패딩 또는 히트영역을 확장한다. 시각 크기는 유지."
@@ -79,7 +80,7 @@
     {
       "id": "touch-target-min-inferred",
       "title": "터치 타깃 최소 크기 (이름 추정)",
-      "rationale": "reactions 가 없는 시안에서 Button·Tab·Input·Checkbox 같은 이름으로 추정한 터치 대상. 문을 잠그지는 않고 3-G 사람 게이트가 본다. 인터랙티브 조상이 있으면 자식은 제외(터치 타깃은 가장 바깥 하나).",
+      "rationale": "reactions 가 없는 시안에서 Button·Tab·Input·Checkbox 같은 이름으로 추정한 터치 대상. 문을 잠그지는 않고 3-G 사람 게이트가 본다. 인터랙티브 조상이 있으면 자식은 제외(터치 타깃은 가장 바깥 하나). 체크박스·라디오처럼 시각 크기가 규격인 요소는 그것을 담은 행(Row/ListItem/Cell/Item/Option/Card)이 44 이상이면 통과 — 실제 터치 대상은 행이다(D-47).",
       "stage": [
         "wireframe",
         "design"
@@ -94,10 +95,11 @@
         "type": "min_size",
         "width": 44,
         "height": 44,
-        "include_padding": true
+        "include_padding": true,
+        "container_pattern": "^(Row|ListItem|List\\s?Item|Cell|Item|Option|Card)\\b"
       },
-      "autofix": true,
-      "fix_hint": "노드 크기를 키우지 말고 패딩 또는 히트영역을 확장한다. 시각 크기는 유지."
+      "autofix": false,
+      "fix_hint": "노드 크기를 키우지 말고 패딩으로 44 를 만든다(바인딩 교체). 체크박스·라디오는 담는 행의 높이를 44 이상으로 — Figma 에 히트영역 개념은 없으므로 행이 터치 대상이다. 행 밖 단독 요소만 노드 자체 44."
     },
     {
       "id": "image-fill-valid",

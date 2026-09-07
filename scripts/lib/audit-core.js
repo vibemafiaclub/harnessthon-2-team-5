@@ -139,10 +139,16 @@ var CHECKS = {
     if (minRep && ctx && ctx.instanceCount && iconName && (ctx.instanceCount[iconName] || 0) >= minRep) { hit.severity = 'blocker'; hit.escalation_reason = iconName + ' 인스턴스 ' + ctx.instanceCount[iconName] + '개 반복'; }
     return [hit];
   },
+  /* A-4 터치 타깃 — 노드 자체가 w×h 이상이면 통과. 체크박스·라디오처럼 시각 크기가 규격인 요소는 실제 터치 대상이 그것을 담은 행이므로(test2 실측: 24×24 체크박스 19건, Figma 에는 히트영역 개념이 없다)
+     조상 중 이름이 check.container_pattern(기본 Row/ListItem/Cell/Item/Option/Card) 이고 크기가 w×h 이상인 것이 있으면 통과. 단독(행 밖) 요소는 그대로 위반. */
   min_size: function (node, check) {
     if (typeof node.width !== 'number' || typeof node.height !== 'number') return [];
     var w = Number(check.width || 0), h = Number(check.height || 0);
-    return (node.width < w || node.height < h) ? [{ property: 'size', expected: w + 'x' + h, actual: Math.round(node.width) + 'x' + Math.round(node.height) }] : [];
+    if (node.width >= w && node.height >= h) return [];
+    var contRe = new RegExp(check.container_pattern || '^(Row|ListItem|List\\s?Item|Cell|Item|Option|Card)\\b', 'i');
+    var inRow = check.container_ok !== false && (node._ancestors || []).some(function (a) { return contRe.test(a.name || '') && typeof a.width === 'number' && typeof a.height === 'number' && a.width >= w && a.height >= h; });
+    if (inRow) return [];
+    return [{ property: 'size', expected: w + 'x' + h + ' (또는 ' + (check.container_pattern || 'Row/Item/Cell/Option/Card') + ' 조상 ≥ ' + w + 'x' + h + ')', actual: Math.round(node.width) + 'x' + Math.round(node.height) }];
   },
   /* A-12 텍스트 오버플로 — 도메인 최장 문자열을 넣은 `/ long` 프레임(check.frame_matches, 기본 /\/\s*long\s*$/)의 TEXT 가
      고정 크기(textAutoResize NONE)거나 말줄임(textTruncation ENDING, 구 API 의 TRUNCATE)이면 실데이터에서 잘린다. 다른 프레임의 TEXT 는 대상 아님.
@@ -244,21 +250,21 @@ function flatten(nodes) {
     var c = {}; for (var k in n) if (k !== 'children') c[k] = n[k];
     if (n.type === 'COMPONENT_SET' && !n.variantValues && n.children) c.variantValues = n.children.reduce(function (acc, ch) { var vp = ch.variantProperties || {}; for (var q in vp) acc.push(vp[q]); return acc; }, []);
     c._parent = ctx.parentName; c._ancestorInteractive = ctx.ancInter; c._inInstance = ctx.inInst || (typeof n.id === 'string' && n.id.indexOf(';') >= 0); c._parentSemantic = ctx.parentSemantic;
-    c._depth = ctx.depth; c._hidden = ctx.hidden; c._ancestorNames = ctx.ancestorNames;
+    c._depth = ctx.depth; c._hidden = ctx.hidden; c._ancestorNames = ctx.ancestorNames; c._ancestors = ctx.ancestors;
     var hasXY = typeof n.x === 'number' && typeof n.y === 'number';
     if (ctx.depth === 0) { c._relX = 0; c._relY = 0; c._root = c; c._descendants = []; }
     else { c._relX = (ctx.relX === null || !hasXY) ? null : ctx.relX + n.x; c._relY = (ctx.relY === null || !hasXY) ? null : ctx.relY + n.y; c._root = ctx.root; ctx.root._descendants.push(c); }
     out.push(c);
     var semantic = !!(n.name && !AUTO_NAMES.test(n.name) && !/^(Frame|Group)\s*\d*$/.test(n.name));
     var childCtx = { parentName: n.name, ancInter: ctx.ancInter || isInteractive(n), inInst: c._inInstance, parentSemantic: semantic, depth: ctx.depth + 1,
-      hidden: ctx.hidden || n.visible === false, relX: c._relX, relY: c._relY, ancestorNames: ctx.ancestorNames.concat([n.name || '']), root: c._root };
+      hidden: ctx.hidden || n.visible === false, relX: c._relX, relY: c._relY, ancestorNames: ctx.ancestorNames.concat([n.name || '']), ancestors: ctx.ancestors.concat([{ name: n.name || '', width: n.width, height: n.height }]), root: c._root };
     (n.children || []).forEach(function (ch) { walk(ch, childCtx); });
   };
-  var rootCtx = function () { return { parentName: null, ancInter: false, inInst: false, parentSemantic: false, depth: 0, hidden: false, relX: 0, relY: 0, ancestorNames: [], root: null }; };
+  var rootCtx = function () { return { parentName: null, ancInter: false, inInst: false, parentSemantic: false, depth: 0, hidden: false, relX: 0, relY: 0, ancestorNames: [], ancestors: [], root: null }; };
   (Array.isArray(nodes) ? nodes : [nodes]).forEach(function (n) {
     if (n && n.type === 'SECTION') {
       var s = {}; for (var k in n) if (k !== 'children') s[k] = n[k];
-      s._depth = -1; s._section = true; s._ancestorNames = []; s._hidden = false; out.push(s);
+      s._depth = -1; s._section = true; s._ancestorNames = []; s._ancestors = []; s._hidden = false; out.push(s);
       (n.children || []).forEach(function (ch) { walk(ch, rootCtx()); });
       return;
     }
