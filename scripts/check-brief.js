@@ -35,7 +35,7 @@
  *   B-13  §11 적합성 단서 2~6줄
  *   B-14  감사가 제거한 수치가 §5/§7/§8 에 잔존하지 않음 (--audit 있을 때, 없으면 N/A)
  *   B-15  raw 답변 수 ≥ 질문 수
- *   B-16  §2c 사용자 여정·필수 플로우: 고정 행 9 전부 존재, 담당 화면 # ∈ §2 번호 집합 또는 사유; 초대 두 행 '해당 없음' 인데 §2 역할 2종 이상이면 FAIL
+ *   B-16  §2c 사용자 여정·필수 플로우: 고정 행 10 전부 존재(계정 진입 포함, D-50), 담당 화면 # ∈ §2 번호 집합 또는 사유; 초대 두 행 '해당 없음' 인데 §2 역할 2종 이상이면 FAIL
  *   B-17  §2d 상태 강조 순위 ≥2행, raw 에 ^A-05 있으면 1순위 행이 A-05 참조, 행마다 §2c 상태 행에 '상태 #n' 대응
  *   B-18  §9 레퍼런스 행 agent_references_min(4·fast 3)~agent_references_max(10·fast 6), 출처 공백 0, T-1~T-3 각각 '우리 과업' 열에 ≥1(fast)/≥2(full), --refs 존재·비어 있지 않은 줄 ≥10
  *   B-19  §4 각 RULE: plain: 필드 존재(그 안에 금지어 0) 또는 statement 에 금지어 0 — 금지어 26개 정본은 scripts/lib/forbidden-words.js
@@ -282,6 +282,7 @@ const FIXED = [
   ['역할별 랜딩', (s) => /역할별|랜딩/.test(s)],
   ['알림·리마인드 진입', (s) => /알림|리마인드/.test(s)],
   ['설정·탈퇴', (s) => /설정|탈퇴/.test(s)],
+  ['계정 진입', (s) => /계정|가입|로그인/.test(s)],
   ['상태 순위표의 각 상태', (s) => /상태/.test(s)],
   ['시나리오 까다로운 상황', (s) => /시나리오|까다로운/.test(s)],
   ['되돌리기·오류 복구', (s) => /되돌리기|오류|복구/.test(s)],
@@ -297,9 +298,9 @@ for (const c of s2c) {
 const inviteRows = s2c.filter((c) => /초대/.test(itemOf(c)));
 const inviteNA = inviteRows.length >= 2 && inviteRows.every((c) => !nums(s2cScreen < 0 ? '' : (c[s2cScreen] || '')).length && /해당 없음/.test(plainText(c[s2cScreen] || '') + ' ' + plainText(c[s2cWhy] || '')));
 const inviteConflict = inviteNA && s2roleVals.length >= 2;
-add('B-16', has('2c') && s2cItem >= 0 && s2cScreen >= 0 && s2c.length >= 9 && fixedMissing.length === 0 && s2cBad.length === 0 && !inviteConflict,
-  `§2c 여정 ${s2c.length}행(≥9), 고정 행 누락 ${fixedMissing.length}, 화면·사유 위반 ${s2cBad.length}${inviteConflict ? ', 초대 두 행 해당 없음인데 역할 ' + s2roleVals.length + '종' : ''}`,
-  !has('2c') ? '§2c 없음' : (s2cItem < 0 || s2cScreen < 0) ? '§2c 헤더에 여정 항목/담당 화면 열 없음' : ([...fixedMissing.map((n) => n + ' 행 없음'), ...s2cBad, ...(inviteConflict ? ['초대·초대받은 쪽 둘 다 해당 없음 + §2 역할 ' + s2roleVals.join('/')] : [])].join('; ') || '고정 행 9 전부·화면 # 정합'));
+add('B-16', has('2c') && s2cItem >= 0 && s2cScreen >= 0 && s2c.length >= 10 && fixedMissing.length === 0 && s2cBad.length === 0 && !inviteConflict,
+  `§2c 여정 ${s2c.length}행(≥10), 고정 행 누락 ${fixedMissing.length}, 화면·사유 위반 ${s2cBad.length}${inviteConflict ? ', 초대 두 행 해당 없음인데 역할 ' + s2roleVals.length + '종' : ''}`,
+  !has('2c') ? '§2c 없음' : (s2cItem < 0 || s2cScreen < 0) ? '§2c 헤더에 여정 항목/담당 화면 열 없음' : ([...fixedMissing.map((n) => n + ' 행 없음'), ...s2cBad, ...(inviteConflict ? ['초대·초대받은 쪽 둘 다 해당 없음 + §2 역할 ' + s2roleVals.join('/')] : [])].join('; ') || '고정 행 10 전부·화면 # 정합'));
 
 /* B-17 §2d 상태 강조 순위 (+ 행마다 §2c '상태 #n' 대응 행 — templates/brief.md §2d 주석이 B-17 로 지목) */
 const s2dt = table(sec('2d')); const s2d = s2dt.rows; const s2dRank = s2dt.col(/순위/);

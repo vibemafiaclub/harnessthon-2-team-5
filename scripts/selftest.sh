@@ -119,6 +119,7 @@ sed -E 's/R-2 돌봄 대리인\(가족·펫시터\)$/R-2 돌봄 대리인(가족
 sed -E 's/^- source_refs: \[A-05, R-G-03, W-1\]$/- source_refs: [A-05]/' "$G" > "$TMP/m_b7b.md";                       mut "B-7b confirmed 근거 1건"        "B-7b" "$TMP/m_b7b.md" "$R" "$S" "$PR"
 sed -E 's/\| ① — 등록 0건 상태가 PRD 에 없음 \|/|  |/' "$G" > "$TMP/m_b12.md";                                          mut "B-12 하네스 추천 공백"          "B-12" "$TMP/m_b12.md" "$R" "$S" "$PR"
 grep -v '^| 첫 진입·온보딩(등록 0건) |' "$G" > "$TMP/m_b16.md";                                                            mut "B-16 첫 진입 행 삭제(+B-4 T-1 대조)" "B-4 B-16" "$TMP/m_b16.md" "$R" "$S" "$PR"
+grep -v '^| 계정 진입(가입·로그인·비로그인 시작) |' "$G" > "$TMP/m_b16g.md";                                              mut "B-16 계정 진입 행 삭제(D-50)"   "B-16" "$TMP/m_b16g.md" "$R" "$S" "$PR"
 grep -v '^| 2 | 복약 놓침 |' "$G" > "$TMP/m_b17.md";                                                                     mut "B-17 §2d 1행뿐"                 "B-17" "$TMP/m_b17.md" "$R" "$S" "$PR"
 grep -v '^| REF-5 |' "$G" > "$TMP/m_b18.md";                                                                             mut "B-18 §9 과업 T-3 커버 부족"     "B-18" "$TMP/m_b18.md" "$R" "$S" "$PR"
 sed -E 's/^- plain: 시간 지난 약은 맨 위 따로 보인다$/- plain: 시간 지난 약은 레이아웃 맨 위 따로 보인다/' "$G" > "$TMP/m_b19.md"; mut "B-19 plain 에 금지어"        "B-19" "$TMP/m_b19.md" "$R" "$S" "$PR"
