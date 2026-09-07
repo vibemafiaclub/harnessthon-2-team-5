@@ -100,7 +100,9 @@ var CHECKS = {
     if (node._inInstance && check.include_instance_children !== true) return [];
     if (AUTO_NAMES.test(name) && node._parentSemantic) return [];
     for (var i = 0; i < (check.deny || []).length; i++) if (new RegExp(check.deny[i]).test(name)) return [{ property: 'name', expected: 'deny 패턴 위반 없음 (' + check.deny[i] + ')', actual: name }];
-    if (check.allow && !new RegExp(check.allow).test(name)) return [{ property: 'name', expected: 'allow 패턴 만족 (' + check.allow + ')', actual: name }];
+    /* allow(semantic 형식)는 컨테이너(check.allow_node_types, 기본 FRAME/COMPONENT/COMPONENT_SET/INSTANCE)와 비루트 노드에만 — TEXT·VECTOR 하나하나에 역할 이름을 요구하면 소음이고, 루트 화면 프레임 이름은 '<nn> <이름> / <state>' 규약이라 별도다(D-48). */
+    var allowTypes = check.allow_node_types || ['FRAME', 'COMPONENT', 'COMPONENT_SET', 'INSTANCE'];
+    if (check.allow && allowTypes.indexOf(node.type) >= 0 && (node._depth || 0) > 0 && !new RegExp(check.allow).test(name)) return [{ property: 'name', expected: 'semantic 이름 (' + check.allow + ')', actual: name }];
     return [];
   },
   min_font_size: function (node, check) {
@@ -145,10 +147,11 @@ var CHECKS = {
     if (typeof node.width !== 'number' || typeof node.height !== 'number') return [];
     var w = Number(check.width || 0), h = Number(check.height || 0);
     if (node.width >= w && node.height >= h) return [];
-    var contRe = new RegExp(check.container_pattern || '^(Row|ListItem|List\\s?Item|Cell|Item|Option|Card)\\b', 'i');
+    /* 경계 매칭 — Row/Person · person-row · Card/Meeting · meeting-card · contact_cell 전부(test2 실측: 하네스 명명이 아닌 파일의 person-row 가 ^Row 에 안 걸려 19건 잔존). */
+    var contRe = new RegExp(check.container_pattern || '(^|[-_/ ])(row|listitem|list-item|list_item|cell|item|option|card)([-_/ ]|$)', 'i');
     var inRow = check.container_ok !== false && (node._ancestors || []).some(function (a) { return contRe.test(a.name || '') && typeof a.width === 'number' && typeof a.height === 'number' && a.width >= w && a.height >= h; });
     if (inRow) return [];
-    return [{ property: 'size', expected: w + 'x' + h + ' (또는 ' + (check.container_pattern || 'Row/Item/Cell/Option/Card') + ' 조상 ≥ ' + w + 'x' + h + ')', actual: Math.round(node.width) + 'x' + Math.round(node.height) }];
+    return [{ property: 'size', expected: w + 'x' + h + ' (또는 row/item/cell/option/card 조상 ≥ ' + w + 'x' + h + ')', actual: Math.round(node.width) + 'x' + Math.round(node.height) }];
   },
   /* A-12 텍스트 오버플로 — 도메인 최장 문자열을 넣은 `/ long` 프레임(check.frame_matches, 기본 /\/\s*long\s*$/)의 TEXT 가
      고정 크기(textAutoResize NONE)거나 말줄임(textTruncation ENDING, 구 API 의 TRUNCATE)이면 실데이터에서 잘린다. 다른 프레임의 TEXT 는 대상 아님.

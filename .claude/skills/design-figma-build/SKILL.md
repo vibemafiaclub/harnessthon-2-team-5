@@ -79,7 +79,7 @@ argument-hint: "<figma file url | --new>"
 2. **타이포 스타일 재사용** — 텍스트 노드 전부 텍스트 스타일 적용. 미적용 0.
 3. **spacing 그리드** — 모든 gap/padding 이 `spacing.scale` 값. 예외 목록은 design.md exception.
 4. **컴포넌트 재사용률** — Screens 페이지의 시각 요소 중 인스턴스 비율. 기준값 design.md(없으면 ≥70% 를 provisional 기준으로 쓰고 명시).
-5. **레이어 네이밍** — 정규식(기본 `^[A-Z][A-Za-z]+(/[A-Z][A-Za-z0-9 ]+)*`), `Frame \d+|Rectangle \d+|Group \d+` 0건.
+5. **레이어 네이밍** — 컨테이너(FRAME·COMPONENT·INSTANCE, 루트 화면 프레임 제외)는 allow 정규식 `^[A-Z][A-Za-z0-9 ]*(/[A-Z][A-Za-z0-9 ]+)*$`(`Card/MeetingRow`, `Content`, `Contact List`; `person-row`·`btn btn-primary` 는 위반), 전 노드에 `Frame \d+|Rectangle \d+|Group \d+` 0건. warning — 사람 게이트가 본다.
 6. **variant 커버리지** — components.md 의 상태가 variant 로 전부 존재.
 7b. **아이콘 내부 이물** (`icon_foreign_fill`, audit.js 구현, warning) — 아이콘 컨테이너 안에 VECTOR/BOOLEAN_OPERATION 외의 보이는 fill 을 가진 RECTANGLE·FRAME·ELLIPSE 가 있으면 위반. **opacity 와 무관**(0.14 배경 칩도 회색 상자로 보인다 — D-38). 덮개(D-10)·배경 칩 둘 다 이 한 줄로 걸린다. 예외: 활성 `Indicator`. **같은 아이콘 인스턴스가 3개 이상 반복되면(탭바·목록 행) 그 히트는 blocker 로 승격**(`blocker_if_repeats: 3`) — 반복 컴포넌트의 이물은 사실상 항상 실수이고 warning 이면 `passed_machine` 을 막지 않아 지나간다(D-38 실측: 사용자 4회 지적까지 아무도 못 잡음). 한 번 쓰이는 장식 아이콘은 warning 유지.
 7. **아이콘 덮임·배경** — 아이콘 컴포넌트·인스턴스 안에 `visible` 한 VECTOR/BOOLEAN_OPERATION 이 ≥1 이고, 그 벡터의 조상 중 벡터 영역을 덮는 불투명 fill(opacity ≥ 0.9, 크기 ≥ 벡터) 을 가진 FRAME/RECTANGLE 이 없다(D-10: 마스터는 정상, 인스턴스만 네모). **아이콘 컨테이너 프레임(`Icon/*`)에 보이는 fill 이 있으면 FAIL** — 벡터 뒤에 있어 아이콘은 보이더라도 회색 네모가 남는다(D-33: 탭바 4개 전부 회색 상자). 예외는 활성 탭 표시(`Tab/*` 의 `Indicator` 노드, 화면당 1개)뿐. 화면 프레임 안의 **인스턴스**를 검사 대상으로 한다.

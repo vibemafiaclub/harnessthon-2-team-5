@@ -165,7 +165,7 @@ const out = {
       check: { type: 'icon_foreign_fill', icon_name_pattern: '^Icon/', blocker_if_repeats: 3 }, autofix: false, status: 'filled', source: 'D-10·D-38 실측 — 아이콘은 벡터만. 같은 아이콘 인스턴스 3개 이상(탭바·목록 행)이면 blocker 로 승격',
       fix_hint: '아이콘 컨테이너 안의 RECTANGLE/FRAME/ELLIPSE 를 지우거나 fill 을 없앤다. 활성 표시는 Tab/* 의 Indicator 하나뿐.' },
     { id: 'layer-naming-semantic', title: '레이어 네이밍 semantic', stage: ['wireframe', 'design'], severity: 'warning', applies_to: {},
-      check: { type: 'name_pattern', deny: ['^(Frame|Group|Rectangle|Ellipse|Vector|Line)\\s*\\d*$'] }, autofix: true, status: 'filled', source: '하네스 기본 — 인스턴스 내부·의미 있는 부모 아래의 자동 생성 벡터는 제외',
+      check: { type: 'name_pattern', deny: ['^(Frame|Group|Rectangle|Ellipse|Vector|Line)\\s*\\d*$'], allow: '^[A-Z][A-Za-z0-9 ]*(/[A-Z][A-Za-z0-9 ]+)*$', allow_node_types: ['FRAME', 'COMPONENT', 'COMPONENT_SET', 'INSTANCE'] }, autofix: true, status: 'filled', source: '하네스 기본 — deny: 자동 이름, allow: 컨테이너는 Semantic 또는 Group/Name 형식(3-D 5 정규식, D-48 실측: deny 만 있어 person-row·btn btn-primary 가 0건으로 통과). 인스턴스 내부·의미 있는 부모 아래의 자동 생성 벡터·TEXT·VECTOR 는 제외',
       fix_hint: '역할 기반 이름(Card/MeetingRow, Chip/Status)으로.' },
     { id: 'variant-state-coverage', title: 'Variant 상태 커버리지', stage: ['design'], severity: variantRequired ? 'blocker' : 'warning', applies_to: { node_types: ['COMPONENT_SET'] },
       check: { type: 'variant_states_present', required: variantRequired || [], required_by_component: (variantRequired && variantRequired.byComponent) || undefined }, autofix: false, status: 'filled',

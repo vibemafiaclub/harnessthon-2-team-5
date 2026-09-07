@@ -1,7 +1,7 @@
 {
   "$schema": "./README.md",
   "layer": "core",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "L1 — 프로젝트와 무관하게 항상 적용되는 객관적 품질 하한선. 이 파일은 하네스가 소유하며 프로젝트별로 수정하지 않는다.",
   "rules": [
     {
@@ -72,7 +72,7 @@
         "width": 44,
         "height": 44,
         "include_padding": true,
-        "container_pattern": "^(Row|ListItem|List\\s?Item|Cell|Item|Option|Card)\\b"
+        "container_pattern": "(^|[-_/ ])(row|listitem|list-item|list_item|cell|item|option|card)([-_/ ]|$)"
       },
       "autofix": true,
       "fix_hint": "노드 크기를 키우지 말고 패딩 또는 히트영역을 확장한다. 시각 크기는 유지."
@@ -96,7 +96,7 @@
         "width": 44,
         "height": 44,
         "include_padding": true,
-        "container_pattern": "^(Row|ListItem|List\\s?Item|Cell|Item|Option|Card)\\b"
+        "container_pattern": "(^|[-_/ ])(row|listitem|list-item|list_item|cell|item|option|card)([-_/ ]|$)"
       },
       "autofix": false,
       "fix_hint": "노드 크기를 키우지 말고 패딩으로 44 를 만든다(바인딩 교체). 체크박스·라디오는 담는 행의 높이를 44 이상으로 — Figma 에 히트영역 개념은 없으므로 행이 터치 대상이다. 행 밖 단독 요소만 노드 자체 44."
