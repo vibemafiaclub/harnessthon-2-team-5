@@ -60,6 +60,7 @@ argument-hint: "<figma file url | --new>"
 - 화면별 호출을 병렬로 내되 **한 호출 안에서 페이지 전환은 1회**.
 - 생성 노드 ID → **화면별 별도 파일 `design/figma_nodes.<화면슬러그>.json`**. 병합은 3-C 종료 후 `design-worker` 단일 호출(D-8). 병합본 형태는 `scripts/check-figma.js` 헤더 주석의 정본(`screens[].frames[].{state,id,name,primary_action}`)을 따른다.
 - 프레임 규격은 `design.md` §2 의 값 — **폭 390 고정 + 상태바 + 탭바, 높이는 내용에 맞춰(최소 844, hug 허용)**. 현업 관행대로 프레임이 길어지고 탭바는 맨 아래, 프로토타입에서 탭바·고정 바에 "fix position when scrolling". clip content 로 내용을 잘라 숨기지 않는다(D-34 정정).
+- **1등 정보 노드는 `Info/Top` 으로 이름 짓는다**(초안 `data-role="top-info"` 와 1:1) — 첫 화면 안, 그 안의 글자가 첫 화면에서 가장 크다. A검사 17 이 센다(U-5). 결과·확인 화면처럼 1등 정보가 없으면 이름 접미사 `[no-top-info]`.
 - **주 행동 노드는 `Action/Primary` 로 이름 짓고**, 첫 화면(y+height ≤ 프레임 높이) 안에 있거나 `Bar/Action` 하단 고정 컨테이너(프로토타입 "fix position when scrolling") 안에 둔다. 잘리거나 스크롤 뒤에 있으면 A검사 13 FAIL. 초안의 `data-role="primary-action"` 수 × 상태 수 == `Action/Primary` 수(check-figma F-9b).
 - 첫 화면 경계를 보이고 싶으면 y=844 에 `Guide/Fold` 점선 하나(선택). **같은 화면을 두 벌(기기 크기 + full) 만들지 않는다** — 현업에서 드문 방식이고 두 벌이 어긋난다(D-34).
 

@@ -23,6 +23,7 @@
  *   primary-action-visible  (A-13) primary_action_visible: 루트 프레임마다 Action/Primary 정확히 1개, y+height ≤ 최소 높이(첫 화면) 또는 조상 Bar/Action.
  *   content-not-cut         (A-14) within_parent_bounds: 루트 프레임 자손의 y+height ≤ 프레임 높이.
  *   no-primitive-binding    (A-15) binding_name_deny: 노드에 직접 바인딩된 변수 이름에 primitive 계층 0건 (D-43).
+ *   top-info-dominant       (A-17) top_info_dominant: 루트 프레임마다 Info/Top 1개, 첫 화면 안, 그 TEXT 가 첫 화면 최대 크기 (U-5).
  *   A-12(text_overflow)는 guide/core.rules.json 의 text-not-clipped 가 담당한다 — audit-core 가 구현했으므로 더 이상 unchecked 가 아니다.
  *
  * 반환 JSON 추가 필드 (audit() 결과 위에):
@@ -90,6 +91,9 @@ function builtinRules(spec) {
     { id: 'content-not-cut', title: '내용 절단 없음 (A검사 14)', stage: ['design'], severity: 'blocker', applies_to: { descendants_only: true, root_node_types: ['FRAME'] },
       check: { type: 'within_parent_bounds', axis: 'y', tolerance: 1 }, autofix: false,
       fix_hint: '프레임 높이를 내용에 맞춰 늘린다(hug). clip content 로 잘라 숨기지 않는다(D-34).' },
+    { id: 'top-info-dominant', title: '1등 정보 지배 (A검사 17)', stage: ['design'], severity: 'warning', applies_to: { root_only: true, node_types: ['FRAME'] },
+      check: { type: 'top_info_dominant', name: '^Info\\/Top$', fold: spec.min_height, optout_marker: 'no-top-info' }, autofix: false,
+      fix_hint: `brief §2 '이 화면의 1등 정보' 요소를 Info/Top 으로 이름 짓고 첫 화면(≤${spec.min_height}) 안에서 가장 큰 글자로. 1등 정보가 없는 화면(결과·확인 화면)은 이름 접미사 [no-top-info].` },
     { id: 'no-primitive-binding', title: 'primitive 직접 바인딩 없음 (A검사 15)', stage: ['design'], severity: 'warning', applies_to: {},
       check: { type: 'binding_name_deny', deny: ['(^|/)primitive/'] }, autofix: false,
       fix_hint: 'semantic 변수만 노드에 직접 바인딩한다. 값(#hex)으로 변수를 찾지 말고 정본 노드의 boundVariables 를 읽어 같은 변수를 바인딩한다(D-43).' },

@@ -12,7 +12,7 @@ var AUDIT_CATALOG = ['contrast_ratio', 'min_size', 'min_font_size', 'image_fill_
   'color_allowlist', 'color_denylist', 'style_bound', 'multiple_of', 'scale_allowlist', 'reuse_ratio', 'name_pattern', 'variant_states_present',
   'within_parent_bounds', 'primary_action_visible', 'frame_spec', 'icon_foreign_fill'];
 var AUDIT_IMPLEMENTED = ['color_allowlist', 'color_denylist', 'multiple_of', 'scale_allowlist', 'name_pattern', 'min_font_size', 'min_size', 'style_bound', 'variant_states_present',
-  'text_overflow', 'within_parent_bounds', 'primary_action_visible', 'frame_spec', 'icon_foreign_fill', 'binding_name_deny'];
+  'text_overflow', 'within_parent_bounds', 'primary_action_visible', 'frame_spec', 'icon_foreign_fill', 'binding_name_deny', 'top_info_dominant'];
 /* 검사 타입을 CHECKS 에 넣고 이 목록에 안 넣으면 조용히 skipped_unimplemented 가 된다(D-43 실측: A-15 가 규칙 목록에만 있고 집계에 없음). 두 곳이 어긋나면 audit() 이 시작 시 오류를 낸다. */
 
 var HEX6 = /^#?[0-9a-fA-F]{6}$/;
@@ -212,6 +212,22 @@ var CHECKS = {
     if (bottom <= fold + 0.5) return [];
     var cut = typeof node.height === 'number' && bottom > node.height + 0.5;
     return [{ property: 'Action/Primary 위치', expected: 'y+height ≤ ' + fold + ' 또는 조상 Bar/Action', actual: 'y+height=' + Math.round(bottom) + (cut ? ' (프레임 밖으로 잘림)' : ' (첫 화면 아래 — 스크롤해야 보임)') }];
+  },
+  /* A-17 1등 정보 지배 — 루트 화면 프레임마다 이름 `Info/Top`(check.name) 노드 정확히 1개, 첫 화면(y+height ≤ check.fold) 안, 그 안의 TEXT 최대 fontSize 가
+     프레임 첫 화면 안 다른 TEXT 의 최대 fontSize 이상(같으면 통과). brief §2 '이 화면의 1등 정보' → 초안 data-role=top-info(H-15) → Figma Info/Top 으로 이어지는 마지막 고리(U-5). 주 행동만 있는 화면은 description·이름 접미사 [no-top-info] 로 제외. */
+  top_info_dominant: function (node, check) {
+    if ((node._depth || 0) !== 0) return [];
+    var nameRe = new RegExp(check.name || '^Info\\/Top$'); var fold = Number(check.fold) || 844; var marker = check.optout_marker || 'no-top-info';
+    if (((node.description || '') + ' ' + (node.name || '')).indexOf(marker) >= 0) return [];
+    var desc = visibleDescendants(node); var tops = desc.filter(function (d) { return nameRe.test(d.name || ''); });
+    if (tops.length !== 1) return [{ property: 'Info/Top', expected: '정확히 1개 (없는 화면은 이름 접미사 [' + marker + '])', actual: tops.length + '개' }];
+    var t = tops[0]; if (typeof t._relY === 'number' && typeof t.height === 'number' && t._relY + t.height > fold + 0.5) return [{ property: 'Info/Top 위치', expected: 'y+height ≤ ' + fold + ' (첫 화면 안)', actual: 'y+height=' + Math.round(t._relY + t.height) }];
+    var inTop = desc.filter(function (d) { return d.type === 'TEXT' && typeof d.fontSize === 'number' && (d._ancestorNames || []).some(function (a) { return nameRe.test(a || ''); }); });
+    var topMax = inTop.reduce(function (m, d) { return Math.max(m, d.fontSize); }, t.type === 'TEXT' && typeof t.fontSize === 'number' ? t.fontSize : 0);
+    var others = desc.filter(function (d) { return d.type === 'TEXT' && typeof d.fontSize === 'number' && inTop.indexOf(d) < 0 && d !== t && (typeof d._relY !== 'number' || d._relY <= fold); });
+    var otherMax = others.reduce(function (m, d) { return Math.max(m, d.fontSize); }, 0);
+    if (!topMax) return [{ property: 'Info/Top', expected: '안에 TEXT ≥1', actual: 'TEXT 없음' }];
+    return topMax + 0.5 < otherMax ? [{ property: 'Info/Top fontSize', expected: '≥ 첫 화면의 다른 TEXT 최대 ' + otherMax, actual: String(topMax) }] : [];
   },
   /* A-9 프레임 규격 — 루트 화면 프레임의 폭 == check.width(design.md §2), 높이 ≥ check.min_height(내용에 맞춰 늘어남, hug 허용),
      required_children 각 패턴(상태바·탭바 이름)에 맞는 보이는 자손 ≥1. 값은 make-figma-audit 가 design.md §2 에서 읽어 넣는다. */

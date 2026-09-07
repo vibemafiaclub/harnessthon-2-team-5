@@ -66,15 +66,16 @@ argument-hint: "<PRD 경로> [--budget 40m]"
 
 요구 산출:
 
-| REF-n | 서비스 | 화면 | PRD 유저스토리 동사(등록·제안·확정…) | 처리 방식(진입·1등 정보·상태 표현·빈 상태) | 출처(URL 또는 앱명+화면명) | 차용(패턴만) |
-|---|---|---|---|---|---|---|
+| REF-n | 서비스 | 화면 | PRD 유저스토리 동사(등록·제안·확정…) | 처리 방식(진입·1등 정보·상태 표현·빈 상태) | 출처(URL 또는 앱명+화면명) | 유형(직접/간접) | 스크린샷(파일명 또는 '미확보 — 사유') | 차용(패턴만) |
+|---|---|---|---|---|---|---|---|---|
 
-- **같은 카테고리 서비스 ≥3 + 인접 카테고리 ≥1.** 유저스토리 동사마다 **≥2 서비스**(한 서비스만 보면 관행인지 그 앱의 버릇인지 모른다).
+- **같은 카테고리 서비스 ≥3(유형 '직접') + 인접 카테고리 ≥1('간접').** 유저스토리 동사마다 **≥2 서비스**(한 서비스만 보면 관행인지 그 앱의 버릇인지 모른다). check-references R-3·R-4.
+- **스크린샷을 모은다(U-2).** judge 는 행마다 앱스토어/플레이스토어/공식 페이지의 화면 이미지 URL 을 적고, `design-worker` 가 `curl -L -o design/references/REF-n-k.png <url>` 로 저장한다(행당 1~3장, 폭 390 리사이즈 `sips -Z 390`). 못 구하면 스크린샷 열에 '미확보 — 사유'. **전 행 미확보는 FAIL**(R-5) — 수집이 안 된 것이다. 스크린샷은 내부 비교용이다: 0-B 가 패턴 선택지 그림을 그릴 때 보고(P-17), 3-E 2콜이 같은 과업 화면과 나란히 놓고 본다. 사용자 페이지·산출물에 재배포하지 않는다.
 - 처리 방식 열은 우리 도메인 말로 옮겨 적는다 — 이 열이 0-B pattern 질문의 장면 재료다.
 - **금지**: 색 hex·로고·카피 기록, 서비스명의 사용자 노출(서비스명은 이 파일과 brief §9 에만 남고 인터뷰 페이지에는 장면만 보인다).
 - 0건이면 "레퍼런스 없음 — 사유" 한 줄(검색이 막힘·카테고리가 신규 등). 사유 없는 0건은 FAIL.
 
-종료조건(`design-worker`, 실행만): 표 존재 · 행 수 `agent_references_min`~`agent_references_max` · 출처 열 공백 0 · 처리 방식 열에서 금지어 0건 — `awk -F'|' '/^\| *REF-/{print $6}' design/references.md > /tmp/refs_how.txt && node scripts/lib/forbidden-words.js /tmp/refs_how.txt` 종료 코드 0(서비스명·화면명 열은 고유명사라 대상에서 뺀다) · 전체 줄 수 ≤`agent_references_lines_max`. 소비처: 0-B 화이트리스트(pattern 질문 생성), 0-F 화이트리스트(§9 채우기 + screen_derivation 6b 대조), check-brief B-18(`--refs`).
+종료조건(`design-worker`, 실행만): `node scripts/check-references.js --refs design/references.md --state design/state.json --out design/verify/exit_references.md` 종료 코드 0 — R-1 행 수 `agent_references_min`~`max` · R-2 출처 공백 0 · R-3 직접 ≥3 + 간접 ≥1 · R-4 과업마다 서비스 ≥2 · R-5 스크린샷 파일 ≥1(행마다 파일 또는 '미확보 — 사유') · R-6 처리 방식 열 금지어 0(서비스명·화면명 열은 고유명사라 제외). '레퍼런스 없음 — 사유' 한 줄이면 R-1 만 본다. 전체 줄 수 ≤`agent_references_lines_max`. 소비처: 0-B 화이트리스트(pattern 질문 생성), 0-F 화이트리스트(§9 채우기 + screen_derivation 6b 대조), check-brief B-18(`--refs`).
 
 ## 0-B ~ 0-E. 인터뷰 페이지 — 링크 하나로 질문·갤러리·월드컵을 받는다
 

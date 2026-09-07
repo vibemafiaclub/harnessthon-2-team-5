@@ -145,6 +145,15 @@ mutpage "$TMP/cip_m15.html" effect; expect_fail_exact "P-15 effect 삭제" "P-15
 mutpage "$TMP/cip_m16.html" press;  expect_fail_exact "P-16 투어 press 삭제" "P-16" "$TMP/cip_m16.md" $CIP --page "$TMP/cip_m16.html" "${CIPARGS[@]}" --out "$TMP/cip_m16.md"
 expect_rc "없는 페이지 → 종료 2" 2 $CIP --page "$TMP/nope.html"
 
+echo "## 3b. check-references (0-A2)"
+CRF="node scripts/check-references.js"
+expect_pass "골든(references_golden.md)" "$TMP/crf_good.md" $CRF --refs "$FX/references_golden.md" --state "$S" --out "$TMP/crf_good.md"
+sed -E 's/\| REF-1-1\.png \|/| 미확보 — 사유 |/' "$FX/references_golden.md" > "$TMP/refs_noshot.md"; mkdir -p "$TMP/references"
+expect_fail_exact "변이 R-5 전 행 스크린샷 미확보" "R-5" "$TMP/crf_m5.md" $CRF --refs "$TMP/refs_noshot.md" --state "$S" --out "$TMP/crf_m5.md"
+printf '# 레퍼런스\n\n레퍼런스 없음 — 검색 결과가 전부 웹 대시보드라 모바일 화면 없음\n' > "$TMP/refs_none.md"
+expect_pass "레퍼런스 없음 선언(사유) → R-1 PASS, 나머지 N/A" "$TMP/crf_none.md" $CRF --refs "$TMP/refs_none.md" --state "$S" --out "$TMP/crf_none.md"
+expect_rc "없는 파일 → 종료 2" 2 $CRF --refs "$TMP/nope.md"
+
 echo "## 4. check-c-report"
 CCR="node scripts/check-c-report.js"; FG="$FX/figma_good"
 expect_pass "골든(figma_good/verify/c_report.json)" "$TMP/ccr_good.md" $CCR --report "$FG/verify/c_report.json" --brief "$FG/brief.md" --state "$S" --shots "$FG/verify/shots/index.md" --out "$TMP/ccr_good.md"
