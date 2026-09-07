@@ -30,7 +30,7 @@
  *   F-10 `check-c-report.js` 종료 코드 0 (리포트는 --out 과 같은 폴더의 exit_stage3_c.md)
  *   F-11 C 판정 처리 원장(D-40) — c_report.json 의 verdict fail 전건(local 포함)마다 `--c-routing`(기본 design/verify/c_routing.md) 표에
  *        `| <화면 id> | <C-id> | <분류> | <처리: 수정|처리 안 함> | <근거> |` 행이 있고, 처리가 '수정' 이면 근거에 재캡처 파일명(.png) 또는 커밋 해시(7자 이상),
- *        '처리 안 함' 이면 근거(사유) ≥8자. fail 0건이면 원장 없이 PASS. 리포트를 받아 보고만 하는 것은 라우팅이 아니다.
+ *        '처리 안 함' 이면 근거(사유) ≥8자. fail 0건이면 원장 없이 PASS. 정본 스키마(screens[])가 아니면 FAIL(D-41 — 조용히 PASS 하지 않는다). 리포트를 받아 보고만 하는 것은 라우팅이 아니다.
  *
  * figma_nodes.json 정본 형태(3-A·3-B·3-C 병합본):
  *   { "variables": { "primitive": { "color/primitive/primary/500": "VariableID:1:2" }, "semantic": { … }, "text_styles": { "display": "S:…" }, "font_substitution": null },
@@ -274,6 +274,9 @@ add('F-10', cr.status === 0, `check-c-report.js 종료 코드 ${cr.status} (리�
 {
   let crep = null; try { crep = JSON.parse(read(P('c-report')) || 'null'); } catch (e) { crep = null; }
   const fails = []; for (const s of arr(crep && crep.screens)) for (const c of arr(s.checks)) if (/^fail$/i.test(String(c.verdict || ''))) fails.push({ screen: String(s.id || ''), id: String(c.id || '').toUpperCase(), diag: String(c.diagnosis || '') });
+  /* 스키마 불일치는 통과가 아니라 FAIL — 정본은 screens[].checks[].verdict(3-E·check-c-report 헤더). 다른 모양(예: 최상위 fails[])이면 fail 을 셀 수 없으므로 게이트가 헛돈다(D-41). */
+  const schemaOk = !!(crep && Array.isArray(crep.screens) && crep.screens.length);
+  const legacyFails = arr(crep && crep.fails).length;
   const routing = read(P('c-routing'));
   const rows = []; for (const line of (routing || '').split('\n')) { const m = line.match(/^\s*\|(.+)\|\s*$/); if (!m) continue; const cells = m[1].split('|').map((x) => x.trim()); if (cells.length < 5 || /^-+$/.test(cells[0]) || /^화면/.test(cells[0])) continue; rows.push({ screen: cells[0], id: cells[1].toUpperCase(), diag: cells[2], action: cells[3], basis: cells.slice(4).join(' ') }); }
   const bad11 = [];
@@ -284,7 +287,8 @@ add('F-10', cr.status === 0, `check-c-report.js 종료 코드 ${cr.status} (리�
     else if (/^처리 안 함|^미처리/.test(r.action)) { if (r.basis.replace(/\s+/g, '').length < 8) bad11.push(`${f.screen}/${f.id}: '처리 안 함' 사유 8자 미만`); }
     else bad11.push(`${f.screen}/${f.id}: 처리 열 '${r.action}' ∉ {수정, 처리 안 함}`);
   }
-  if (fails.length && routing == null) add('F-11', false, `C fail ${fails.length}건인데 처리 원장 없음 (${P('c-routing')})`, fails.map((f) => f.screen + '/' + f.id).join(', '));
+  if (!schemaOk) add('F-11', false, `c_report.json 이 정본 스키마(screens[].checks[].verdict)가 아님 — fail 을 셀 수 없음` + (legacyFails ? ` (최상위 fails[] ${legacyFails}건 발견: 3-E 스키마로 다시 내야 한다)` : ''), crep ? `키: ${Object.keys(crep).join(', ')}` : `${P('c-report')} 없음/파싱 실패`);
+  else if (fails.length && routing == null) add('F-11', false, `C fail ${fails.length}건인데 처리 원장 없음 (${P('c-routing')})`, fails.map((f) => f.screen + '/' + f.id).join(', '));
   else add('F-11', bad11.length === 0, `C fail ${fails.length}건 중 처리 원장 미기록·근거 부족 ${bad11.length}건`, bad11.join('; ') || (fails.length ? `전건 원장 있음 (${P('c-routing')} 행 ${rows.length})` : 'fail 0건 — 원장 불필요'));
 }
 

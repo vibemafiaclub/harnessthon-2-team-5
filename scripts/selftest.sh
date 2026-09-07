@@ -168,6 +168,9 @@ node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[
 CFARGS=(--figma "$FG/figma.md" --state "$S" --nodes "$FG/figma_nodes.json" --brief "$FG/brief.md" --drafts "$FG/drafts" --audit "$FG/verify/audit_screens.json,$FG/verify/audit_components.json" --shots "$TMP/shots" --review "$FG/verify/final_review.md" --tokens "$FG/tokens.json" --shots-index "$FG/verify/shots/index.md")
 expect_fail_exact "F-11 C fail 1건, 처리 원장 없음" "F-11" "$TMP/cf_f11a.md" node scripts/check-figma.js "${CFARGS[@]}" --c-report "$TMP/verify_f11/c_report.json" --c-routing "$TMP/nope_routing.md" --out "$TMP/cf_f11a.md"
 printf '| 화면 | C-id | 분류 | 처리 | 근거 |\n|---|---|---|---|---|\n| 01_home | C-2 | local | 수정 | CTA 프레임 바닥 고정, 재캡처 01_normal_r2.png, 커밋 60b4c4f |\n' > "$TMP/c_routing_ok.md"
+# D-41: 정본 스키마가 아닌 c_report(최상위 fails[]) 는 F-11 이 조용히 PASS 하면 안 된다 — F-10(check-c-report CR-1·CR-4)·F-11 둘 다 FAIL
+rm -rf "$TMP/verify_f11c"; cp -R "$FG/verify" "$TMP/verify_f11c"; printf '{"stage":"C","fails":[{"id":"F-1","check":"C-6","diagnosis":"local","screen":"03_answering.png"}],"routing":"local"}' > "$TMP/verify_f11c/c_report.json"
+expect_fail_exact "F-11 구 스키마(fails[]) c_report → 조용한 PASS 금지" "F-10 F-11" "$TMP/cf_f11c.md" node scripts/check-figma.js "${CFARGS[@]}" --c-report "$TMP/verify_f11c/c_report.json" --c-routing "$TMP/c_routing_ok.md" --out "$TMP/cf_f11c.md"
 expect_pass "F-11 처리 원장 있음(수정+커밋)" "$TMP/cf_f11b.md" node scripts/check-figma.js "${CFARGS[@]}" --c-report "$TMP/verify_f11/c_report.json" --c-routing "$TMP/c_routing_ok.md" --out "$TMP/cf_f11b.md"
 
 echo
