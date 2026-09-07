@@ -43,8 +43,8 @@
 
 | 화면 | 검사 | 분류 | 처리 | 근거 |
 |---|---|---|---|---|
-| 02_meetingdetail | frame-spec | local | 수정 | 탭바 3개 제거(54:510·54:541·54:572). 진입 경로가 '홈 카드/일정 카드' 인 push 화면이라 탭바가 있으면 안 된다. 재캡처 02_meetingdetail_normal.png·02_meetingdetail_deadline.png·02_meetingdetail_confirmed.png, 커밋 PLACEHOLDER |
-| 04_contacts, 05_contactedit, 06_groupcompose | touch-target-min-inferred | local | 수정 | 입력칸 10개 세로 패딩을 spacing/2→spacing/3 바인딩 교체로 높이 40→48. 재캡처 05_contactedit_edit.png 외 9장, 커밋 PLACEHOLDER |
+| 02_meetingdetail | frame-spec | local | 수정 | 탭바 3개 제거(54:510·54:541·54:572). 진입 경로가 '홈 카드/일정 카드' 인 push 화면이라 탭바가 있으면 안 된다. 재캡처 02_meetingdetail_normal.png·02_meetingdetail_deadline.png·02_meetingdetail_confirmed.png, 커밋 f06ca80 |
+| 04_contacts, 05_contactedit, 06_groupcompose | touch-target-min-inferred | local | 수정 | 입력칸 10개 세로 패딩을 spacing/2→spacing/3 바인딩 교체로 높이 40→48. 재캡처 05_contactedit_edit.png 외 9장, 커밋 f06ca80 |
 | 전 화면 | touch-target-min-inferred (checkbox 19) | local | 처리 안 함 | 체크박스 19개는 전부 24×24 다. fix_hint 가 요구하는 '히트영역 확장' 은 Figma 에 그 개념이 없어 실행 불가능하고, 24px 체크박스를 44px 로 키우면 디자인이 망가진다. 규칙의 적용 범위 문제로 보고 보류 |
 | 전 화면 | primary-action-visible (24) | local | 처리 안 함 | Action/Primary 명명 규약이 이 파일 생성 이후에 도입됐다. 검증 2 자산의 소급 대상이라 다음 런에서 처음부터 지키기로 합의했다 |
 
