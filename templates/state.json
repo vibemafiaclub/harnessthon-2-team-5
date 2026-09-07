@@ -1,6 +1,6 @@
 {
-  "$note": "하네스 진행 상태. 오케스트레이터가 시작할 때 읽어 next_stage 부터 이어간다. 사람이 손으로 고치지 않는다.",
-  "version": 1,
+  "$note": "하네스 진행 상태. 오케스트레이터가 시작할 때 읽어 next_stage 부터 이어간다. 사람이 손으로 고치지 않는다. version 2: human_gates 에 rule_ack·calls·delegations·axis_choice, stages.interview.answered, caps 에 human_calls_max·agent_references_*·agent_reference_patterns_max·agent_flow_steps_max 추가.",
+  "version": 2,
   "prd": "",
   "figma_url": "",
   "budget_minutes": 0,
@@ -13,7 +13,8 @@
       "status": "pending",
       "started_at": "",
       "done_at": "",
-      "exit_check": ""
+      "exit_check": "",
+      "answered": 0
     },
     "tokens": {
       "status": "pending",
@@ -38,6 +39,7 @@
     }
   },
   "human_gates": {
+    "_note": "사람이 실제로 한 것만 기록한다. calls[] = 사용자를 부른 원장, 항목 {stage, kind, ts} — kind 는 호출 3분류 중 결정형/취향형(바닥선은 부르지 않는다), interview_raw 의 H-nn [<stage>/<kind>] 와 1:1, 길이 ≤ caps.human_calls_max. delegations[] = 하네스가 대신 정한 원장, 항목 {stage, item, kind, default_taken, ts} — kind 는 unknown(모르겠음→기본값) / q12(Q12 위임) / timeout(ack 시간상한→provisional 진행) / budget60(예산 60% 자동확정). 0-H ack 화면의 '제가 대신 정한 것 N개' 다이제스트가 이 원장과 brief §6 을 읽는다. rule_ack = 0-H 규칙 전량표 ack(fixes[] = 사용자가 바꾸자고 한 RULE 번호). draft_hash·screen_count = 승인 시점 초안의 sha256·화면 수(승인 후 변경 감지). final_ack.exceptions[] = check-c-report 긍정형 FAIL 중 사용자가 예외 승인한 항목, level_ack = 3축 자체 채점(1=AI 가 만든 티 / 3=신입 / 5=시니어)을 고지받고 남긴 원문, final_review.file = design/verify/final_review.md.",
     "interview_answers": {
       "count": 0
     },
@@ -45,27 +47,49 @@
       "gallery": 0,
       "worldcup": 0
     },
+    "rule_ack": {
+      "acked": false,
+      "at": "",
+      "quote": "",
+      "fixes": []
+    },
+    "calls": [],
+    "delegations": [],
     "token_set_choice": {
       "chosen": "",
       "ai_pick": "",
-      "changed_after_reveal": false
+      "changed_after_reveal": false,
+      "delegated": false
+    },
+    "axis_choice": {
+      "chosen": [],
+      "ai_pick": [],
+      "delegated": false
     },
     "draft_approval": {
       "approved": false,
       "at": "",
-      "quote": ""
+      "quote": "",
+      "draft_hash": "",
+      "screen_count": 0
     },
     "final_ack": {
       "approved": false,
       "at": "",
-      "quote": ""
+      "quote": "",
+      "exceptions": [],
+      "level_ack": "",
+      "final_review": {
+        "file": ""
+      }
     }
   },
   "caps": {
-    "_note": "사람 개입 상한(human_*)과 에이전트 산출 상한(agent_*)을 분리한다. 오케스트레이터가 fast 모드면 caps_fast 로 덮어쓴다. 서브 브리프에는 해당 상한을 숫자 문장으로 넣는다.",
-    "human_interview_questions_max": 8,
+    "_note": "사람 개입 상한(human_*)과 에이전트 산출 상한(agent_*)을 분리한다. 오케스트레이터가 fast 모드면 caps_fast 로 덮어쓴다. 서브 브리프에는 해당 상한을 숫자 문장으로 넣는다. 레퍼런스는 패턴만, 값은 사용자 반응. human_interview_questions_max 는 페이지 항목 수 기준(세트 정본은 interview_prompts.md §6). human_worldcup_rounds_max = always 쌍 4 + 미결 ≤2. human_calls_max = 사람 개입 지점 5곳 + 예외 2. agent_references_* 는 design/references.md 의 REF 행 수·줄 수, agent_reference_patterns_max 는 인터뷰 페이지 kind:pattern 질문 수, agent_flow_steps_max 는 flows[] 한 흐름의 화면 조각 수. agent_brief_lines_max 는 §2c·§2d·§9·plain 신설분을 반영해 올렸다.",
+    "human_interview_questions_max": 12,
     "human_gallery_tiles_max": 24,
     "human_worldcup_rounds_max": 6,
+    "human_calls_max": 7,
     "human_token_sets": 3,
     "human_open_axes_max": 3,
     "human_draft_revision_max": 2,
@@ -79,17 +103,23 @@
     "agent_emotion_keywords_max": 5,
     "agent_gallery_tile_elements_max": 6,
     "agent_gallery_html_kb_max": 200,
+    "agent_references_min": 4,
+    "agent_references_max": 10,
+    "agent_references_lines_max": 80,
+    "agent_reference_patterns_max": 6,
+    "agent_flow_steps_max": 4,
     "agent_rules_min": 8,
     "agent_rules_max": 20,
-    "agent_brief_lines_max": 220,
+    "agent_brief_lines_max": 320,
     "agent_design_md_lines_max": 160,
     "agent_draft_html_lines_max": 400,
     "agent_report_lines_max": 80
   },
   "caps_fast": {
-    "human_interview_questions_max": 6,
+    "human_interview_questions_max": 10,
     "human_gallery_tiles_max": 12,
-    "human_worldcup_rounds_max": 2,
+    "human_worldcup_rounds_max": 6,
+    "human_calls_max": 7,
     "human_token_sets": 2,
     "human_open_axes_max": 1,
     "human_draft_revision_max": 1,
@@ -103,9 +133,14 @@
     "agent_emotion_keywords_max": 3,
     "agent_gallery_tile_elements_max": 5,
     "agent_gallery_html_kb_max": 120,
+    "agent_references_min": 3,
+    "agent_references_max": 6,
+    "agent_references_lines_max": 40,
+    "agent_reference_patterns_max": 3,
+    "agent_flow_steps_max": 3,
     "agent_rules_min": 6,
     "agent_rules_max": 12,
-    "agent_brief_lines_max": 140,
+    "agent_brief_lines_max": 220,
     "agent_design_md_lines_max": 100,
     "agent_draft_html_lines_max": 300,
     "agent_report_lines_max": 50

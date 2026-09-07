@@ -1,8 +1,18 @@
 <!--
   0단계 인터뷰 페이지 골격. design-maker 가 <script id="harness-data"> 의 JSON 만 채워 design/stimuli/interview.html 로 낸다.
   메인이 artifact-capabilities 스킬을 로드한 뒤 capabilities: {db: {}} 로 발행하고, 끝나면 read_db(collection "answers") 로 회수한다.
-  이 파일의 마크업·스크립트는 고치지 않는다(D-6 함정: db 읽기 실패와 연결 실패를 분리, 에러 코드 노출).
+  이 파일의 마크업·스크립트는 고치지 않는다(D-6 함정: db 읽기 실패와 연결 실패를 분리, 에러 코드 노출). 검사기 P-1 이 HEAD 골격과 바이트 대조한다.
   db 가 없으면(미발행·오프라인) localStorage 에 저장하고 "답변 내보내기" 로 JSON 을 복사해 채팅에 붙이게 한다.
+
+  harness-data 스키마 (check-interview-page.js 가 검사한다):
+  - questions[]  필수: id·text·options[]({value, scene ≥8자})·free:true·unknown:true·skeleton("Q1"…, interview_prompts §6 정본)·payload(§6 payload 열 — 같은 payload 두 질문이면 FAIL)
+      kind: question(기본) | pushback(PRD 반박 — options 정확히 3개 + recommended(options.value 중 하나) + why, 결정형이라 추천을 먼저 보인다)
+            | pattern(레퍼런스 UX 패턴 — options ≥2, 장면 = 실제 서비스가 같은 과업을 푸는 방식, 서비스명 숨김)
+  - tiles[]      id·axis·variant·html — 한 타일은 축 하나만 바꾼다(다른 속성은 같은 축의 타일끼리 동일)
+  - pairs[]      axis·left·right, 선택 always:true — 갤러리 결과와 무관하게 항상 노출하는 재검증 쌍(진술형 질문이 없는 축)
+  - flows[]      선택. {id:"FL-1", question, narrative, steps:[{label, html}], free:true, unknown:true} — 시나리오 아래 실제 화면 조각을 순서대로. steps ≤ agent_flow_steps_max, html 에 자리표시자 0
+  고정 힌트 2문장(intro 아래 / 갤러리 배너 앞)은 마크업에 있으므로 intro·banner 에 되풀이하지 않는다.
+  회수 레코드: question/pushback/pattern → {id, kind, skeleton, payload, recommended, question, value, unknown, free} / tile → verdict·reason / pair → choice·chosen_id / flow → step_id(Sn|ok)·step_label·free.
 -->
 <title>디자인 인터뷰</title>
 <style>
@@ -30,6 +40,7 @@
   button.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
   button.opt.unk{color:var(--ink-2);border-style:dashed}
   button.opt.unk.sel{border-color:var(--human);background:var(--human-soft);color:var(--ink)}
+  .rec{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--human-soft);color:var(--human);font-size:12px;font-weight:600;vertical-align:middle}
   textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;background:var(--surface);color:var(--ink)}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
   .saved{font-size:12.5px;color:var(--good)}.saved.err{color:var(--bad)}
@@ -44,6 +55,13 @@
   @media (max-width:520px){.pair{grid-template-columns:1fr}}
   .pair .stim{border:1px solid var(--line);border-radius:6px;overflow:hidden;min-height:140px;background:#fff;color:#111;cursor:pointer}
   .pair .stim.sel{outline:3px solid var(--accent)}
+  .narr{margin:0 0 10px}
+  .flow{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px}
+  .flow .fstep{flex:0 0 200px;cursor:pointer}
+  .fstep .lab{font-size:13px;color:var(--ink-2);margin-bottom:4px}
+  .fstep .stim{border:1px solid var(--line);border-radius:6px;overflow:hidden;min-height:140px;background:#fff;color:#111}
+  .fstep.sel .stim{outline:3px solid var(--accent)}
+  .fstep .mark{display:none;font-size:12.5px;color:var(--accent);font-weight:600;margin-top:4px}.fstep.sel .mark{display:block}
   .banner{background:var(--human-soft);border-left:3px solid var(--human);padding:8px 12px;border-radius:0 6px 6px 0;margin:0 0 14px;font-size:14px}
   .nav{display:flex;justify-content:space-between;gap:10px;margin-top:18px}
   .btn{padding:12px 18px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;font:inherit;cursor:pointer;min-height:44px}
@@ -57,27 +75,48 @@
 <script id="harness-data" type="application/json">
 {
   "title": "청첩장모임 스케줄러 · 디자인 인터뷰",
-  "intro": "디자인 용어를 몰라도 됩니다. 보이는 것에 반응만 해 주세요. 모르면 '모르겠음'을 누르셔도 됩니다.",
+  "intro": "청첩장 모임 날짜를 잡는 앱을 만들기 전에, 실제로 쓸 때를 떠올려 몇 가지만 여쭙습니다. 10분이면 됩니다.",
   "banner": "글자 내용(뜻)이 아니라 보이는 느낌만 평가해 주세요.",
   "questions": [
-    { "id": "Q-01", "text": "이 앱을 주로 언제, 어디서 쓰게 될까요?", "options": [
+    { "id": "Q-01", "skeleton": "Q1", "payload": "mood_axis", "text": "이 앱을 주로 언제, 어디서 쓰게 될까요?", "options": [
         { "value": "이동 중 잠깐", "scene": "지하철이나 길에서 한 손으로 잠깐 열어 확인하고 닫아요" },
         { "value": "앉아서 오래", "scene": "저녁에 앉아서 여러 사람 일정을 한참 들여다보며 정리해요" } ],
       "free": true, "unknown": true },
-    { "id": "Q-05", "text": "여기서 뭔가 빠뜨리거나 잘못되면 뭐가 제일 곤란할까요?", "options": [], "free": true, "unknown": true },
-    { "id": "Q-11", "kind": "pushback", "text": "PRD에는 회신 마감을 '기한'으로만 적혀 있는데, 실제로는 답이 늦는 사람이 꼭 생깁니다. 그럴 때 어떻게 보이면 좋을까요?", "options": [
+    { "id": "Q-05", "skeleton": "Q5", "payload": "state_priority", "text": "여기서 뭔가 빠뜨리거나 잘못되면 뭐가 제일 곤란할까요?", "options": [
+        { "value": "날짜를 잘못 잡음", "scene": "다들 된다고 한 날이 아닌 날로 잡혀서, 몇 명이 못 오게 돼요" },
+        { "value": "답 없는 사람을 놓침", "scene": "아직 답을 안 한 사람을 잊고 있다가, 마감이 지나서야 알아차려요" } ],
+      "free": true, "unknown": true },
+    { "id": "Q-04", "kind": "pattern", "skeleton": "Q4'", "payload": "pattern", "text": "여러 사람의 되는 날을 맞출 때, 다른 서비스들은 보통 이렇게 보여 줍니다. 실제로 쓸 때 어느 쪽이 편할까요?", "options": [
+        { "value": "표로 한눈에", "scene": "날짜가 가로, 사람이 세로로 놓인 표에서 되는 날이 겹치는 칸이 색으로 보여요" },
+        { "value": "되는 날만 모아서", "scene": "다들 되는 날만 골라 위에 모아 주고, 안 되는 날은 접혀 있어요" },
+        { "value": "투표처럼", "scene": "후보 날짜 몇 개를 두고 각자 고르면, 가장 많이 고른 날이 맨 위로 올라와요" } ],
+      "free": true, "unknown": true },
+    { "id": "Q-11", "kind": "pushback", "skeleton": "Q11", "payload": "pushback", "text": "PRD에는 회신 마감이 '기한'으로만 적혀 있는데, 실제로는 답이 늦는 사람이 꼭 생깁니다. 저는 마감이 지나면 아직 답 없는 사람을 맨 위에 크게 보이고 그 사람들에게만 다시 보내는 쪽(A)이 맞다고 봅니다 — 날짜를 정하려면 결국 그 사람들 답이 필요하기 때문입니다. 그래도 다른 쪽이 나은 경우가 있을까요?", "options": [
         { "value": "A", "scene": "마감이 지나면 '아직 답 없는 사람 3명'이 맨 위에 크게 보이고, 그 사람들에게만 다시 보낼 수 있어요" },
         { "value": "B", "scene": "마감이 지나면 답한 사람만으로 날짜를 정하고, 못 답한 사람은 나중에 따로 알려요" },
         { "value": "PRD대로", "scene": "PRD에 적힌 대로 기한만 두고 특별한 처리는 하지 않아요" } ],
+      "recommended": "A", "why": "날짜를 정하려면 결국 답 없는 사람의 답이 필요해서, 그 사람들이 먼저 보여야 합니다.",
+      "free": true, "unknown": true }
+  ],
+  "flows": [
+    { "id": "FL-1", "question": "초대받은 사람이 링크를 열어서 답하기까지입니다. 실제와 다른 화면이 있나요?",
+      "narrative": "친구가 보낸 링크를 폰에서 열면 모임 이름과 날짜 후보가 보이고, 되는 날을 누른 뒤 이름만 적으면 끝납니다.",
+      "steps": [
+        { "label": "링크를 열면", "html": "<div style='padding:12px;font:13px sans-serif'><b>대학동기 모임</b><div style='margin-top:6px;color:#555'>9월 셋째 주 중 하루</div><div style='margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:8px'>되는 날 고르기</div></div>" },
+        { "label": "되는 날 누르기", "html": "<div style='padding:12px;font:13px sans-serif'><div style='padding:8px;border:1px solid #ddd;border-radius:8px;margin-bottom:6px'>9/19(금) 저녁</div><div style='padding:8px;border:2px solid #0F6E63;border-radius:8px;margin-bottom:6px'>9/20(토) 점심 · 선택함</div><div style='padding:8px;border:1px solid #ddd;border-radius:8px'>9/21(일) 점심</div></div>" },
+        { "label": "이름 적고 보내기", "html": "<div style='padding:12px;font:13px sans-serif'><div style='padding:8px;border:1px solid #ddd;border-radius:8px'>이서연</div><div style='margin-top:10px;padding:10px;border-radius:8px;background:#0F6E63;color:#fff;text-align:center'>보내기</div></div>" } ],
       "free": true, "unknown": true }
   ],
   "tiles": [
-    { "id": "G-01", "axis": "밀도", "variant": "낮음", "html": "<div style='padding:12px;font:13px sans-serif'><b>이번 주 모임</b><div style='margin-top:10px;padding:14px;border:1px solid #ddd;border-radius:8px'>9/20(토) 대학동기 · 4명</div></div>" },
-    { "id": "G-02", "axis": "밀도", "variant": "높음", "html": "<div style='padding:8px;font:12px sans-serif'><b>이번 주 모임</b><div style='margin-top:6px;border-top:1px solid #ddd;padding:6px 0'>9/20(토) 대학동기 · 4명</div><div style='border-top:1px solid #ddd;padding:6px 0'>9/20(토) 직장동료 · 3명</div><div style='border-top:1px solid #ddd;padding:6px 0'>9/21(일) 동네친구 · 5명</div></div>" }
+    { "id": "G-01", "axis": "밀도", "variant": "낮음", "html": "<div style='padding:12px;font:13px sans-serif'><b>이번 주 모임</b><div style='margin-top:14px;padding:6px 0;border-top:1px solid #ddd'>9/20(토) 대학동기 · 4명</div><div style='margin-top:14px;padding:6px 0;border-top:1px solid #ddd'>9/21(일) 동네친구 · 5명</div></div>" },
+    { "id": "G-02", "axis": "밀도", "variant": "높음", "html": "<div style='padding:12px;font:13px sans-serif'><b>이번 주 모임</b><div style='margin-top:4px;padding:6px 0;border-top:1px solid #ddd'>9/20(토) 대학동기 · 4명</div><div style='margin-top:4px;padding:6px 0;border-top:1px solid #ddd'>9/20(토) 직장동료 · 3명</div><div style='margin-top:4px;padding:6px 0;border-top:1px solid #ddd'>9/21(일) 동네친구 · 5명</div></div>" }
   ],
   "pairs": [
     { "axis": "색온도", "left": { "id": "W-1-L", "variant": "따뜻함", "html": "<div style='background:#FBF6EF;padding:16px;font:13px sans-serif;color:#3A2E22'>안녕하세요, 김민준·이서연입니다</div>" },
-                       "right": { "id": "W-1-R", "variant": "차가움", "html": "<div style='background:#F2F6F8;padding:16px;font:13px sans-serif;color:#1E2A33'>안녕하세요, 김민준·이서연입니다</div>" } }
+                       "right": { "id": "W-1-R", "variant": "차가움", "html": "<div style='background:#F2F6F8;padding:16px;font:13px sans-serif;color:#1E2A33'>안녕하세요, 김민준·이서연입니다</div>" } },
+    { "axis": "형태", "always": true,
+      "left": { "id": "W-2-L", "variant": "둥근 카드", "html": "<div style='padding:12px;font:13px sans-serif;color:#1C2228'><div style='padding:12px;border:1px solid #ddd;border-radius:14px'>9/20(토) 대학동기 · 4명</div></div>" },
+      "right": { "id": "W-2-R", "variant": "각진 카드", "html": "<div style='padding:12px;font:13px sans-serif;color:#1C2228'><div style='padding:12px;border:1px solid #ddd;border-radius:0'>9/20(토) 대학동기 · 4명</div></div>" } }
   ]
 }
 </script>
@@ -90,10 +129,11 @@
   </div>
   <h1 id="title"></h1>
   <p class="sub" id="intro"></p>
+  <p class="hint">디자인 용어를 몰라도 됩니다. 모르면 '모르겠음'을 누르세요. 답하기 싫은 항목은 건너뛰어도 됩니다.</p>
 
   <section id="step0"></section>
-  <section id="step1" hidden><div class="banner" id="banner"></div><div class="tiles" id="tiles"></div></section>
-  <section id="step2" hidden><p class="hint">앞에서 갈리지 않은 것만 다시 묻습니다. 왼쪽/오른쪽 중 더 편한 쪽을 누르세요. 둘 다 아니어도 됩니다.</p><div id="pairs"></div></section>
+  <section id="step1" hidden><p class="hint">전부 하지 않아도 됩니다. 눈에 띄는 것부터 눌러 주세요.</p><div class="banner" id="banner"></div><div class="tiles" id="tiles"></div></section>
+  <section id="step2" hidden><p class="hint">앞에서 갈리지 않았거나 한 번 더 확인할 것만 다시 묻습니다. 왼쪽/오른쪽 중 더 편한 쪽을 누르세요. 둘 다 아니어도 됩니다.</p><div id="pairs"></div></section>
   <section id="step3" hidden><div class="done"><h2>다 했습니다</h2><p>이 화면을 닫고 채팅으로 돌아가 "다 했어요"라고 말해 주세요.</p><p class="hint" id="doneinfo"></p></div></section>
 
   <div class="nav"><button class="btn ghost" id="prev">이전</button><button class="btn" id="next">다음</button></div>
@@ -107,6 +147,7 @@
 <script>
 (function () {
   const DATA = JSON.parse(document.getElementById('harness-data').textContent);
+  DATA.flows = DATA.flows || [];
   const $ = (id) => document.getElementById(id);
   const state = { answers: {}, step: 0, db: null, dbErr: null };
   const LS_KEY = 'harness-interview-answers';
@@ -140,15 +181,16 @@
   function mark(el, text, bad) { if (!el) return; el.textContent = text; el.className = 'saved' + (bad ? ' err' : ''); }
 
   /* ---------- 진행률 ---------- */
-  function items() { return DATA.questions.length + DATA.tiles.length + undecidedPairs().length; }
+  function items() { return DATA.questions.length + DATA.flows.length + DATA.tiles.length + undecidedPairs().length; }
   function answeredCount() { return Object.keys(state.answers).filter((k) => !k.startsWith('meta')).length; }
   function updateProgress() { const n = items(), a = Math.min(answeredCount(), n); $('prog').style.width = (n ? Math.round(a / n * 100) : 0) + '%'; $('cnt').textContent = a + ' / ' + n; }
 
-  /* ---------- 갤러리 반응으로 갈리지 않은 축만 월드컵에 노출 ---------- */
+  /* ---------- 갤러리 반응으로 갈리지 않은 축만 월드컵에 노출. always:true 쌍은 항상 노출(재검증) ---------- */
   function undecidedPairs() {
     const byAxis = {};
     DATA.tiles.forEach((t) => { const a = state.answers[t.id]; if (!a) return; (byAxis[t.axis] = byAxis[t.axis] || {})[t.variant] = (byAxis[t.axis][t.variant] || []).concat(a.verdict); });
     return DATA.pairs.filter((p) => {
+      if (p.always) return true;
       const v = byAxis[p.axis]; if (!v) return true;
       const liked = Object.keys(v).filter((k) => v[k].includes('좋다'));
       const disliked = Object.keys(v).filter((k) => v[k].includes('싫다'));
@@ -162,17 +204,54 @@
     $('title').textContent = DATA.title; $('intro').textContent = DATA.intro; $('banner').textContent = DATA.banner;
     renderQuestions(); renderTiles(); renderPairs(); showStep(state.step); updateProgress();
   }
+  // 회수 레코드에 질문 → 페이로드 → 소비처 매핑 필드(skeleton·payload·recommended)를 항상 싣는다.
+  function qrec(q, a) { return Object.assign({ id: q.id, kind: q.kind || 'question', skeleton: q.skeleton || '', payload: q.payload || '', recommended: q.recommended || '', question: q.text, free: a.free || '' }, a); }
   function renderQuestions() {
     const root = $('step0'); root.innerHTML = '';
     DATA.questions.forEach((q) => {
       const a = state.answers[q.id] || {};
       const card = document.createElement('div'); card.className = 'card';
-      card.innerHTML = '<p class="q">' + esc(q.text) + '</p>' + (q.kind === 'pushback' ? '<p class="hint">PRD와 다르게 갈 수도 있는 지점입니다. 실제로 쓸 때를 떠올려 골라 주세요.</p>' : '');
+      const hint = q.kind === 'pushback' ? '저희 추천은 표시해 두었습니다 — 실제로 쓸 때를 떠올려 다르게 보이면 골라 주세요.'
+        : q.kind === 'pattern' ? '다른 서비스들이 같은 일을 푸는 방식입니다(서비스 이름은 가렸습니다). 실제로 쓸 때를 떠올려 골라 주세요.' : '';
+      card.innerHTML = '<p class="q">' + esc(q.text) + '</p>' + (hint ? '<p class="hint">' + hint + '</p>' : '');
       const opts = document.createElement('div'); opts.className = 'opts';
-      q.options.forEach((o) => { const b = document.createElement('button'); b.className = 'opt' + (a.value === o.value ? ' sel' : ''); b.innerHTML = '<b>' + esc(o.value) + '</b><br><span style="color:var(--ink-2);font-size:14px">' + esc(o.scene) + '</span>'; b.onclick = () => { a.value = o.value; a.unknown = false; save(Object.assign({ id: q.id, kind: q.kind || 'question', question: q.text, free: a.free || '' }, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b); });
-      if (q.unknown) { const b = document.createElement('button'); b.className = 'opt unk' + (a.unknown ? ' sel' : ''); b.textContent = '모르겠음 — 기본값으로 진행해도 돼요'; b.onclick = () => { a.unknown = true; a.value = ''; save(Object.assign({ id: q.id, kind: q.kind || 'question', question: q.text, free: a.free || '' }, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b); }
+      q.options.forEach((o) => {
+        const b = document.createElement('button'); b.className = 'opt' + (a.value === o.value ? ' sel' : '');
+        const rec = q.kind === 'pushback' && q.recommended && o.value === q.recommended;
+        b.innerHTML = '<b>' + esc(o.value) + '</b>' + (rec ? '<span class="rec">하네스 추천</span>' : '') + '<br><span style="color:var(--ink-2);font-size:14px">' + esc(o.scene) + '</span>'
+          + (rec && q.why ? '<br><span style="color:var(--ink-2);font-size:13px">추천 이유: ' + esc(q.why) + '</span>' : '');
+        b.onclick = () => { a.value = o.value; a.unknown = false; save(qrec(q, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b);
+      });
+      if (q.unknown) { const b = document.createElement('button'); b.className = 'opt unk' + (a.unknown ? ' sel' : ''); b.textContent = '모르겠음 — 기본값으로 진행해도 돼요'; b.onclick = () => { a.unknown = true; a.value = ''; save(qrec(q, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b); }
       card.appendChild(opts);
-      if (q.free) { const ta = document.createElement('textarea'); ta.placeholder = q.options.length ? '덧붙일 말이 있으면 자유롭게 (선택)' : '떠오르는 대로 한두 줄'; ta.value = a.free || ''; ta.onchange = () => { a.free = ta.value; save(Object.assign({ id: q.id, kind: q.kind || 'question', question: q.text }, a), card.querySelector('.saved')); }; card.appendChild(ta); }
+      if (q.free) { const ta = document.createElement('textarea'); ta.placeholder = q.options.length ? '덧붙일 말이 있으면 자유롭게 (선택)' : '떠오르는 대로 한두 줄'; ta.value = a.free || ''; ta.onchange = () => { a.free = ta.value; save(qrec(q, a), card.querySelector('.saved')); }; card.appendChild(ta); }
+      const row = document.createElement('div'); row.className = 'row'; row.innerHTML = '<span class="saved">' + (a.ts ? '저장됨' : '') + '</span>'; card.appendChild(row);
+      root.appendChild(card);
+    });
+    renderFlows();
+  }
+  /* ---------- 흐름(flows[]): 시나리오 아래 실제 화면 조각을 순서대로. 조각 클릭 = '여기가 달라요' ---------- */
+  function frec(f, a) { return Object.assign({ id: f.id, kind: 'flow', question: f.question, step_id: a.step_id || '', step_label: a.step_label || '', free: a.free || '' }, a); }
+  function renderFlows() {
+    const root = $('step0');
+    DATA.flows.forEach((f) => {
+      const a = state.answers[f.id] || {};
+      const card = document.createElement('div'); card.className = 'card';
+      card.innerHTML = '<p class="q">' + esc(f.question) + '</p><p class="narr">' + esc(f.narrative || '') + '</p><p class="hint">실제와 다른 화면이 있으면 그 화면을 누르세요. 다 맞으면 아래 \'이 흐름이 맞아요\'를 누르세요.</p>';
+      const flow = document.createElement('div'); flow.className = 'flow';
+      (f.steps || []).forEach((s, i) => {
+        const sid = 'S' + (i + 1);
+        const d = document.createElement('div'); d.className = 'fstep' + (a.step_id === sid ? ' sel' : '');
+        d.innerHTML = '<div class="lab">' + esc(s.label) + '</div><div class="stim">' + s.html + '</div><div class="mark">여기가 달라요</div>';
+        d.onclick = () => { a.step_id = sid; a.step_label = s.label; a.unknown = false; save(frec(f, a), card.querySelector('.saved')); renderQuestions(); };
+        flow.appendChild(d);
+      });
+      card.appendChild(flow);
+      const opts = document.createElement('div'); opts.className = 'opts';
+      const ok = document.createElement('button'); ok.className = 'opt' + (a.step_id === 'ok' ? ' sel' : ''); ok.textContent = '이 흐름이 맞아요'; ok.onclick = () => { a.step_id = 'ok'; a.step_label = ''; a.unknown = false; save(frec(f, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(ok);
+      if (f.unknown) { const b = document.createElement('button'); b.className = 'opt unk' + (a.unknown ? ' sel' : ''); b.textContent = '모르겠음 — 기본값으로 진행해도 돼요'; b.onclick = () => { a.unknown = true; a.step_id = ''; a.step_label = ''; save(frec(f, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b); }
+      card.appendChild(opts);
+      if (f.free) { const ta = document.createElement('textarea'); ta.placeholder = '어디가 어떻게 다른지 한 줄 (선택)'; ta.value = a.free || ''; ta.onchange = () => { a.free = ta.value; save(frec(f, a), card.querySelector('.saved')); }; card.appendChild(ta); }
       const row = document.createElement('div'); row.className = 'row'; row.innerHTML = '<span class="saved">' + (a.ts ? '저장됨' : '') + '</span>'; card.appendChild(row);
       root.appendChild(card);
     });
@@ -195,15 +274,16 @@
     const root = $('pairs'); root.innerHTML = '';
     const list = undecidedPairs();
     if (!list.length) { root.innerHTML = '<p class="hint">앞 단계 답으로 전부 갈렸습니다. 다음으로 넘어가세요.</p>'; return; }
-    list.forEach((p, i) => {
-      const id = 'W-' + (i + 1); const a = state.answers[id] || {};
+    list.forEach((p) => {
+      // W-n 은 DATA.pairs 안의 자리 번호 — 노출되는 쌍이 바뀌어도 같은 쌍은 같은 번호를 갖는다.
+      const id = 'W-' + (DATA.pairs.indexOf(p) + 1); const a = state.answers[id] || {};
       const card = document.createElement('div'); card.className = 'card';
       card.innerHTML = '<p class="q">어느 쪽이 더 편한가요?</p>';
       const pair = document.createElement('div'); pair.className = 'pair';
-      [['left', p.left], ['right', p.right]].forEach(([side, s]) => { const d = document.createElement('div'); d.className = 'stim' + (a.choice === side ? ' sel' : ''); d.innerHTML = s.html; d.onclick = () => { a.choice = side; a.chosen_id = s.id; save(Object.assign({ id, kind: 'pair', axis_hidden: true, left_id: p.left.id, right_id: p.right.id }, a), card.querySelector('.saved')); renderPairs(); }; pair.appendChild(d); });
+      [['left', p.left], ['right', p.right]].forEach(([side, s]) => { const d = document.createElement('div'); d.className = 'stim' + (a.choice === side ? ' sel' : ''); d.innerHTML = s.html; d.onclick = () => { a.choice = side; a.chosen_id = s.id; save(Object.assign({ id, kind: 'pair', axis_hidden: true, always: !!p.always, left_id: p.left.id, right_id: p.right.id }, a), card.querySelector('.saved')); renderPairs(); }; pair.appendChild(d); });
       card.appendChild(pair);
-      const none = document.createElement('button'); none.className = 'opt unk' + (a.choice === 'none' ? ' sel' : ''); none.textContent = '둘 다 아님'; none.style.marginTop = '8px'; none.onclick = () => { a.choice = 'none'; a.chosen_id = ''; save(Object.assign({ id, kind: 'pair', axis_hidden: true, left_id: p.left.id, right_id: p.right.id }, a), card.querySelector('.saved')); renderPairs(); }; card.appendChild(none);
-      const ta = document.createElement('textarea'); ta.style.minHeight = '40px'; ta.placeholder = '왜요? (한 줄, 선택)'; ta.value = a.reason || ''; ta.onchange = () => { a.reason = ta.value; save(Object.assign({ id, kind: 'pair', axis_hidden: true, left_id: p.left.id, right_id: p.right.id }, a), card.querySelector('.saved')); }; card.appendChild(ta);
+      const none = document.createElement('button'); none.className = 'opt unk' + (a.choice === 'none' ? ' sel' : ''); none.textContent = '둘 다 아님'; none.style.marginTop = '8px'; none.onclick = () => { a.choice = 'none'; a.chosen_id = ''; save(Object.assign({ id, kind: 'pair', axis_hidden: true, always: !!p.always, left_id: p.left.id, right_id: p.right.id }, a), card.querySelector('.saved')); renderPairs(); }; card.appendChild(none);
+      const ta = document.createElement('textarea'); ta.style.minHeight = '40px'; ta.placeholder = '왜요? (한 줄, 선택)'; ta.value = a.reason || ''; ta.onchange = () => { a.reason = ta.value; save(Object.assign({ id, kind: 'pair', axis_hidden: true, always: !!p.always, left_id: p.left.id, right_id: p.right.id }, a), card.querySelector('.saved')); }; card.appendChild(ta);
       const row = document.createElement('div'); row.className = 'row'; row.innerHTML = '<span class="saved">' + (a.ts ? '저장됨' : '') + '</span>'; card.appendChild(row);
       root.appendChild(card);
     });
