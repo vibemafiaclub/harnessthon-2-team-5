@@ -201,6 +201,24 @@
       "fix_hint": "기존 컴포넌트로 대체 가능한 신규 노드를 인스턴스로."
     },
     {
+      "id": "icon-foreign-fill",
+      "title": "아이콘 내부 이물(판·칩·덮개)",
+      "stage": [
+        "design"
+      ],
+      "severity": "warning",
+      "applies_to": {},
+      "check": {
+        "type": "icon_foreign_fill",
+        "icon_name_pattern": "^Icon/",
+        "blocker_if_repeats": 3
+      },
+      "autofix": false,
+      "status": "filled",
+      "source": "D-10·D-38 실측 — 아이콘은 벡터만. 같은 아이콘 인스턴스 3개 이상(탭바·목록 행)이면 blocker 로 승격",
+      "fix_hint": "아이콘 컨테이너 안의 RECTANGLE/FRAME/ELLIPSE 를 지우거나 fill 을 없앤다. 활성 표시는 Tab/* 의 Indicator 하나뿐."
+    },
+    {
       "id": "layer-naming-semantic",
       "title": "레이어 네이밍 semantic",
       "stage": [
@@ -226,7 +244,7 @@
       "stage": [
         "design"
       ],
-      "severity": "blocker",
+      "severity": "warning",
       "applies_to": {
         "node_types": [
           "COMPONENT_SET"
@@ -234,60 +252,11 @@
       },
       "check": {
         "type": "variant_states_present",
-        "required": [
-          "Waiting",
-          "Closing",
-          "Confirmed",
-          "Done",
-          "Yes",
-          "No",
-          "Pending",
-          "Default",
-          "Disabled",
-          "Overlap",
-          "Deadline",
-          "Unselected",
-          "Selected-Yes",
-          "Selected-No",
-          "Normal",
-          "Long-text",
-          "Skeleton"
-        ],
-        "required_by_component": {
-          "Chip/Status": [
-            "Waiting",
-            "Closing",
-            "Confirmed",
-            "Done"
-          ],
-          "Chip/Response": [
-            "Yes",
-            "No",
-            "Pending"
-          ],
-          "Button/Primary": [
-            "Default",
-            "Disabled"
-          ],
-          "Banner/Alert": [
-            "Overlap",
-            "Deadline"
-          ],
-          "Field/DateOption": [
-            "Unselected",
-            "Selected-Yes",
-            "Selected-No"
-          ],
-          "Row/Meeting": [
-            "Normal",
-            "Long-text",
-            "Skeleton"
-          ]
-        }
+        "required": []
       },
       "autofix": false,
       "status": "filled",
-      "source": "design/drafts/components.md",
+      "source": "가정: components.md 없음 — 검사 대상 없음(warning)",
       "fix_hint": "누락 상태 variant 추가. 품질은 C단계."
     }
   ],

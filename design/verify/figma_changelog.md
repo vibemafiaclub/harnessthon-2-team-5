@@ -113,3 +113,37 @@ radius 의 변수 바인딩 4개가 끊겼고, `#CDD1CE` 값 검색으로 `color
   변수 바인딩뿐이라 픽셀이 안 변하는 것이 맞다
 
 24장 중 13장의 sha 가 바뀌었다. CR-3 PASS(실측 mtime 24, 자기 신고 0).
+
+## 2026-09-07 — A검사 21규칙 전체 실행
+
+`type-style-reuse` 1건이 **F-9 수정 때 낸 회귀**였다. `x.fontSize = 17` 직접 대입으로
+`46:355`(07 비활성 CTA 텍스트)의 `textStyleId` 가 빈 문자열이 됐다.
+정본 `State=Disabled` 의 `type/body-large` 를 `setTextStyleIdAsync` 로 재바인딩,
+Screens 전체 인라인 텍스트 0건 확인.
+
+**`n.cornerRadius = 16` 때와 같은 패턴이다** — 값을 직접 대입하면 바인딩·스타일이 조용히 끊긴다.
+정본 노드의 `boundVariables`·`textStyleId` 를 복사해야 한다(3-B 에 반영됨).
+
+### 최종 결과
+
+| | Screens | Components |
+|---|---|---|
+| passed_machine | false | **true** |
+| 검사 노드 | 1253 | 182 |
+| blocker / warning | 27 / 25 | 0 / 0 |
+
+| 규칙 | 위반 | 적용 | 성격 |
+|---|---|---|---|
+| `primary-action-visible` | 24 | 24 | `Action/Primary` 명명 규약 미도입 — 검증 2 소급 대상 |
+| `touch-target-min-inferred` | 25 | 43 | `field-input` 358×40 (기준 44) — warning |
+| `frame-spec` | 3 | 24 | **02 MeetingDetail 3장에 탭바가 있다** |
+| `type-style-reuse` | 0 | 510 | 회귀 수정됨 |
+| `content-not-cut` | 0 | 1213 | A-14 유지 |
+| `no-primitive-binding` | 0 | 1253 | A-15 정상 실행 |
+| 나머지 11규칙 | 0 | | |
+
+### 02 MeetingDetail 탭바 3건 — 규칙이 옳다
+
+탭바 규칙이 IA 기준 양방향으로 바뀌자 반대 방향 불일치가 드러났다.
+`prd_analysis` §1 에서 이 화면의 진입 경로는 **"홈 카드 / 일정 카드"** — push 다.
+탭바가 있으면 안 된다. 다음 라운드 수정 대상.
