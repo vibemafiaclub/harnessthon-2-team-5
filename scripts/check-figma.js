@@ -28,6 +28,9 @@
  *        c: tokens.json Variables 대상 leaf 수 == figma_nodes.variables 수(typography·elevation·icon 은 스타일이라 제외, typography.scale 수는 text_styles 와 대조) /
  *        d: 번들 text_inventory 가 있으면 초안 텍스트 집합 일치율 ≥90% (없으면 N/A)
  *   F-10 `check-c-report.js` 종료 코드 0 (리포트는 --out 과 같은 폴더의 exit_stage3_c.md)
+ *   F-11 C 판정 처리 원장(D-40) — c_report.json 의 verdict fail 전건(local 포함)마다 `--c-routing`(기본 design/verify/c_routing.md) 표에
+ *        `| <화면 id> | <C-id> | <분류> | <처리: 수정|처리 안 함> | <근거> |` 행이 있고, 처리가 '수정' 이면 근거에 재캡처 파일명(.png) 또는 커밋 해시(7자 이상),
+ *        '처리 안 함' 이면 근거(사유) ≥8자. fail 0건이면 원장 없이 PASS. 리포트를 받아 보고만 하는 것은 라우팅이 아니다.
  *
  * figma_nodes.json 정본 형태(3-A·3-B·3-C 병합본):
  *   { "variables": { "primitive": { "color/primitive/primary/500": "VariableID:1:2" }, "semantic": { … }, "text_styles": { "display": "S:…" }, "font_substitution": null },
@@ -40,7 +43,7 @@ const fs = require('fs'); const path = require('path'); const cp = require('chil
 const ROOT = path.resolve(__dirname, '..');
 function args(argv) { const o = {}; for (let i = 2; i < argv.length; i++) { const a = argv[i]; if (a.startsWith('--')) o[a.slice(2)] = argv[++i]; } return o; }
 const A = args(process.argv);
-const DEF = { figma: 'design/figma.md', state: 'design/state.json', nodes: 'design/figma_nodes.json', brief: 'design/brief.md', drafts: 'design/drafts', audit: 'design/verify/audit_screens.json,design/verify/audit_components.json', shots: 'design/verify/shots/final', review: 'design/verify/final_review.md', tokens: 'design/tokens.json', 'c-report': 'design/verify/c_report.json', 'shots-index': 'design/verify/shots/index.md' };
+const DEF = { figma: 'design/figma.md', state: 'design/state.json', nodes: 'design/figma_nodes.json', brief: 'design/brief.md', drafts: 'design/drafts', audit: 'design/verify/audit_screens.json,design/verify/audit_components.json', shots: 'design/verify/shots/final', review: 'design/verify/final_review.md', tokens: 'design/tokens.json', 'c-report': 'design/verify/c_report.json', 'c-routing': 'design/verify/c_routing.md', 'shots-index': 'design/verify/shots/index.md' };
 const P = (k) => A[k] || DEF[k];
 const read = (p) => (fs.existsSync(p) && fs.statSync(p).isFile()) ? fs.readFileSync(p, 'utf8') : null;
 const stateTxt = read(P('state'));
@@ -266,6 +269,24 @@ const cOut = A.out ? path.join(path.dirname(A.out), 'exit_stage3_c.md') : 'desig
 const cr = cp.spawnSync(process.execPath, [path.join(__dirname, 'check-c-report.js'), '--report', P('c-report'), '--shots', P('shots-index'), '--state', P('state'), '--brief', P('brief'), '--out', cOut], { encoding: 'utf8' });
 const crLine = ((cr.stdout || '').match(/결과: \*\*(PASS|FAIL)\*\* \([^)]*\)/) || [(cr.stderr || '').trim().split('\n')[0] || ''])[0];
 add('F-10', cr.status === 0, `check-c-report.js 종료 코드 ${cr.status} (리포트 ${cOut})`, crLine || '(출력 없음)');
+
+/* ---- F-11 C 판정 처리 원장 (D-40) ---- */
+{
+  let crep = null; try { crep = JSON.parse(read(P('c-report')) || 'null'); } catch (e) { crep = null; }
+  const fails = []; for (const s of arr(crep && crep.screens)) for (const c of arr(s.checks)) if (/^fail$/i.test(String(c.verdict || ''))) fails.push({ screen: String(s.id || ''), id: String(c.id || '').toUpperCase(), diag: String(c.diagnosis || '') });
+  const routing = read(P('c-routing'));
+  const rows = []; for (const line of (routing || '').split('\n')) { const m = line.match(/^\s*\|(.+)\|\s*$/); if (!m) continue; const cells = m[1].split('|').map((x) => x.trim()); if (cells.length < 5 || /^-+$/.test(cells[0]) || /^화면/.test(cells[0])) continue; rows.push({ screen: cells[0], id: cells[1].toUpperCase(), diag: cells[2], action: cells[3], basis: cells.slice(4).join(' ') }); }
+  const bad11 = [];
+  for (const f of fails) {
+    const r = rows.find((x) => x.screen === f.screen && x.id === f.id);
+    if (!r) { bad11.push(`${f.screen}/${f.id}(${f.diag || '분류 없음'}): 원장 행 없음`); continue; }
+    if (/^수정/.test(r.action)) { if (!/[A-Za-z0-9_\-]+\.png|\b[0-9a-f]{7,40}\b/.test(r.basis)) bad11.push(`${f.screen}/${f.id}: '수정' 인데 근거에 재캡처 파일(.png)·커밋 해시 없음`); }
+    else if (/^처리 안 함|^미처리/.test(r.action)) { if (r.basis.replace(/\s+/g, '').length < 8) bad11.push(`${f.screen}/${f.id}: '처리 안 함' 사유 8자 미만`); }
+    else bad11.push(`${f.screen}/${f.id}: 처리 열 '${r.action}' ∉ {수정, 처리 안 함}`);
+  }
+  if (fails.length && routing == null) add('F-11', false, `C fail ${fails.length}건인데 처리 원장 없음 (${P('c-routing')})`, fails.map((f) => f.screen + '/' + f.id).join(', '));
+  else add('F-11', bad11.length === 0, `C fail ${fails.length}건 중 처리 원장 미기록·근거 부족 ${bad11.length}건`, bad11.join('; ') || (fails.length ? `전건 원장 있음 (${P('c-routing')} 행 ${rows.length})` : 'fail 0건 — 원장 불필요'));
+}
 
 /* ---- 리포트 ---- */
 const passed = checks.every((c) => c.status === 'PASS');

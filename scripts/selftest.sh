@@ -162,6 +162,13 @@ echo "## 7. check-figma (F-10 이 check-c-report 를 실제로 부른다)"
 mkdir -p "$TMP/shots"; for p in 01_normal 01_empty 01_long 02_normal 02_empty 02_long 02_error; do : > "$TMP/shots/$p.png"; done
 expect_pass "골든(figma_good/)" "$TMP/cf_good.md" node scripts/check-figma.js --figma "$FG/figma.md" --state "$S" --nodes "$FG/figma_nodes.json" --brief "$FG/brief.md" --drafts "$FG/drafts" --audit "$FG/verify/audit_screens.json,$FG/verify/audit_components.json" --shots "$TMP/shots" --review "$FG/verify/final_review.md" --tokens "$FG/tokens.json" --c-report "$FG/verify/c_report.json" --shots-index "$FG/verify/shots/index.md" --out "$TMP/cf_good.md"
 expect_rc "state.json 없음 → 종료 2" 2 node scripts/check-figma.js --state "$TMP/nope.json" --out "$TMP/cf_none.md"
+# F-11: c_report 에 fail 1건(local) 을 심고 처리 원장이 없으면 F-11 만 FAIL, 원장(수정+커밋 해시)이 있으면 PASS (F-0 이 c_report 와 같은 폴더의 a_report·c_report.md 를 보므로 verify/ 를 통째로 복사)
+rm -rf "$TMP/verify_f11"; cp -R "$FG/verify" "$TMP/verify_f11"
+node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));const c=d.screens[0].checks.find(c=>c.id==="C-2");c.verdict="fail";c.diagnosis="local";c.elements=["Action/Primary"];c.evidence="CTA 가 프레임 아래로 35px 잘려 24px 만 보임";fs.writeFileSync(process.argv[2],JSON.stringify(d,null,1));' "$FG/verify/c_report.json" "$TMP/verify_f11/c_report.json"
+CFARGS=(--figma "$FG/figma.md" --state "$S" --nodes "$FG/figma_nodes.json" --brief "$FG/brief.md" --drafts "$FG/drafts" --audit "$FG/verify/audit_screens.json,$FG/verify/audit_components.json" --shots "$TMP/shots" --review "$FG/verify/final_review.md" --tokens "$FG/tokens.json" --shots-index "$FG/verify/shots/index.md")
+expect_fail_exact "F-11 C fail 1건, 처리 원장 없음" "F-11" "$TMP/cf_f11a.md" node scripts/check-figma.js "${CFARGS[@]}" --c-report "$TMP/verify_f11/c_report.json" --c-routing "$TMP/nope_routing.md" --out "$TMP/cf_f11a.md"
+printf '| 화면 | C-id | 분류 | 처리 | 근거 |\n|---|---|---|---|---|\n| 01_home | C-2 | local | 수정 | CTA 프레임 바닥 고정, 재캡처 01_normal_r2.png, 커밋 60b4c4f |\n' > "$TMP/c_routing_ok.md"
+expect_pass "F-11 처리 원장 있음(수정+커밋)" "$TMP/cf_f11b.md" node scripts/check-figma.js "${CFARGS[@]}" --c-report "$TMP/verify_f11/c_report.json" --c-routing "$TMP/c_routing_ok.md" --out "$TMP/cf_f11b.md"
 
 echo
 echo "selftest 결과: 기대 일치 $PASS_N / 불일치 $FAIL_N"
