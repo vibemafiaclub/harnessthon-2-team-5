@@ -7,6 +7,7 @@
  *   R-3  같은 카테고리(직접) ≥3 + 인접 카테고리(간접) ≥1 — '유형' 열(직접/간접)
  *   R-4  과업(동사/T-n) 열마다 ≥2 서비스 — 한 서비스만 보면 관행인지 그 앱의 버릇인지 모른다
  *   R-5  스크린샷 열: 행마다 design/references/ 아래 파일 ≥1 존재 또는 '미확보 — 사유'. 파일 있는 행이 전체의 절반 미만이면 FAIL(감사 지적: 1행만 있어도 통과하던 하한을 올림)
+ *   R-7  전체 줄 수 ≤ agent_references_lines_max (fast caps_fast) — 상한 초과는 FAIL(design-harness 규약, 감사 지적 M4)
  *   R-6  처리 방식 열 금지어 0 (scripts/lib/forbidden-words.js) — 서비스·화면명 열은 고유명사라 제외
  */
 'use strict';
@@ -32,7 +33,7 @@ for (const line of txt.split('\n')) {
 const col = (re) => header ? header.findIndex((h) => re.test(h)) : -1;
 const iSvc = col(/서비스/), iTask = col(/과업|동사|T-n/), iHow = col(/처리 방식|처리/), iSrc = col(/출처/), iKind = col(/유형|직접|카테고리/), iShot = col(/스크린샷|캡처|이미지/);
 const min = cap('agent_references_min', 4), max = cap('agent_references_max', 10);
-if (none) { add('R-1', true, `'레퍼런스 없음 — 사유' 선언 — 사유: ${(txt.match(/레퍼런스 없음\s*[—-]\s*(.+)/) || [])[1] || ''}`, refsPath); ['R-2', 'R-3', 'R-4', 'R-5', 'R-6'].forEach((id) => add(id, null, '레퍼런스 없음 선언 — N/A', refsPath)); }
+if (none) { add('R-1', true, `'레퍼런스 없음 — 사유' 선언 — 사유: ${(txt.match(/레퍼런스 없음\s*[—-]\s*(.+)/) || [])[1] || ''}`, refsPath); ['R-2', 'R-3', 'R-4', 'R-5', 'R-6', 'R-7'].forEach((id) => add(id, null, '레퍼런스 없음 선언 — N/A', refsPath)); }
 else {
   add('R-1', !!header && rows.length >= min && rows.length <= max, `REF 행 ${rows.length} (${min}~${max}, ${state ? state.mode || 'full' : 'state 없음'})`, header ? `열: ${header.join(' | ')}` : '표 없음');
   const noSrc = rows.filter((r) => iSrc < 0 || !String(r[iSrc] || '').trim()).map((r) => r[0]);
@@ -51,6 +52,7 @@ else {
   const needShots = Math.max(1, Math.ceil(rows.length / 2));
   add('R-5', iShot >= 0 && bad5.length === 0 && withFile >= needShots, `스크린샷 파일 있는 행 ${withFile} (≥${needShots} = 행의 절반), 미확보(사유) ${withReason}, 위반 ${bad5.length}` + (withFile < needShots && bad5.length === 0 ? ' — 스크린샷이 절반 미만(수집 부족)' : ''), bad5.join('; ') || (iShot >= 0 ? `${refDir}/` : '스크린샷 열 없음'));
   const hits = []; rows.forEach((r) => FW.scanText(String(iHow >= 0 ? r[iHow] : '')).forEach((h) => hits.push(`${r[0]}:「${h.word}」`)));
+  { const lines = txt.split('\n').length, lmax = cap('agent_references_lines_max', 80); add('R-7', lines <= lmax, `전체 ${lines}줄 (≤${lmax})`, refsPath); }
   add('R-6', iHow >= 0 && hits.length === 0, `처리 방식 열 금지어 ${hits.length}건`, hits.slice(0, 6).join(', ') || (iHow >= 0 ? '0건' : '처리 방식 열 없음'));
 }
 const passed = checks.every((c) => c.status !== 'FAIL');

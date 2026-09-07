@@ -6,7 +6,7 @@
 
 **전제**: 스크린샷을 **Read 로 직접 열어** 판정한다. 노드 속성이나 소스로 대체할 수 없다. 스크린샷을 못 얻었으면 결과는 통과가 아니라 `C_NOT_RUN` 이다.
 **판정 원칙**: 두 사람이 같은 화면을 보고 같은 결론에 도달할 수 있어야 한다. "위계가 약하다"는 판정이 아니다. **어느 요소가 / 어떤 수치로 / 어느 기준을** 어겼는지 쓴다.
-**결과의 형식**: 화면마다 `c_report.json` 의 `checks[]`(C-n · SLOP-SWEEP · POS-<키>) · `positive`(§2 의 7키 boolean) · `tasks[]` · `score` · `top_info` · `fidelity` 를 채운다. `check-c-report.js` CR-1~CR-10 이 이것을 센다 — 빈 칸은 판정 안 함으로 계산된다.
+**결과의 형식**: 화면마다 `c_report.json` 의 `checks[]`(C-n · SLOP-SWEEP · POS-<키>) · `positive`(§2 의 7키 boolean) · `tasks[]` · `score` · `top_info` · `fidelity` 를 채운다. `check-c-report.js` CR-1~CR-12 가 이것을 센다 — 빈 칸은 판정 안 함으로 계산된다.
 
 ---
 

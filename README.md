@@ -38,7 +38,7 @@ C단계에서 탈락하면 원인에 따라 세 갈래로 라우팅한다 — �
 .claude/skills/design-draft-html/SKILL.md     # 2단계(B): HTML 후보 병렬 발산·교차 비평·선택·승인 → decisions.md, drafts/
 .claude/skills/design-draft-html/references/  #   layout_rules.md — 실제로 깨진 레이아웃 14유형(판정 기준·빈발 사례·수정 방침)
 .claude/skills/design-figma-build/SKILL.md    # 3단계(A/C): Figma MCP 구현 → A 기계 검사 → C 육안 판정(2콜 블라인드) → 라우팅 → 링크
-.claude/skills/design-figma-build/references/ #   c_checks.md — C단계 판정 기준 원본(1차 목적 선언 → 부정형 C-1~C-9 → 긍정형 매력 판정)
+.claude/skills/design-figma-build/references/ #   c_checks.md — C단계 판정 기준 원본(1차 목적 선언 → 부정형 C-1~C-10 → 긍정형 매력 판정)
 scripts/audit.js · extract-nodes.js           # A게이트 결정론 검사기(LLM 아님) · use_figma 1회 순회 노드 덤프
 scripts/build-rules.js · check-html.js        # tokens.json → project.rules.json 생성 · 2단계 HTML 승인 전 정적 검사
 guide/core.rules.json · README.md             # L1 고정 하한선(접근성·터치·잘림) · 규칙 스키마/check.type 카탈로그
@@ -110,10 +110,10 @@ PRD ─▶ 0 인터뷰 ─▶ brief.md ─▶ 1 토큰·가이드 ─▶ tokens.
 | 끼울 것 | 파일 | 위치 |
 |---|---|---|
 | 인터뷰 질문 뱅크 | `.claude/skills/design-interview/references/interview_prompts.md` | §6 표에 행 추가 (캐내는 것 · 질문 형태 · 태그) |
-| 자극 갤러리 축 | `.claude/skills/design-interview/SKILL.md` | 0-C "축 6개" 목록 |
+| 자극 갤러리 축 | `.claude/skills/design-interview/SKILL.md` | 0-B 타일 축 표(6축) |
 | 판단기준 스키마 필드 | `.claude/skills/design-interview/references/rule_schema.md` | 필드 표 |
 | 비평 페르소나 | `.claude/skills/design-draft-html/SKILL.md` | 2-D 페르소나 목록 |
-| A단계 기계 검사 항목 | `.claude/skills/design-figma-build/SKILL.md` | 3-D 내장 6항목 |
+| A단계 기계 검사 항목 | `.claude/skills/design-figma-build/SKILL.md` | 3-D 보완 항목 1~16(7b·9b 포함) |
 | C단계 육안 판정 항목 | `.claude/skills/design-figma-build/SKILL.md` | 3-E 2콜 대조 목록 |
 | 토큰 분류 체계(6카테고리) | `templates/tokens.json` | 그룹 추가 시 `rationale` 필드 유지 — 출처: 팀 디자이너 `prd-to-design-guide` 스킬 |
 | 하네스 고정 하한선(접근성 등) | `templates/design.md` | §3 제약사항 |

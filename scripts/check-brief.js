@@ -33,7 +33,7 @@
  *   B-12  §10 반박 로그: 1~agent_prd_pushback_max(10) 행, 각 행 '하네스 이의·대안'·'하네스 추천'·'사용자 확인 원문'(인용·A-nn·위임)·'결정' 채움,
  *         또는 '반박 없음 — 사유: …'; 유형 열 '누락' ≥1 또는 '누락 없음 — 사유: …'
  *   B-13  §11 적합성 단서 2~6줄
- *   B-14  감사가 제거한 수치가 §5/§7/§8 에 잔존하지 않음 (--audit 있을 때, 없으면 N/A)
+ *   B-14  0-G 감사 결과(--audit) 필수(§4 RULE ≥1 이면) + 감사가 제거한 수치가 §5/§7/§8 에 잔존하지 않음 — 감사 미실행이 조용히 통과하던 것(M5) 차단
  *   B-15  raw 답변 수 ≥ 질문 수
  *   B-16  §2c 사용자 여정·필수 플로우: 고정 행 10 전부 존재(계정 진입 포함, D-50), 담당 화면 # ∈ §2 번호 집합 또는 사유; 초대 두 행 '해당 없음' 인데 §2 역할 2종 이상이면 FAIL
  *   B-17  §2d 상태 강조 순위 ≥2행, raw 에 ^A-05 있으면 1순위 행이 A-05 참조, 행마다 §2c 상태 행에 '상태 #n' 대응
@@ -269,7 +269,7 @@ if (A.audit && fs.existsSync(A.audit)) {
     for (const n of removed) if (others.replace(/\s+/g, '').includes(n)) leaked.push(`${it.rule_id || it.id}:${n}`);
   }
   add('B-14', leaked.length === 0, `감사가 제거한 수치가 §5/§7/§8 에 잔존 ${leaked.length}건`, leaked.join(', ') || '잔존 없음');
-} else add('B-14', true, '감사 결과 파일 없음 — 전파 검사 생략(N/A)', A.audit || '--audit 미지정');
+} else { const ruleN = (sec('4').match(/^### RULE-/gm) || []).length; add('B-14', ruleN === 0, ruleN ? `0-G 감사 결과 없음(--audit) 인데 §4 RULE ${ruleN}건 — 감사를 돌리지 않으면 재검증(I-3)의 절반이 무검이다` : 'RULE 0건 — 감사 대상 없음', A.audit || '--audit 미지정 (design/audit_result.json)'); }
 
 /* B-15 raw 답변 수 ≥ 질문 수 */
 const qs = rawCount(/^Q-\d+/), as = rawCount(/^A-\d+/);

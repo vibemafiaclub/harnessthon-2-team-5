@@ -111,10 +111,12 @@ CB="node scripts/check-brief.js"
 G="$FX/brief_golden.md"; R="$FX/raw_golden.md"; S="$FX/state_full.json"; PR="$FX/exit_interview_page_golden.md"; REFS="$FX/references_golden.md"
 expect_fail_subset "빈 템플릿(brief_empty.md)" "B-3 B-4 B-5 B-12 B-16 B-18" "$TMP/cb_empty.md" $CB --brief "$FX/brief_empty.md" --raw "$FX/raw_empty.md" --out "$TMP/cb_empty.md"
 expect_fail_subset "빈 템플릿(라이브 templates/brief.md)" "B-3 B-4 B-5 B-12 B-16 B-18" "$TMP/cb_live.md" $CB --brief templates/brief.md --raw "$FX/raw_empty.md" --out "$TMP/cb_live.md"
-expect_pass "골든(brief_golden.md, full)" "$TMP/cb_golden.md" $CB --brief "$G" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --out "$TMP/cb_golden.md"
+AUD="$FX/audit_result_golden.json"
+expect_pass "골든(brief_golden.md, full)" "$TMP/cb_golden.md" $CB --brief "$G" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --out "$TMP/cb_golden.md"
+expect_fail_exact "B-14 0-G 감사 미실행(--audit 없음)" "B-14" "$TMP/cb_noaudit.md" $CB --brief "$G" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --out "$TMP/cb_noaudit.md"
 expect_rc "--state 가 없는 경로 → 종료 2" 2 $CB --brief "$G" --raw "$R" --state "$TMP/nope.json"
 # 변이: 골든에서 결함 하나씩 심는다 → 심은 항목만 FAIL
-mut() { local name="$1" want="$2" brief="$3" raw="$4" state="$5" pr="$6"; expect_fail_exact "변이 $name" "$want" "$TMP/cb_$name.md" $CB --brief "$brief" --raw "$raw" --state "$state" --refs "$REFS" --page-report "$pr" --out "$TMP/cb_$name.md"; }
+mut() { local name="$1" want="$2" brief="$3" raw="$4" state="$5" pr="$6"; expect_fail_exact "변이 $name" "$want" "$TMP/cb_$name.md" $CB --brief "$brief" --raw "$raw" --state "$state" --refs "$REFS" --page-report "$pr" --audit "$AUD" --out "$TMP/cb_$name.md"; }
 sed -E 's/^\| 4 \| 돌봄 공유 링크 \| R-1 \| 약 등록 완료 직후 \| 공유 링크 \|/| 4 | 돌봄 공유 링크 | R-1 | 약 등록 완료 직후 |  |/' "$G" > "$TMP/m_b3b.md";  mut "B-3b 1등 정보 공백"            "B-3b" "$TMP/m_b3b.md" "$R" "$S" "$PR"
 sed -E 's/R-2 돌봄 대리인\(가족·펫시터\)$/R-2 돌봄 대리인(가족·펫시터) · R-3 수의사/' "$G" > "$TMP/m_b3c.md";           mut "B-3c §11 역할이 §2 에 없음"     "B-3c" "$TMP/m_b3c.md" "$R" "$S" "$PR"
 sed -E 's/^- source_refs: \[A-05, R-G-03, W-1\]$/- source_refs: [A-05]/' "$G" > "$TMP/m_b7b.md";                       mut "B-7b confirmed 근거 1건"        "B-7b" "$TMP/m_b7b.md" "$R" "$S" "$PR"
@@ -167,7 +169,15 @@ sed -E 's/\| 간접 \|/| 직접 |/' "$FX/references_golden.md" > "$TMP/refs/refs
 sed -E 's/\| T-1, T-2 \|/| T-9 |/' "$FX/references_golden.md" > "$TMP/refs/refs_thin.md"; expect_fail_exact "변이 R-4 과업당 서비스 1개" "R-4" "$TMP/crf_m4.md" $CRF --refs "$TMP/refs/refs_thin.md" --state "$S" --out "$TMP/crf_m4.md"
 printf '# 레퍼런스\n\n레퍼런스 없음 — 검색 결과가 전부 웹 대시보드라 모바일 화면 없음\n' > "$TMP/refs_none.md"
 expect_pass "레퍼런스 없음 선언(사유) → R-1 PASS, 나머지 N/A" "$TMP/crf_none.md" $CRF --refs "$TMP/refs_none.md" --state "$S" --out "$TMP/crf_none.md"
+{ cat "$FX/references_golden.md"; yes "- 메모 줄" | head -100; } > "$TMP/refs/refs_long.md"; expect_fail_exact "변이 R-7 줄 수 상한 초과" "R-7" "$TMP/crf_m7.md" $CRF --refs "$TMP/refs/refs_long.md" --state "$S" --out "$TMP/crf_m7.md"
 expect_rc "없는 파일 → 종료 2" 2 $CRF --refs "$TMP/nope.md"
+
+echo "## 3c. check-prd-analysis (0-A Z-1~Z-8)"
+CPA="node scripts/check-prd-analysis.js"
+expect_pass "골든(prd_analysis_golden.md)" "$TMP/cpa_good.md" $CPA --prd "$FX/prd_analysis_golden.md" --state "$S" --out "$TMP/cpa_good.md"
+node -e 'const fs=require("fs");const L=fs.readFileSync(process.argv[1],"utf8").split("\n").map(l=>l.startsWith("| P-01 ")?l.replace("| B |","|  |"):l);fs.writeFileSync(process.argv[2],L.join("\n"));' "$FX/prd_analysis_golden.md" "$TMP/prd_m5.md"; expect_fail_exact "Z-5 반박 추천 공백" "Z-5" "$TMP/cpa_m5.md" $CPA --prd "$TMP/prd_m5.md" --state "$S" --out "$TMP/cpa_m5.md"
+grep -v '^| (g) 계정 진입' "$FX/prd_analysis_golden.md" > "$TMP/prd_m6.md"; expect_fail_exact "Z-6 계정 진입 행 삭제" "Z-6" "$TMP/cpa_m6.md" $CPA --prd "$TMP/prd_m6.md" --state "$S" --out "$TMP/cpa_m6.md"
+expect_rc "없는 파일 → 종료 2" 2 $CPA --prd "$TMP/nope.md"
 
 echo "## 4. check-c-report"
 CCR="node scripts/check-c-report.js"; FG="$FX/figma_good"
@@ -222,6 +232,7 @@ node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[
 awk -F'|' 'BEGIN{OFS="|"} /^\| 1 \| 홈/ && $4!="" {$4=" "} {print}' "$TG/design.md" > "$TMP/design_m11.md"; expect_fail_exact "K-11 §5 1등 정보 셀 공백" "K-11" "$TMP/ct_m11.md" $CT --tokens "$TG/tokens.json" --state "$S" --design "$TMP/design_m11.md" --brief "$FX/brief_golden.md" --wcag "$TG/verify/wcag_tokens.md" --raw "$TG/interview_raw.md" --rules-out "$TMP/tg_rules.json" --compare "$TG/stimuli/design_guide_compare.html" --sets "$TG/stimuli/token_sets.json" --out "$TMP/ct_m11.md"
 node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));d.sets[0].tokens.color.primitive.neutral["900"]="#000000";fs.writeFileSync(process.argv[2],JSON.stringify(d));' "$TG/stimuli/token_sets.json" "$TMP/sets_m1.json"; expect_fail_exact "K-3b M-1 순검정 neutral.900" "K-3b" "$TMP/ct_m3b1.md" $CT "${CTARGS[@]}" --compare "$TG/stimuli/design_guide_compare.html" --sets "$TMP/sets_m1.json" --out "$TMP/ct_m3b1.md"
 node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));d.sets[0].tokens.elevation.scale.sm.blur=30;fs.writeFileSync(process.argv[2],JSON.stringify(d));' "$TG/stimuli/token_sets.json" "$TMP/sets_m3.json"; expect_fail_exact "K-3b M-3 그림자 단조 위반" "K-3b" "$TMP/ct_m3b3.md" $CT "${CTARGS[@]}" --compare "$TG/stimuli/design_guide_compare.html" --sets "$TMP/sets_m3.json" --out "$TMP/ct_m3b3.md"
+node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));d.sets[2].tokens.color.primitive.neutral["900"]="#000000";fs.writeFileSync(process.argv[2],JSON.stringify(d));' "$TG/stimuli/token_sets.json" "$TMP/sets_m3c.json"; expect_fail_exact "K-3b 선택 안 된 세트(SET-C)의 M-1 위반도 잡음" "K-3b" "$TMP/ct_m3bc.md" $CT "${CTARGS[@]}" --compare "$TG/stimuli/design_guide_compare.html" --sets "$TMP/sets_m3c.json" --out "$TMP/ct_m3bc.md"
 sed -E 's/^T-01 SET-A \| 이유: .*$/T-01 SET-A | 이유: /' "$TG/interview_raw.md" > "$TMP/raw_m10.md"; expect_fail_exact "K-10 T-01 이유 공백" "K-10" "$TMP/ct_m10.md" $CT --tokens "$TG/tokens.json" --state "$S" --design "$TG/design.md" --brief "$FX/brief_golden.md" --wcag "$TG/verify/wcag_tokens.md" --raw "$TMP/raw_m10.md" --rules-out "$TMP/tg_rules.json" --compare "$TG/stimuli/design_guide_compare.html" --sets "$TG/stimuli/token_sets.json" --out "$TMP/ct_m10.md"
 
 echo "## 7. check-figma (F-10 이 check-c-report 를 실제로 부른다)"

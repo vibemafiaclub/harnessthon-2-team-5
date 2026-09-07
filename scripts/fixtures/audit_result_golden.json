@@ -1,0 +1,44 @@
+{
+ "results": [
+  {
+   "rule_id": "RULE-01",
+   "verdict": "entailed",
+   "evidence_ok": true
+  },
+  {
+   "rule_id": "RULE-02",
+   "verdict": "entailed",
+   "evidence_ok": true
+  },
+  {
+   "rule_id": "RULE-03",
+   "verdict": "entailed",
+   "evidence_ok": true
+  },
+  {
+   "rule_id": "RULE-04",
+   "verdict": "entailed",
+   "evidence_ok": true
+  },
+  {
+   "rule_id": "RULE-05",
+   "verdict": "entailed",
+   "evidence_ok": true
+  },
+  {
+   "rule_id": "RULE-06",
+   "verdict": "entailed",
+   "evidence_ok": true
+  },
+  {
+   "rule_id": "RULE-07",
+   "verdict": "entailed",
+   "evidence_ok": true
+  },
+  {
+   "rule_id": "RULE-08",
+   "verdict": "entailed",
+   "evidence_ok": true
+  }
+ ]
+}
