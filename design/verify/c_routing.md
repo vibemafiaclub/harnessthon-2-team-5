@@ -17,9 +17,9 @@
 | 05_contactedit | C-9 | local | 처리 안 함 | F-3. 신원 칩이 '신부 쪽 / 신부 쪽 / 양가 공동' 으로 읽혀 중복 라벨처럼 보인다는 지적. 세 칩은 서로 다른 사람의 소속값이고 같은 값이 두 번 나오는 것은 정상 데이터다. 판정자가 라벨 중복으로 오인했다 |
 | 05_contactedit | C-8 | local | 처리 안 함 | F-4. 선택 상태 표현이 05·06·07 세 화면에서 제각각이다. 통일하려면 선택 컴포넌트를 하나로 합쳐야 하는데, 0-C 갤러리에서 형태 축이 취향 공백으로 남아 어느 쪽으로 통일할지 근거가 없다. taste_gap 으로 남긴다 |
 | 06_groupcompose | C-8 | local | 처리 안 함 | F-4 의 같은 결함. 05_contactedit 과 동일 사유로 보류 |
-| 06_groupcompose | C-1 | local | 수정 | F-9. `cta-button disabled`(44:305)를 정본 `Button/Primary` State=Disabled 와 동일하게 맞췄다 — fill `color/semantic/text/disabled`, 텍스트 `color/semantic/text/secondary`, radius `radius/lg` 바인딩. 커밋 af4f088, 재캡처 06_groupcompose_none.png |
+| 06_groupcompose | C-1 | local | 수정 | F-9. `cta-button disabled`(44:305)를 정본 `Button/Primary` State=Disabled 와 동일하게 맞췄다 — fill `color/semantic/text/disabled`, 텍스트 `color/semantic/text/secondary`, radius `radius/lg` 바인딩. 커밋 fb4790b, 재캡처 06_groupcompose_none.png |
 | 07_datepropose | C-8 | local | 처리 안 함 | F-4 의 같은 결함. 05_contactedit 과 동일 사유로 보류 |
-| 07_datepropose | C-1 | local | 수정 | F-9. `btn btn-disabled`(46:354)가 **흰 배경 + 회색 테두리 + 56px + 15px 텍스트** 로 완전히 다른 표현이었다. 정본과 동일하게 교체(fill #CDD1CE 바인딩, stroke 제거, h56→59, 텍스트 15→17px). 커밋 af4f088, 재캡처 07_datepropose_empty.png |
+| 07_datepropose | C-1 | local | 수정 | F-9. `btn btn-disabled`(46:354)가 **흰 배경 + 회색 테두리 + 56px + 15px 텍스트** 로 완전히 다른 표현이었다. 정본과 동일하게 교체(fill #CDD1CE 바인딩, stroke 제거, h56→59, 텍스트 15→17px). 커밋 fb4790b, 재캡처 07_datepropose_empty.png |
 
 ## A-14 로 별도 처리된 것 (C fail 아님)
 
