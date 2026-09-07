@@ -299,8 +299,10 @@ for (const c of s2c) {
 const inviteRows = s2c.filter((c) => /초대/.test(itemOf(c)));
 const inviteNA = inviteRows.length >= 2 && inviteRows.every((c) => !nums(s2cScreen < 0 ? '' : (c[s2cScreen] || '')).length && /해당 없음/.test(plainText(c[s2cScreen] || '') + ' ' + plainText(c[s2cWhy] || '')));
 const inviteConflict = inviteNA && s2roleVals.length >= 2;
-add('B-16', has('2c') && s2cItem >= 0 && s2cScreen >= 0 && s2c.length >= 10 && fixedMissing.length === 0 && s2cBad.length === 0 && !inviteConflict,
-  `§2c 여정 ${s2c.length}행(≥10), 고정 행 누락 ${fixedMissing.length}, 화면·사유 위반 ${s2cBad.length}${inviteConflict ? ', 초대 두 행 해당 없음인데 역할 ' + s2roleVals.length + '종' : ''}`,
+/* '역할마다 1행'(templates/brief.md §2c 주석) — §2 역할 열의 역할 수만큼 '역할별 랜딩' 행이 있어야 한다(감사 지적: ≥1 만 요구해 역할 3종이 1행으로 통과) */
+const landingRows = s2c.filter((c) => /역할별|랜딩/.test(itemOf(c))).length; const landingShort = s2roleVals.length > 0 && landingRows < s2roleVals.length;
+add('B-16', has('2c') && s2cItem >= 0 && s2cScreen >= 0 && s2c.length >= 10 && fixedMissing.length === 0 && s2cBad.length === 0 && !inviteConflict && !landingShort,
+  `§2c 여정 ${s2c.length}행(≥10), 고정 행 누락 ${fixedMissing.length}, 화면·사유 위반 ${s2cBad.length}${inviteConflict ? ', 초대 두 행 해당 없음인데 역할 ' + s2roleVals.length + '종' : ''}${landingShort ? ', 역할별 랜딩 ' + landingRows + '행 < 역할 ' + s2roleVals.length + '종' : ''}`,
   !has('2c') ? '§2c 없음' : (s2cItem < 0 || s2cScreen < 0) ? '§2c 헤더에 여정 항목/담당 화면 열 없음' : ([...fixedMissing.map((n) => n + ' 행 없음'), ...s2cBad, ...(inviteConflict ? ['초대·초대받은 쪽 둘 다 해당 없음 + §2 역할 ' + s2roleVals.join('/')] : [])].join('; ') || '고정 행 10 전부·화면 # 정합'));
 
 /* B-17 §2d 상태 강조 순위 (+ 행마다 §2c '상태 #n' 대응 행 — templates/brief.md §2d 주석이 B-17 로 지목) */

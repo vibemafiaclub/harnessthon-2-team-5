@@ -18,7 +18,7 @@
  *   H-3  overflow-wrap: anywhere 를 쓰지 않았는가                                (L-13)       [screen·axis]
  *   H-4  tokens.css 밖에 hex·px 리터럴이 없는가 — 예외는 #fff/#ffffff 뿐, #000 은 H-16 (토큰 규율) [screen·axis·page]
  *   H-5  루트 프레임 폭이 전 화면 동일하고 --frame 폭과 같은가 (높이는 내용에 따라 다름) (D-11·D-14·D-34)
- *   H-6  data-state="normal|empty|long" 섹션이 전부 있는가                       (상태 3종)
+ *   H-6  data-state="normal|empty|long|error" 섹션이 전부 있는가 (error 는 data-no-error="true" 선언 시 제외)   (상태 4종, 2-C·2-F 규약 통일)
  *   H-7  고정 높이 + overflow:hidden 이면서 스크롤 컨테이너가 없는가 (경고)        (L-8)
  *   H-8  "Lorem ipsum" / "제목을 입력" 류 자리표시자가 없는가                     (C-5)        [screen·axis·page]
  *   H-9  주 행동(data-role=primary-action)이 하단 고정 바(data-fixed=bottom) 안이거나 above-fold 선언인가 (D-26)
@@ -199,8 +199,9 @@ for (const f of files) {
   const fm = src.match(/data-frame\s*=\s*"(\d+)x(\d+)"/) || src.match(/\.screen\s*\{[^}]*width\s*:\s*(\d+)px[^}]*height\s*:\s*(\d+)px/);
   const fw = fm ? fm[1] : null; frames.set(f, fw);
   add('H-5', f, fw === String(FRW) ? 'PASS' : 'FAIL', fw ? `프레임 폭 ${fw} (기대 ${FRW}; 높이 ${fm[2]} 는 내용에 따라 자유)` : '루트 프레임 규격 미표기 — data-frame="WxH" 또는 .screen{width;height} 필요', 'data-frame="WxH" | .screen{width;height}');
-  const states = ['normal', 'empty', 'long'].filter((s) => !new RegExp(`data-state\\s*=\\s*"${s}"`).test(src));
-  if (/^screen_/.test(f)) add('H-6', f, states.length ? 'FAIL' : 'PASS', states.length ? '누락 상태: ' + states.join(', ') : '상태 3종 존재', 'data-state="normal|empty|long"');
+  const need6 = ['normal', 'empty', 'long'].concat(/data-no-error\s*=\s*"true"/.test(src) ? [] : ['error']);
+  const states = need6.filter((s) => !new RegExp(`data-state\\s*=\\s*"${s}"`).test(src));
+  if (/^screen_/.test(f)) add('H-6', f, states.length ? 'FAIL' : 'PASS', states.length ? '누락 상태: ' + states.join(', ') : `상태 ${need6.length}종 존재`, 'data-state="normal|empty|long|error" (error 는 data-no-error="true" 로 제외 가능)');
   const h7 = /overflow\s*:\s*hidden/.test(src) && !/overflow(-y)?\s*:\s*auto|scroll/.test(src);
   add('H-7', f, h7 ? 'WARN' : 'PASS', h7 ? '고정 높이+hidden 인데 스크롤 컨테이너 없음 → 무음 절단 가능' : 'overflow:hidden 없음 또는 스크롤 컨테이너 있음', 'overflow:hidden 有 · overflow:auto|scroll 無');
   if (/^screen_/.test(f)) {

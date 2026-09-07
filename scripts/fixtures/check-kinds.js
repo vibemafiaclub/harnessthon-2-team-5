@@ -13,5 +13,7 @@ for (const f of files) {
   for (const line of t.split('\n')) { if (!/kind/.test(line) || !/(허용 목록|허용 집합|KINDS)/.test(line)) continue; for (const m of line.matchAll(/`([a-z_]{4,})`|(?:^|[·:(\s])([a-z]+_[a-z_]+)(?=[\s·).,])/g)) { const k = m[1] || m[2]; if (!k || ['q12', 'unknown', 'accepted', 'budget60', 'human_calls_max', 'check_brief', 'stage', 'kind'].includes(k) || k.length < 5) continue; if (/^(interview|tokens|draft|figma)$/.test(k)) continue; seen++; if (!KINDS.has(k)) { bad++; console.log(`[NG] ${rel}: 나열형 kind '${k}' — KINDS 에 없음`); } } }
   for (const m of t.matchAll(/kind `([a-z_]+)`/g)) { seen++; const k = m[1]; if (['q12', 'unknown', 'accepted', 'budget60'].includes(k)) continue; /* delegations kind 는 별도 어휘 */ if (!KINDS.has(k)) { bad++; console.log(`[NG] ${rel}: kind \`${k}\` — KINDS 에 없음`); } }
 }
+/* 'kind … N종' 숫자 표기도 정본 크기와 대조(감사 지적: 이름 집합만 보면 '10종' 오기가 통과한다) */
+for (const f of files) { const t = fs.readFileSync(f, 'utf8'); const rel = path.relative(root, f); for (const m of t.matchAll(/(?:허용 목록|허용 집합|kind ∈|kind 는 [^\n]{0,30}?허용 집합)[^\n]{0,14}?(\d{1,2})종/g)) { seen++; if (Number(m[1]) !== KINDS.size) { bad++; console.log(`[NG] ${rel}: 'kind … ${m[1]}종' — 정본 ${KINDS.size}종`); } } }
 console.log(`kinds: 문서 참조 ${seen}건, 정본 ${KINDS.size}종, 불일치 ${bad}`);
 process.exit(bad ? 1 : 0);

@@ -247,7 +247,7 @@ if (!D) {
   for (const [where, text] of segs) for (const h of FW.scanText(text)) p4.push(`${where}:「${h.word}」`);
   const taste = [];
   Q.forEach((q) => { if (FW.TASTE_PATTERN.test(String(q.text || ''))) taste.push(`${q.id}.text`); if (FW.OPEN_DECISION_PATTERN && FW.OPEN_DECISION_PATTERN.test(String(q.text || '')) && !/저는 .+(봅니다|보입니다)/.test(String(q.text || ''))) taste.push(`${q.id}.text:열린 결정 질문(추천 없이 '무엇을/몇 개/어떻게' — §1-10)`); (q.options || []).forEach((o, i) => { if (FW.TASTE_PATTERN.test(String((o && o.scene) || ''))) taste.push(`${q.id}.options[${i}].scene`); }); });
-  add('P-4', p4.length === 0 && taste.length === 0, `금지어 ${p4.length}건 · 취향형 패턴 ${taste.length}건 (텍스트 조각 ${segs.length})`, [...p4, ...taste.map((t) => t + ':취향형')].slice(0, 8).join(', ') || `${FW.FORBIDDEN_WORDS.length}개 단어 0건, TASTE_PATTERN 0건`);
+  add('P-4', p4.length === 0 && taste.length === 0, `금지어 ${p4.length}건 · 취향형 패턴 ${taste.length}건 (텍스트 조각 ${segs.length})`, [...p4, ...taste.map((t) => t + ':취향형')].slice(0, 8).join(', ') || `${(FW.ALL_WORDS || FW.FORBIDDEN_WORDS).length}개 단어 0건, TASTE_PATTERN 0건`);
 
   /* P-5·P-6 축 차이·축 격리 (타일은 축별로, 쌍은 W-n 별로) */
   const groups = [];

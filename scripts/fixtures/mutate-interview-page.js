@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* selftest 보조 — 골든 JSON 에 결함 하나를 심어 템플릿 골격에 주입한 페이지를 만든다.
-   사용: node scripts/fixtures/mutate-interview-page.js <golden.json> <out.html> <mode>   mode: effect(첫 질문 effect 삭제) | press(첫 장면 press 삭제) */
+   사용: node scripts/fixtures/mutate-interview-page.js <golden.json> <out.html> <mode>   mode: effect | press | recommended | verifies | pattern-html | pattern-drop | open-question | taste-recommended | frame | tile-elements | contrast | service-name (구현은 아래 if 목록이 정본) */
 const fs = require('fs');
 const [src, out, mode] = process.argv.slice(2);
 const tpl = fs.readFileSync('templates/interview_page.html', 'utf8');
