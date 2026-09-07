@@ -147,3 +147,54 @@ Screens 전체 인라인 텍스트 0건 확인.
 탭바 규칙이 IA 기준 양방향으로 바뀌자 반대 방향 불일치가 드러났다.
 `prd_analysis` §1 에서 이 화면의 진입 경로는 **"홈 카드 / 일정 카드"** — push 다.
 탭바가 있으면 안 된다. 다음 라운드 수정 대상.
+
+## 2026-09-07 — 02 탭바 제거 + 입력칸 터치 영역 (A검사 지시 2건)
+
+### 02 MeetingDetail 탭바 3개 제거
+
+`prd_analysis` §1 에서 이 화면의 진입 경로는 **"홈 카드 / 일정 카드"** — push 다.
+탭 화면이 아니므로 탭바가 있으면 안 된다. IA 기준 양방향 판정이 도입되자 드러났다.
+제거 전 확인: `Content` 가 y=780 까지라 탭바(780~844)에 가려진 내용은 없었다.
+
+| 노드 | 프레임 |
+|---|---|
+| `54:510` | 02 MeetingDetail / normal |
+| `54:541` | 02 MeetingDetail / deadline |
+| `54:572` | 02 MeetingDetail / confirmed |
+
+→ `frame-spec` **3 → 0**
+
+### 입력칸 10개 세로 패딩 확대 (40 → 48)
+
+`touch-target-min-inferred` warning 25건의 정체는 **입력칸 6 + 체크박스 19** 였다.
+
+입력칸(`field-input` ×6, `search-input` ×1, `name-input` ×3)은 세로 패딩을
+`spacing/2`(8) → `spacing/3`(12) **변수 바인딩 교체**로 올려 높이 48 을 만들었다.
+값 직접 대입을 피해 바인딩이 끊기지 않았다(cornerRadius·fontSize 회귀와 같은 함정).
+
+→ `touch-target-min-inferred` **25 → 19**
+
+### 체크박스 19건은 처리하지 않았다
+
+전부 24×24 다. fix_hint 는 "노드 크기를 키우지 말고 패딩 또는 히트영역을 확장,
+시각 크기는 유지" 인데 **Figma 에는 히트영역 개념이 없다** — 실제 앱 코드의 관심사다.
+24px 체크박스를 44px 로 키우면 디자인이 망가지므로 그 처방도 쓸 수 없다.
+규칙의 적용 범위 문제로 보고 보류했다.
+
+### 정정
+
+동료 지시는 "`field-input` 은 컴포넌트라 마스터 한 곳 수정으로 전 인스턴스 해소" 였으나,
+실측 결과 **컴포넌트가 아니라 생 FRAME 6개**였다(`isInstance: false`). 개별 처리했다.
+
+### A검사 결과 (재실행)
+
+| 규칙 | 전 | 후 |
+|---|---|---|
+| `frame-spec` | 3 | **0** |
+| `touch-target-min-inferred` | 25 | **19** (체크박스만) |
+| `type-style-reuse` | 0 | 0 |
+| `no-primitive-binding` | 0 | 0 |
+| `content-not-cut` | 0 | 0 |
+| `primary-action-visible` | 24 | 24 (명명 규약 미도입 — 소급 안 함) |
+
+blocker 27 → **24**, warning 25 → **19**. 24장 전건 재캡처, CR-3 PASS.
