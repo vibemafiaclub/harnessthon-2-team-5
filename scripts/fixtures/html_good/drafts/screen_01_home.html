@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><title>홈</title><link rel="stylesheet" href="tokens.css">
+<style>
+.screen{width:390px;word-break:keep-all;overflow-wrap:break-word;color:var(--color-semantic-text-primary);background:var(--color-semantic-surface-default)}
+.title{font-size:calc(var(--typography-scale-heading-1-size)*1px);font-weight:700}
+.body{font-size:calc(var(--typography-scale-body-size)*1px)}
+.fixed{position:sticky;bottom:0}
+.list{overflow-y:auto}
+</style></head>
+<body>
+<section data-state="normal" class="screen" data-frame="390x844">
+  <h1 class="title" data-role="top-info">오늘 남은 복약 2건</h1>
+  <p class="body">콩이 · 심장약 아침 8시 <span aria-hidden="true">💊</span></p>
+  <div data-fold></div>
+  <div data-fixed="bottom" class="fixed"><button data-role="primary-action">먹였어요</button></div>
+</section>
+<section data-state="empty" class="screen" data-frame="390x844"><p class="body">아직 등록된 약이 없어요. 첫 반려동물을 등록해 보세요.</p></section>
+<section data-state="long" class="screen" data-frame="390x844"><p class="body">아주 긴 약 이름과 용법 안내 아주 긴 약 이름과 용법 안내</p></section>
+<section data-state="error" class="screen" data-frame="390x844"><p class="body">저장에 실패했어요. 다시 시도해 주세요.</p></section>
+</body></html>

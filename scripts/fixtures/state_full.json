@@ -1,0 +1,178 @@
+{
+  "$note": "selftest 골든 상태 — templates/state.json(version 2)에 raw_golden.md·brief_golden.md·decisions_golden.md·c_report_good.json·figma_good/ 과 맞춘 값을 채운 것. answered = raw ^A-nn(11)+^R-(5)+^W-n(3), calls[] = raw H-nn 2건과 1:1.",
+  "version": 2,
+  "prd": "docs/prd_petmeds.md",
+  "figma_url": "https://www.figma.com/design/PetMeds01/petmeds",
+  "budget_minutes": 0,
+  "mode": "full",
+  "started_at": "2026-09-07T01:00:00Z",
+  "updated_at": "2026-09-07T11:00:00Z",
+  "next_stage": "done",
+  "stages": {
+    "interview": {
+      "status": "done",
+      "started_at": "2026-09-07T01:00:00Z",
+      "done_at": "2026-09-07T01:30:00Z",
+      "exit_check": "design/verify/exit_stage0.md",
+      "answered": 19
+    },
+    "tokens": {
+      "status": "done",
+      "started_at": "2026-09-07T01:30:00Z",
+      "done_at": "2026-09-07T02:00:00Z",
+      "exit_check": "design/verify/exit_stage1.md"
+    },
+    "draft": {
+      "status": "done",
+      "started_at": "2026-09-07T02:00:00Z",
+      "done_at": "2026-09-07T04:10:00Z",
+      "exit_check": "design/verify/exit_stage2.md",
+      "revision_rounds": 1
+    },
+    "figma": {
+      "status": "done",
+      "started_at": "2026-09-07T04:10:00Z",
+      "done_at": "2026-09-07T11:00:00Z",
+      "exit_check": "design/verify/exit_stage3.md",
+      "c_rounds": 1,
+      "c_fail_reasons": []
+    }
+  },
+  "human_gates": {
+    "_note": "사람이 실제로 한 것만 기록한다. calls[] = 사용자를 부른 원장, 항목 {stage, kind, ts} — kind 는 호출 3분류 중 결정형/취향형(바닥선은 부르지 않는다), interview_raw 의 H-nn [<stage>/<kind>] 와 1:1, 길이 ≤ caps.human_calls_max. delegations[] = 하네스가 대신 정한 원장, 항목 {stage, item, kind, default_taken, ts} — kind 는 unknown(모르겠음→기본값) / q12(Q12 위임) / timeout(ack 시간상한→provisional 진행) / budget60(예산 60% 자동확정). 0-H ack 화면의 '제가 대신 정한 것 N개' 다이제스트가 이 원장과 brief §6 을 읽는다. rule_ack = 0-H 규칙 전량표 ack(fixes[] = 사용자가 바꾸자고 한 RULE 번호). draft_hash·screen_count = 승인 시점 초안의 sha256·화면 수(승인 후 변경 감지). final_ack.exceptions[] = check-c-report 긍정형 FAIL 중 사용자가 예외 승인한 항목, level_ack = 3축 자체 채점(1=AI 가 만든 티 / 3=신입 / 5=시니어)을 고지받고 남긴 원문, final_review.file = design/verify/final_review.md.",
+    "interview_answers": {
+      "count": 11
+    },
+    "stimulus_reactions": {
+      "gallery": 5,
+      "worldcup": 3
+    },
+    "rule_ack": {
+      "acked": true,
+      "at": "2026-09-07T01:25:00Z",
+      "quote": "이 정도면 맞아요",
+      "fixes": []
+    },
+    "calls": [
+      {
+        "stage": "interview",
+        "kind": "interview_page",
+        "ts": "2026-09-07T01:05:00Z"
+      },
+      {
+        "stage": "interview",
+        "kind": "constraint",
+        "ts": "2026-09-07T01:20:00Z"
+      }
+    ],
+    "delegations": [
+      {
+        "stage": "interview",
+        "item": "Q12",
+        "kind": "q12",
+        "default_taken": true,
+        "ts": "2026-09-07T01:15:00Z"
+      }
+    ],
+    "token_set_choice": {
+      "chosen": "SET-A",
+      "ai_pick": "SET-A",
+      "changed_after_reveal": false,
+      "delegated": false
+    },
+    "axis_choice": {
+      "chosen": [
+        "b"
+      ],
+      "ai_pick": [
+        "b"
+      ],
+      "delegated": false
+    },
+    "draft_approval": {
+      "approved": true,
+      "at": "2026-09-07T04:10:00",
+      "quote": "이대로 만들어 주세요",
+      "draft_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "screen_count": 2
+    },
+    "final_ack": {
+      "approved": true,
+      "at": "2026-09-07T11:00:00Z",
+      "quote": "이대로 마무리해요",
+      "exceptions": [
+        {
+          "screen": "01_home",
+          "item": "brand_device",
+          "quote": "장치는 다음에 해도 돼요",
+          "at": "2026-09-07T10:50:00Z"
+        }
+      ],
+      "level_ack": "3점이면 됐어요",
+      "final_review": {
+        "file": "design/verify/final_review.md"
+      }
+    }
+  },
+  "caps": {
+    "_note": "사람 개입 상한(human_*)과 에이전트 산출 상한(agent_*)을 분리한다. 오케스트레이터가 fast 모드면 caps_fast 로 덮어쓴다. 서브 브리프에는 해당 상한을 숫자 문장으로 넣는다. 레퍼런스는 패턴만, 값은 사용자 반응. human_interview_questions_max 는 페이지 항목 수 기준(세트 정본은 interview_prompts.md §6). human_worldcup_rounds_max = always 쌍 4 + 미결 ≤2. human_calls_max = 사람 개입 지점 5곳 + 예외 2. agent_references_* 는 design/references.md 의 REF 행 수·줄 수, agent_reference_patterns_max 는 인터뷰 페이지 kind:pattern 질문 수, agent_flow_steps_max 는 flows[] 한 흐름의 화면 조각 수. agent_brief_lines_max 는 §2c·§2d·§9·plain 신설분을 반영해 올렸다.",
+    "human_interview_questions_max": 12,
+    "human_gallery_tiles_max": 24,
+    "human_worldcup_rounds_max": 6,
+    "human_calls_max": 7,
+    "human_token_sets": 3,
+    "human_open_axes_max": 3,
+    "human_draft_revision_max": 2,
+    "human_c_stage_rounds_max": 3,
+    "human_stage0_minutes_max": 30,
+    "agent_prd_analysis_lines_max": 120,
+    "agent_prd_pushback_max": 10,
+    "agent_prd_open_questions_max": 8,
+    "agent_flow_candidates_max": 2,
+    "agent_scenarios_max": 3,
+    "agent_emotion_keywords_max": 5,
+    "agent_gallery_tile_elements_max": 6,
+    "agent_gallery_html_kb_max": 200,
+    "agent_references_min": 4,
+    "agent_references_max": 10,
+    "agent_references_lines_max": 80,
+    "agent_reference_patterns_max": 6,
+    "agent_flow_steps_max": 4,
+    "agent_rules_min": 8,
+    "agent_rules_max": 20,
+    "agent_brief_lines_max": 320,
+    "agent_design_md_lines_max": 160,
+    "agent_draft_html_lines_max": 400,
+    "agent_report_lines_max": 80
+  },
+  "caps_fast": {
+    "human_interview_questions_max": 10,
+    "human_gallery_tiles_max": 12,
+    "human_worldcup_rounds_max": 6,
+    "human_calls_max": 7,
+    "human_token_sets": 2,
+    "human_open_axes_max": 1,
+    "human_draft_revision_max": 1,
+    "human_c_stage_rounds_max": 1,
+    "human_stage0_minutes_max": 12,
+    "agent_prd_analysis_lines_max": 60,
+    "agent_prd_pushback_max": 4,
+    "agent_prd_open_questions_max": 3,
+    "agent_flow_candidates_max": 1,
+    "agent_scenarios_max": 2,
+    "agent_emotion_keywords_max": 3,
+    "agent_gallery_tile_elements_max": 5,
+    "agent_gallery_html_kb_max": 120,
+    "agent_references_min": 3,
+    "agent_references_max": 6,
+    "agent_references_lines_max": 40,
+    "agent_reference_patterns_max": 3,
+    "agent_flow_steps_max": 3,
+    "agent_rules_min": 6,
+    "agent_rules_max": 12,
+    "agent_brief_lines_max": 220,
+    "agent_design_md_lines_max": 100,
+    "agent_draft_html_lines_max": 300,
+    "agent_report_lines_max": 50
+  }
+}

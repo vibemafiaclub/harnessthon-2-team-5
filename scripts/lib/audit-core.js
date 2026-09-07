@@ -1,9 +1,18 @@
 /* audit-core — 판정 핵심. 순수 함수만. Node(require)와 Figma 플러그인 샌드박스(use_figma, 소스 인라인) 양쪽에서 돈다.
-   여기에는 fs/path/process/require 를 쓰지 않는다. 마지막 module.exports 는 Node 에서만 평가된다. */
+   여기에는 fs/path/process/require 를 쓰지 않는다. 마지막 module.exports 는 Node 에서만 평가된다.
+
+   A검사 번호 ↔ check.type (design-figma-build/SKILL.md 3-D 보완 항목):
+     A-9  프레임 규격        → frame_spec              (규칙 frame-spec, make-figma-audit 가 design.md §2 값으로 주입)
+     A-12 텍스트 오버플로    → text_overflow           (규칙 text-not-clipped, guide/core.rules.json)
+     A-13 주 행동 가시성     → primary_action_visible  (규칙 primary-action-visible, 주입)
+     A-14 내용 절단 없음     → within_parent_bounds    (규칙 content-not-cut, 주입)
+   번들 반환의 text_inventory(check-figma F-9 텍스트 일치율)·reactions(A-16 흐름 연결)는 textInventory / reactionEdges 가 만든다. */
 
 var AUDIT_CATALOG = ['contrast_ratio', 'min_size', 'min_font_size', 'image_fill_present', 'text_overflow', 'saturation_max',
-  'color_allowlist', 'color_denylist', 'style_bound', 'multiple_of', 'scale_allowlist', 'reuse_ratio', 'name_pattern', 'variant_states_present'];
-var AUDIT_IMPLEMENTED = ['color_allowlist', 'color_denylist', 'multiple_of', 'scale_allowlist', 'name_pattern', 'min_font_size', 'min_size', 'style_bound', 'variant_states_present'];
+  'color_allowlist', 'color_denylist', 'style_bound', 'multiple_of', 'scale_allowlist', 'reuse_ratio', 'name_pattern', 'variant_states_present',
+  'within_parent_bounds', 'primary_action_visible', 'frame_spec'];
+var AUDIT_IMPLEMENTED = ['color_allowlist', 'color_denylist', 'multiple_of', 'scale_allowlist', 'name_pattern', 'min_font_size', 'min_size', 'style_bound', 'variant_states_present',
+  'text_overflow', 'within_parent_bounds', 'primary_action_visible', 'frame_spec'];
 
 var HEX6 = /^#?[0-9a-fA-F]{6}$/;
 function normHex(v) { if (typeof v !== 'string' || !HEX6.test(v)) return null; return ('#' + v.replace('#', '')).toUpperCase(); }
@@ -34,6 +43,12 @@ function matches(node, sel) {
   if (sel.has_auto_layout === true && !(node.layoutMode && node.layoutMode !== 'NONE')) return false;
   if (sel.has_image_fill === true && !(node.fills || []).some(function (f) { return f.type === 'IMAGE'; })) return false;
   if (sel.exclude_instance_children === true && node._inInstance) return false;
+  /* 루트(페이지 직계 = 화면 프레임) 기준 선택자 — flatten 이 채운 _depth/_root 를 본다.
+     root_only: 루트만 / descendants_only: 루트의 자손만 / root_name_matches·root_node_types: 소속 루트의 이름·타입 */
+  if (sel.root_only === true && (node._depth || 0) !== 0) return false;
+  if (sel.descendants_only === true && !(node._depth > 0)) return false;
+  if (sel.root_name_matches && !new RegExp(sel.root_name_matches).test((node._root && node._root.name) || node.name || '')) return false;
+  if (sel.root_node_types && sel.root_node_types.indexOf((node._root && node._root.type) || node.type) < 0) return false;
   if (sel.interactive_only === true) {
     /* require_reactions: 프로토타입 연결(reactions)이 있는 노드만 — 시안 단계에서 "무엇이 눌리는가"를 기계가 확신할 수 있는 유일한 근거.
        이름 추정만으로는 blocker 로 문을 잠그지 않는다(실측: Row 를 넣으면 Chip 오탐, 빼면 행 안 체크박스 오탐). */
@@ -56,6 +71,7 @@ function nodeColors(node) {
   });
   return out;
 }
+function visibleDescendants(node) { return (node._descendants || []).filter(function (d) { return d.visible !== false && !d._hidden; }); }
 var CHECKS = {
   color_allowlist: function (node, check) {
     var allowed = collectHex(check.allowed); if (!Object.keys(allowed).length) return [];
@@ -110,25 +126,110 @@ var CHECKS = {
     var w = Number(check.width || 0), h = Number(check.height || 0);
     return (node.width < w || node.height < h) ? [{ property: 'size', expected: w + 'x' + h, actual: Math.round(node.width) + 'x' + Math.round(node.height) }] : [];
   },
+  /* A-12 텍스트 오버플로 — 도메인 최장 문자열을 넣은 `/ long` 프레임(check.frame_matches, 기본 /\/\s*long\s*$/)의 TEXT 가
+     고정 크기(textAutoResize NONE)거나 말줄임(textTruncation ENDING, 구 API 의 TRUNCATE)이면 실데이터에서 잘린다. 다른 프레임의 TEXT 는 대상 아님.
+     frame_matches 를 '' 로 주면 모든 프레임에 적용. */
+  text_overflow: function (node, check) {
+    if (node.type !== 'TEXT') return [];
+    var fm = (check.frame_matches === undefined || check.frame_matches === null) ? '\\/\\s*long\\s*$' : check.frame_matches;
+    var rootName = (node._root && node._root.name) || node.name || '';
+    if (fm && !new RegExp(fm).test(rootName)) return [];
+    var out = [];
+    if (node.textAutoResize === 'NONE') out.push({ property: 'textAutoResize', expected: 'HEIGHT 또는 WIDTH_AND_HEIGHT (내용만큼 늘어남)', actual: 'NONE (고정 크기 — 긴 문자열이 잘림)' });
+    if (node.textAutoResize === 'TRUNCATE' || node.textTruncation === 'ENDING') out.push({ property: 'textTruncation', expected: 'DISABLED', actual: 'ENDING (말줄임 — 긴 문자열이 …로 사라짐)' });
+    return out;
+  },
+  /* A-14 내용 절단 없음 — 루트 화면 프레임 기준 상대 좌표(flatten 이 조상 x/y 를 누적)로 자식의 y+height 가 프레임 높이 안에 있는가.
+     clipsContent 와 무관하게 센다: clip 이면 잘려 숨고, 아니면 프레임 밖으로 튀어나온다 — 둘 다 결함(D-26·D-34). 처방은 프레임을 늘리는 것.
+     check.axis 'xy' 면 x+width 도 본다(기본 'y' — 가로 스크롤 캐러셀 오탐 방지). 좌표가 직렬화되지 않은 덤프(구 extract-nodes)는 판정하지 않는다. */
+  within_parent_bounds: function (node, check) {
+    var root = node._root; if (!root || root === node || (node._depth || 0) === 0) return [];
+    if (typeof node.width !== 'number' || typeof node.height !== 'number' || typeof node._relX !== 'number' || typeof node._relY !== 'number') return [];
+    if (typeof root.height !== 'number') return [];
+    var tol = typeof check.tolerance === 'number' ? check.tolerance : 1;
+    var out = [];
+    var bottom = node._relY + node.height, right = node._relX + node.width;
+    if (node._relY < -tol || bottom > root.height + tol) out.push({ property: 'y+height', expected: '0 ≤ y, y+height ≤ ' + Math.round(root.height) + ' (' + (root.name || '루트') + ' 높이)', actual: 'y=' + Math.round(node._relY) + ', y+height=' + Math.round(bottom) });
+    if (check.axis === 'xy' && typeof root.width === 'number' && (node._relX < -tol || right > root.width + tol)) out.push({ property: 'x+width', expected: '0 ≤ x, x+width ≤ ' + Math.round(root.width), actual: 'x=' + Math.round(node._relX) + ', x+width=' + Math.round(right) });
+    return out;
+  },
+  /* A-13 주 행동 가시성 — 루트 화면 프레임마다 `Action/Primary`(check.name) 가 정확히 1개이고, 그 노드가 첫 화면(y+height ≤ check.fold, 기본 844) 안에 있거나
+     조상에 `Bar/Action`(check.bar, 하단 고정 바) 이 있다. 주 행동이 없는 화면은 description·이름·자식 이름에 no-primary(check.no_primary_marker) 를 적어 제외한다(D-26). */
+  primary_action_visible: function (node, check) {
+    if ((node._depth || 0) !== 0) return [];
+    var nameRe = new RegExp(check.name || '^Action\\/Primary$');
+    var barRe = new RegExp(check.bar || '^Bar\\/Action');
+    var fold = Number(check.fold) || 844;
+    var marker = check.no_primary_marker || 'no-primary';
+    var desc = visibleDescendants(node);
+    var prim = desc.filter(function (d) { return nameRe.test(d.name || ''); });
+    if (prim.length === 0) {
+      var optOut = [node.description || '', node.name || ''].join(' ').indexOf(marker) >= 0 || desc.some(function (d) { return (d.name || '').indexOf(marker) >= 0; });
+      return optOut ? [] : [{ property: 'Action/Primary', expected: '정확히 1개 (주 행동 없는 화면은 description 에 ' + marker + ')', actual: '0개' }];
+    }
+    if (prim.length > 1) return [{ property: 'Action/Primary', expected: '정확히 1개', actual: prim.length + '개: ' + prim.map(function (p) { return p.id || p.name; }).join(', ') }];
+    var p = prim[0];
+    if ((p._ancestorNames || []).some(function (nm) { return barRe.test(nm); })) return [];
+    if (typeof p._relY !== 'number' || typeof p.height !== 'number') return [{ property: 'Action/Primary 위치', expected: 'y+height ≤ ' + fold + ' 또는 조상 Bar/Action', actual: '좌표 없음 — x/y 가 직렬화되지 않은 덤프(번들을 다시 생성)' }];
+    var bottom = p._relY + p.height;
+    if (bottom <= fold + 0.5) return [];
+    var cut = typeof node.height === 'number' && bottom > node.height + 0.5;
+    return [{ property: 'Action/Primary 위치', expected: 'y+height ≤ ' + fold + ' 또는 조상 Bar/Action', actual: 'y+height=' + Math.round(bottom) + (cut ? ' (프레임 밖으로 잘림)' : ' (첫 화면 아래 — 스크롤해야 보임)') }];
+  },
+  /* A-9 프레임 규격 — 루트 화면 프레임의 폭 == check.width(design.md §2), 높이 ≥ check.min_height(내용에 맞춰 늘어남, hug 허용),
+     required_children 각 패턴(상태바·탭바 이름)에 맞는 보이는 자손 ≥1. 값은 make-figma-audit 가 design.md §2 에서 읽어 넣는다. */
+  frame_spec: function (node, check) {
+    if ((node._depth || 0) !== 0) return [];
+    var out = [];
+    var w = Number(check.width) || 0, minH = Number(check.min_height) || 0;
+    if (w && typeof node.width === 'number' && Math.abs(node.width - w) > 0.5) out.push({ property: 'width', expected: w, actual: Math.round(node.width) });
+    if (minH && typeof node.height === 'number' && node.height < minH - 0.5) out.push({ property: 'height', expected: '≥' + minH + ' (내용에 맞춰 늘림)', actual: Math.round(node.height) });
+    var desc = visibleDescendants(node);
+    (check.required_children || []).forEach(function (pat) {
+      var re = new RegExp(pat);
+      if (!desc.some(function (d) { return re.test(d.name || ''); })) out.push({ property: 'children', expected: '이름이 /' + pat + '/ 인 보이는 자손 ≥1', actual: '없음' });
+    });
+    return out;
+  },
 };
+/* 트리 → 평면 배열. 각 노드에 판정용 컨텍스트를 붙인다:
+   _parent·_ancestorInteractive·_inInstance·_parentSemantic(기존) / _depth(루트 0) / _root(소속 루트 객체) / _relX·_relY(루트 기준 상대 좌표, 조상 x/y 누적 — 좌표 없는 조상이 있으면 null)
+   / _ancestorNames(루트부터 부모까지 이름) / _hidden(숨은 조상 아래) / _descendants(루트에만: 자손 전부).
+   SECTION 은 정리용 컨테이너 — 그 자식(화면 프레임)을 루트로 본다(_depth -1 로 표시). */
 function flatten(nodes) {
   var out = [];
-  var walk = function (n, parent, ancInter, inInst, parentSemantic) {
+  var walk = function (n, ctx) {
     if (!n || typeof n !== 'object') return;
     var c = {}; for (var k in n) if (k !== 'children') c[k] = n[k];
     if (n.type === 'COMPONENT_SET' && !n.variantValues && n.children) c.variantValues = n.children.reduce(function (acc, ch) { var vp = ch.variantProperties || {}; for (var q in vp) acc.push(vp[q]); return acc; }, []);
-    c._parent = parent; c._ancestorInteractive = ancInter; c._inInstance = inInst || (typeof n.id === 'string' && n.id.indexOf(';') >= 0); c._parentSemantic = parentSemantic;
+    c._parent = ctx.parentName; c._ancestorInteractive = ctx.ancInter; c._inInstance = ctx.inInst || (typeof n.id === 'string' && n.id.indexOf(';') >= 0); c._parentSemantic = ctx.parentSemantic;
+    c._depth = ctx.depth; c._hidden = ctx.hidden; c._ancestorNames = ctx.ancestorNames;
+    var hasXY = typeof n.x === 'number' && typeof n.y === 'number';
+    if (ctx.depth === 0) { c._relX = 0; c._relY = 0; c._root = c; c._descendants = []; }
+    else { c._relX = (ctx.relX === null || !hasXY) ? null : ctx.relX + n.x; c._relY = (ctx.relY === null || !hasXY) ? null : ctx.relY + n.y; c._root = ctx.root; ctx.root._descendants.push(c); }
     out.push(c);
     var semantic = !!(n.name && !AUTO_NAMES.test(n.name) && !/^(Frame|Group)\s*\d*$/.test(n.name));
-    (n.children || []).forEach(function (ch) { walk(ch, n.name, ancInter || isInteractive(n), c._inInstance, semantic); });
+    var childCtx = { parentName: n.name, ancInter: ctx.ancInter || isInteractive(n), inInst: c._inInstance, parentSemantic: semantic, depth: ctx.depth + 1,
+      hidden: ctx.hidden || n.visible === false, relX: c._relX, relY: c._relY, ancestorNames: ctx.ancestorNames.concat([n.name || '']), root: c._root };
+    (n.children || []).forEach(function (ch) { walk(ch, childCtx); });
   };
-  (Array.isArray(nodes) ? nodes : [nodes]).forEach(function (n) { walk(n, null, false, false, false); });
+  var rootCtx = function () { return { parentName: null, ancInter: false, inInst: false, parentSemantic: false, depth: 0, hidden: false, relX: 0, relY: 0, ancestorNames: [], root: null }; };
+  (Array.isArray(nodes) ? nodes : [nodes]).forEach(function (n) {
+    if (n && n.type === 'SECTION') {
+      var s = {}; for (var k in n) if (k !== 'children') s[k] = n[k];
+      s._depth = -1; s._section = true; s._ancestorNames = []; s._hidden = false; out.push(s);
+      (n.children || []).forEach(function (ch) { walk(ch, rootCtx()); });
+      return;
+    }
+    walk(n, rootCtx());
+  });
   return out;
 }
 /* rules: compile 이 $tokens 를 이미 해석한 규칙 배열. perRuleCap: 규칙당 기록할 위반 수 상한(반환량 제어). */
 function audit(opts) {
   var rules = opts.rules, stage = opts.stage, nodes = opts.nodes, target = opts.target, cap = opts.perRuleCap || 0;
-  var flat = flatten(nodes).filter(function (n) { return n.visible !== false; });
+  /* 숨은 노드와 숨은 조상 아래의 노드는 렌더되지 않으므로 판정하지 않는다 */
+  var flat = flatten(nodes).filter(function (n) { return n.visible !== false && !n._hidden; });
   var violations = [], unchecked = [], summary = { blocker: 0, warning: 0, skipped_out_of_stage: 0, skipped_unimplemented: 0 }, perRule = {}, applicable = {};
   rules.forEach(function (rule) {
     if ((rule.stage || []).indexOf(stage) < 0) { summary.skipped_out_of_stage++; return; }
@@ -164,10 +265,25 @@ function paintsOf(list) {
   if (!list || typeof list.map !== 'function') return [];
   return list.map(function (p) { return { type: p.type, visible: p.visible !== false, opacity: p.opacity, hex: p.hex ? normHex(p.hex) : ((p.type === 'SOLID' && p.color) ? rgbToHex(p.color) : undefined), hasImage: p.type === 'IMAGE' ? !!p.imageHash : undefined }; });
 }
+/* reactions → 목적지 노드 id 목록(중복 제거, ≤8). 신 API 의 actions[] 와 구 API 의 action 둘 다 읽는다. NODE 이동만 센다(오버레이 열기·뒤로가기는 제외). */
+function reactionTargetsOf(list) {
+  if (!list || typeof list.length !== 'number' || !list.length) return undefined;
+  var ids = [];
+  for (var i = 0; i < list.length; i++) {
+    var r = list[i]; if (!r) continue;
+    var acts = (r.actions && typeof r.actions.length === 'number') ? r.actions : (r.action ? [r.action] : []);
+    for (var j = 0; j < acts.length; j++) { var a = acts[j]; if (a && a.type === 'NODE' && a.destinationId && ids.indexOf(a.destinationId) < 0) ids.push(a.destinationId); }
+  }
+  return ids.length ? ids.slice(0, 8) : undefined;
+}
 function serializeNode(node, mixed) {
   var has = function (k) { return k in node; };
   var o = { id: node.id, name: node.name, type: node.type, visible: has('visible') ? node.visible !== false : true,
+    /* x/y 는 부모 기준 상대 좌표(Figma 규약). flatten 이 루트 기준으로 누적한다 — A-13·A-14 의 근거. */
+    x: has('x') && typeof node.x === 'number' ? node.x : undefined, y: has('y') && typeof node.y === 'number' ? node.y : undefined,
     width: has('width') ? node.width : undefined, height: has('height') ? node.height : undefined,
+    clipsContent: has('clipsContent') ? node.clipsContent === true : undefined,
+    description: has('description') && typeof node.description === 'string' && node.description ? node.description.slice(0, 80) : undefined,
     fills: has('fills') && node.fills !== mixed ? paintsOf(node.fills) : [], strokes: has('strokes') && node.strokes !== mixed ? paintsOf(node.strokes) : [],
     fillStyleId: has('fillStyleId') && node.fillStyleId !== mixed ? node.fillStyleId : undefined,
     textStyleId: has('textStyleId') ? (node.textStyleId === mixed ? 'mixed' : node.textStyleId) : undefined,
@@ -176,11 +292,15 @@ function serializeNode(node, mixed) {
     paddingTop: has('paddingTop') ? node.paddingTop : undefined, paddingRight: has('paddingRight') ? node.paddingRight : undefined,
     paddingBottom: has('paddingBottom') ? node.paddingBottom : undefined, paddingLeft: has('paddingLeft') ? node.paddingLeft : undefined,
     cornerRadius: has('cornerRadius') && node.cornerRadius !== mixed ? node.cornerRadius : undefined,
+    /* characters 는 TEXT 만, 40자까지 — text_inventory(F-9 텍스트 일치율)의 재료. 20KB 반환 상한 때문에 전문을 싣지 않는다. */
+    characters: node.type === 'TEXT' && typeof node.characters === 'string' ? node.characters.slice(0, 40) : undefined,
     fontSize: node.type === 'TEXT' && node.fontSize !== mixed ? node.fontSize : undefined,
     textAutoResize: node.type === 'TEXT' ? node.textAutoResize : undefined,
+    textTruncation: node.type === 'TEXT' && has('textTruncation') ? node.textTruncation : undefined,
     isInstance: node.type === 'INSTANCE', variantProperties: node.variantProperties || undefined,
     variantValues: (node.type === 'COMPONENT_SET' && node.children) ? Array.prototype.reduce.call(node.children, function (acc, ch) { var vp = ch.variantProperties || {}; for (var k in vp) acc.push(vp[k]); return acc; }, []) : undefined,
     reactions: (node.reactions && node.reactions.length) ? node.reactions.length : undefined,
+    reactionTargets: has('reactions') ? reactionTargetsOf(node.reactions) : undefined,
     interactive: !!(node.reactions && node.reactions.length) };
   for (var k in o) if (o[k] === undefined) delete o[k];
   return o;
@@ -192,6 +312,55 @@ function dumpTree(root, mixed, maxNodes, counter) {
   if ('children' in root && root.children && root.children.length) o.children = root.children.map(function (c) { return dumpTree(c, mixed, maxNodes, counter); });
   return o;
 }
+/* 텍스트 재고 — 루트(화면 프레임)별로 보이는 TEXT 의 characters 를 트리 순서로(공백 정규화·중복 제거·각 maxChars 자·프레임당 perFrame 개).
+   total 은 중복 제거 후 전체 수라 texts.length < total 이면 잘린 것. SECTION 은 그 자식을 루트로 편다. check-figma F-9 가 초안 HTML 의 텍스트 집합과 일치율을 센다. */
+function textInventory(tree, opts) {
+  opts = opts || {}; var perFrame = opts.perFrame || 60, maxChars = opts.maxChars || 40;
+  var roots = []; (Array.isArray(tree) ? tree : [tree]).forEach(function (n) { if (n && n.type === 'SECTION') (n.children || []).forEach(function (c) { roots.push(c); }); else if (n) roots.push(n); });
+  return roots.map(function (root) {
+    var texts = [], seen = {}, total = 0;
+    var walk = function (n) {
+      if (!n || n.visible === false) return;
+      if (n.type === 'TEXT' && typeof n.characters === 'string') {
+        var t = n.characters.replace(/\s+/g, ' ').trim().slice(0, maxChars);
+        if (t && !seen[t]) { seen[t] = true; total++; if (texts.length < perFrame) texts.push(t); }
+      }
+      (n.children || []).forEach(walk);
+    };
+    walk(root);
+    return { frame: root.name || '(unnamed)', id: root.id || null, texts: texts, total: total };
+  });
+}
+/* 프로토타입 연결 — 노드의 reactionTargets(목적지 노드 id)를 루트(화면 프레임) 단위 간선 {from_frame, to_frame} 으로(중복 제거, ≤max).
+   목적지가 이 트리 밖(다른 페이지·삭제된 노드)이면 to_frame null + to_id. check-figma A-16 이 brief §2 진입 경로와 대조한다. */
+function reactionEdges(tree, opts) {
+  opts = opts || {}; var max = opts.max || 120;
+  var roots = []; (Array.isArray(tree) ? tree : [tree]).forEach(function (n) { if (n && n.type === 'SECTION') (n.children || []).forEach(function (c) { roots.push(c); }); else if (n) roots.push(n); });
+  var idToRoot = {};
+  roots.forEach(function (root) { var walk = function (n) { if (!n) return; if (n.id) idToRoot[n.id] = root.name || '(unnamed)'; (n.children || []).forEach(walk); }; walk(root); });
+  var edges = [], seen = {};
+  roots.forEach(function (root) {
+    var walk = function (n) {
+      if (!n) return;
+      (n.reactionTargets || []).forEach(function (id) {
+        var to = idToRoot[id] || null; var key = (root.name || '') + '|' + (to || id);
+        if (seen[key] || edges.length >= max) return; seen[key] = true;
+        var e = { from_frame: root.name || '(unnamed)', to_frame: to }; if (!to) e.to_id = id;
+        edges.push(e);
+      });
+      (n.children || []).forEach(walk);
+    };
+    walk(root);
+  });
+  return edges;
+}
+/* JSON 문자열의 UTF-8 바이트 수 — use_figma 반환 상한(약 20KB)에 맞추기 위한 계측. 한글은 3바이트라 length 로는 부족하다. */
+function utf8Len(s) {
+  var n = 0;
+  for (var i = 0; i < s.length; i++) { var c = s.charCodeAt(i); if (c < 0x80) n += 1; else if (c < 0x800) n += 2; else if (c >= 0xD800 && c <= 0xDBFF) { n += 4; i++; } else n += 3; }
+  return n;
+}
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { AUDIT_CATALOG: AUDIT_CATALOG, AUDIT_IMPLEMENTED: AUDIT_IMPLEMENTED, normHex: normHex, rgbToHex: rgbToHex, collectHex: collectHex, matches: matches, CHECKS: CHECKS, flatten: flatten, audit: audit, serializeNode: serializeNode, dumpTree: dumpTree, paintsOf: paintsOf };
+  module.exports = { AUDIT_CATALOG: AUDIT_CATALOG, AUDIT_IMPLEMENTED: AUDIT_IMPLEMENTED, normHex: normHex, rgbToHex: rgbToHex, collectHex: collectHex, matches: matches, CHECKS: CHECKS, flatten: flatten, audit: audit,
+    serializeNode: serializeNode, dumpTree: dumpTree, paintsOf: paintsOf, reactionTargetsOf: reactionTargetsOf, textInventory: textInventory, reactionEdges: reactionEdges, utf8Len: utf8Len };
 }

@@ -1,0 +1,133 @@
+{
+ "screens": [
+  {
+   "id": "01_home",
+   "purpose": "빠른 처리형",
+   "ran": true,
+   "screenshots": 3,
+   "states": [
+    "normal",
+    "empty",
+    "long"
+   ],
+   "checks": [
+    {
+     "id": "C-2",
+     "verdict": "pass"
+    },
+    {
+     "id": "C-6",
+     "verdict": "pass"
+    },
+    {
+     "id": "SLOP-SWEEP",
+     "verdict": "pass",
+     "elements": [],
+     "evidence": "AI 티 나는 요소 없음 — 카드 라운딩·그림자 상이"
+    }
+   ],
+   "positive": {
+    "unique_element": true,
+    "dominant_number": true,
+    "form_differs_by_kind": true,
+    "surface_layers": true,
+    "brand_device": false,
+    "visual_elements_justified": true,
+    "looks_professional": true
+   },
+   "tasks": [
+    {
+     "id": "T-1",
+     "role": "R-1",
+     "result": "찾음",
+     "first_click": "약 등록"
+    },
+    {
+     "id": "T-2",
+     "role": "R-1",
+     "result": "헤맴",
+     "first_click": "카드"
+    }
+   ],
+   "score": {
+    "ui": 3,
+    "ux": 3,
+    "fit": 3
+   },
+   "top_info": {
+    "declared": "오늘 남은 복약 건수",
+    "blind_first": "오늘 남은 복약 건수",
+    "match": true,
+    "diagnosis": ""
+   },
+   "fidelity": {
+    "elements_match": true,
+    "primary_position_match": true
+   }
+  },
+  {
+   "id": "02_confirm",
+   "purpose": "빠른 처리형",
+   "ran": true,
+   "screenshots": 4,
+   "states": [
+    "normal",
+    "empty",
+    "long",
+    "error"
+   ],
+   "checks": [
+    {
+     "id": "C-2",
+     "verdict": "pass"
+    },
+    {
+     "id": "C-6",
+     "verdict": "pass"
+    },
+    {
+     "id": "SLOP-SWEEP",
+     "verdict": "pass",
+     "elements": [],
+     "evidence": "AI 티 나는 요소 없음 — 카드 라운딩·그림자 상이"
+    }
+   ],
+   "positive": {
+    "unique_element": false,
+    "dominant_number": true,
+    "form_differs_by_kind": true,
+    "surface_layers": true,
+    "brand_device": true,
+    "visual_elements_justified": true,
+    "looks_professional": true
+   },
+   "tasks": [
+    {
+     "id": "T-3",
+     "role": "R-2",
+     "result": "찾음",
+     "first_click": "먹였어요"
+    }
+   ],
+   "score": {
+    "ui": 2,
+    "ux": 3,
+    "fit": 3
+   },
+   "top_info": {
+    "declared": "지금 먹여야 할 약",
+    "blind_first": "지금 먹여야 할 약",
+    "match": true,
+    "diagnosis": ""
+   },
+   "fidelity": {
+    "elements_match": true,
+    "primary_position_match": true
+   }
+  }
+ ],
+ "diagnosis": "local",
+ "routing": "",
+ "retry_count": 1,
+ "escalate_to_human": false
+}

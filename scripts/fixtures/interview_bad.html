@@ -1,0 +1,578 @@
+<!--
+  0단계 인터뷰 페이지 골격. design-maker 가 <script id="harness-data"> 의 JSON 만 채워 design/stimuli/interview.html 로 낸다.
+  메인이 artifact-capabilities 스킬을 로드한 뒤 capabilities: {db: {}} 로 발행하고, 끝나면 read_db(collection "answers") 로 회수한다.
+  이 파일의 마크업·스크립트는 고치지 않는다(D-6 함정: db 읽기 실패와 연결 실패를 분리, 에러 코드 노출). 검사기 P-1 이 HEAD 골격과 바이트 대조한다.
+  db 가 없으면(미발행·오프라인) localStorage 에 저장하고 "답변 내보내기" 로 JSON 을 복사해 채팅에 붙이게 한다.
+
+  harness-data 스키마 (check-interview-page.js 가 검사한다):
+  - questions[]  필수: id·text·options[]({value, scene ≥8자})·free:true·unknown:true·skeleton("Q1"…, interview_prompts §6 정본)·payload(§6 payload 열 — 같은 payload 두 질문이면 FAIL)
+      kind: question(기본) | pushback(PRD 반박 — options 정확히 3개 + recommended(options.value 중 하나) + why, 결정형이라 추천을 먼저 보인다)
+            | pattern(레퍼런스 UX 패턴 — options ≥2, 장면 = 실제 서비스가 같은 과업을 푸는 방식, 서비스명 숨김)
+  - tiles[]      id·axis·variant·html — 한 타일은 축 하나만 바꾼다(다른 속성은 같은 축의 타일끼리 동일)
+  - pairs[]      axis·left·right, 선택 always:true — 갤러리 결과와 무관하게 항상 노출하는 재검증 쌍(진술형 질문이 없는 축)
+  - flows[]      선택. {id:"FL-1", question, narrative, steps:[{label, html}], free:true, unknown:true} — 시나리오 아래 실제 화면 조각을 순서대로. steps ≤ agent_flow_steps_max, html 에 자리표시자 0
+  고정 힌트 2문장(intro 아래 / 갤러리 배너 앞)은 마크업에 있으므로 intro·banner 에 되풀이하지 않는다.
+  회수 레코드: question/pushback/pattern → {id, kind, skeleton, payload, recommended, question, value, unknown, free} / tile → verdict·reason / pair → choice·chosen_id / flow → step_id(Sn|ok)·step_label·free.
+-->
+<title>디자인 인터뷰</title>
+<style>
+  :root{--bg:#F6F8F5;--surface:#fff;--ink:#1C2228;--ink-2:#5A6470;--line:#D9DFD9;--accent:#0F6E63;--accent-soft:#DCEFEA;--human:#B7791F;--human-soft:#FBF0DA;--bad:#B4402E;--bad-soft:#F8E6E2;--good:#2C6E52}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#151A1C;--surface:#1D2326;--ink:#E8ECE9;--ink-2:#A3ACB0;--line:#2E373B;--accent:#5FC4B4;--accent-soft:#1A3532;--human:#E2B25A;--human-soft:#3A2E15;--bad:#E07A66;--bad-soft:#3A1F1A;--good:#6CC39A}}
+  :root[data-theme="dark"]{--bg:#151A1C;--surface:#1D2326;--ink:#E8ECE9;--ink-2:#A3ACB0;--line:#2E373B;--accent:#5FC4B4;--accent-soft:#1A3532;--human:#E2B25A;--human-soft:#3A2E15;--bad:#E07A66;--bad-soft:#3A1F1A;--good:#6CC39A}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Apple SD Gothic Neo","Pretendard","Malgun Gothic",system-ui,sans-serif;font-size:16px;line-height:1.6;word-break:keep-all;overflow-wrap:break-word}
+  main{max-width:760px;margin:0 auto;padding:28px 18px 120px}
+  h1{font-size:24px;margin:0 0 6px}
+  .sub{color:var(--ink-2);margin:0 0 18px}
+  .bar{position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:5;border-bottom:1px solid var(--line);margin-bottom:18px}
+  .steps{display:flex;gap:6px;font-size:13px}
+  .steps span{flex:1;text-align:center;padding:6px 4px;border-radius:6px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2)}
+  .steps span.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .steps span.done{background:var(--accent-soft);color:var(--accent)}
+  .prog{height:6px;background:var(--line);border-radius:3px;margin-top:8px;overflow:hidden}.prog i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+  .status{font-size:12.5px;color:var(--ink-2);margin-top:6px;display:flex;justify-content:space-between;gap:12px}
+  .status .err{color:var(--bad)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin:0 0 14px}
+  .q{font-size:17px;font-weight:600;margin:0 0 10px}
+  .hint{font-size:13.5px;color:var(--ink-2);margin:-4px 0 10px}
+  .opts{display:grid;gap:8px;margin-bottom:10px}
+  button.opt{text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer;min-height:44px}
+  button.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+  button.opt.unk{color:var(--ink-2);border-style:dashed}
+  button.opt.unk.sel{border-color:var(--human);background:var(--human-soft);color:var(--ink)}
+  .rec{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--human-soft);color:var(--human);font-size:12px;font-weight:600;vertical-align:middle}
+  textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;background:var(--surface);color:var(--ink)}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .saved{font-size:12.5px;color:var(--good)}.saved.err{color:var(--bad)}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .tile .id{font-weight:600;font-size:13px;margin-bottom:6px}
+  .tile .stim{border:1px solid var(--line);border-radius:6px;overflow:hidden;min-height:120px;background:#fff;color:#111}
+  .verd{display:flex;gap:6px;margin:8px 0 6px}
+  .verd button{flex:1;min-height:40px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}
+  .verd button.sel{border-color:var(--accent);background:var(--accent-soft)}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:520px){.pair{grid-template-columns:1fr}}
+  .pair .stim{border:1px solid var(--line);border-radius:6px;overflow:hidden;min-height:140px;background:#fff;color:#111;cursor:pointer}
+  .pair .stim.sel{outline:3px solid var(--accent)}
+  .narr{margin:0 0 10px}
+  .flow{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px}
+  .flow .fstep{flex:0 0 200px;cursor:pointer}
+  .fstep .lab{font-size:13px;color:var(--ink-2);margin-bottom:4px}
+  .fstep .stim{border:1px solid var(--line);border-radius:6px;overflow:hidden;min-height:140px;background:#fff;color:#111}
+  .fstep.sel .stim{outline:3px solid var(--accent)}
+  .fstep .mark{display:none;font-size:12.5px;color:var(--accent);font-weight:600;margin-top:4px}.fstep.sel .mark{display:block}
+  .banner{background:var(--human-soft);border-left:3px solid var(--human);padding:8px 12px;border-radius:0 6px 6px 0;margin:0 0 14px;font-size:14px}
+  .nav{display:flex;justify-content:space-between;gap:10px;margin-top:18px}
+  .btn{padding:12px 18px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;font:inherit;cursor:pointer;min-height:44px}
+  .btn.ghost{background:transparent;color:var(--accent)}
+  .btn[disabled]{opacity:.5;cursor:default}
+  .fallback{display:none;margin-top:14px}.fallback.show{display:block}
+  .done{text-align:center;padding:30px 0}
+  [hidden]{display:none!important}
+</style>
+
+<script id="harness-data" type="application/json">
+{
+  "title": "반려동물 복약 알림 · 디자인 인터뷰",
+  "intro": "반려동물 약 먹이는 시간을 챙기는 앱을 만들기 전에, 실제로 쓸 때를 떠올려 몇 가지만 여쭙습니다. 10분이면 됩니다. 레이아웃도 봐 주세요.",
+  "banner": "글자 내용(뜻)이 아니라 보이는 것만 평가해 주세요.",
+  "questions": [
+    {
+      "id": "Q-01",
+      "skeleton": "Q1",
+      "payload": "mood_axis",
+      "text": "이 앱을 주로 언제, 어디서 쓰게 될까요?",
+      "options": [
+        {
+          "value": "이동 중 잠깐",
+          "scene": "산책 나가기 전에 현관에서 한 손으로 잠깐 열어 확인하고 닫아요"
+        },
+        {
+          "value": "앉아서 오래",
+          "scene": "저녁에 앉아서 약 봉투 여러 개를 펼쳐 놓고 뭘 언제 먹였는지 정리해요"
+        }
+      ],
+      "free": true,
+      "unknown": true
+    },
+    {
+      "id": "Q-05",
+      "skeleton": "Q5",
+      "payload": "state_priority",
+      "text": "여기서 뭔가 빠뜨리거나 잘못되면 뭐가 제일 곤란할까요?",
+      "options": [
+        {
+          "value": "두 번 먹임",
+          "scene": "아침에 먹였는지 기억이 안 나서 한 번 더 먹일 뻔해요"
+        },
+        {
+          "value": "놓침",
+          "scene": "저녁 약을 잊고 있다가 다음 날 아침에야 알아차려요"
+        }
+      ],
+      "free": true,
+      "unknown": true
+    },
+    {
+      "id": "Q-02",
+      "skeleton": "Q2",
+      "payload": "top_info",
+      "text": "홈을 열었을 때 딱 하나만 보인다면 무엇이어야 할까요?",
+      "options": [
+        {
+          "value": "오늘 남은 약 수",
+          "scene": "오늘 아직 안 먹인 약이 2개라고 맨 위에 크게 보여요"
+        },
+        {
+          "value": "다음 복용 시각",
+          "scene": "다음 약 시각 오후 6시가 맨 위에 크게 보여요"
+        }
+      ],
+      "free": true,
+      "unknown": true
+    },
+    {
+      "id": "Q-04a",
+      "kind": "pattern",
+      "skeleton": "Q4'",
+      "payload": "pattern",
+      "text": "처음 앱을 열어 약을 등록할 때, 다른 서비스들은 보통 이렇게 시작합니다. 실제로 쓸 때 어느 쪽이 편할까요?",
+      "options": [
+        {
+          "value": "등록 버튼 하나",
+          "scene": "빈 화면에 '첫 반려동물 등록' 버튼 하나만 크게 있어요"
+        },
+        {
+          "value": "예시 약이 미리",
+          "scene": "예시 약 세 개가 미리 들어 있고 지우면서 시작해요"
+        }
+      ],
+      "free": true,
+      "unknown": true
+    },
+    {
+      "id": "Q-04b",
+      "kind": "pattern",
+      "skeleton": "Q4'",
+      "payload": "pattern",
+      "text": "약을 고를 때 두 번 먹이는 실수를 막는 방식입니다. 실제로 쓸 때 어느 쪽이 편할까요?",
+      "options": [
+        {
+          "value": "이미 먹임 잠금",
+          "scene": "먹인 약은 회색으로 잠기고 다시 누르면 '오늘 이미 먹였어요'가 떠요"
+        },
+        {
+          "value": "횟수 표시",
+          "scene": "약 옆에 '오늘 1/2회'처럼 남은 횟수가 숫자로 보여요"
+        }
+      ],
+      "free": true,
+      "unknown": true
+    },
+    {
+      "id": "Q-04c",
+      "kind": "pattern",
+      "skeleton": "Q4'",
+      "payload": "pattern",
+      "text": "놓친 약을 확인하는 방식입니다. 실제로 쓸 때 어느 쪽이 편할까요?",
+      "options": [
+        {
+          "value": "맨 위에 모아서",
+          "scene": "놓친 약이 홈 맨 위에 빨간 칸으로 모여 있어요"
+        },
+        {
+          "value": "알림 목록에서",
+          "scene": "홈은 그대로 두고 알림 목록에 들어가면 놓친 약이 보여요"
+        }
+      ],
+      "free": true,
+      "unknown": true
+    },
+    {
+      "id": "Q-06",
+      "skeleton": "Q6",
+      "payload": "constraint",
+      "text": "꼭 지켜야 하는 것이 있나요? 큰 글씨가 필요한 분이 있나요?",
+      "options": [
+        {
+          "value": "있어요",
+          "scene": "부모님이 대신 먹이실 때가 있어서 글씨가 커야 해요"
+        },
+        {
+          "value": "없어요",
+          "scene": "특별히 지켜야 할 것은 없어요"
+        }
+      ],
+      "free": true,
+      "unknown": false
+    },
+    {
+      "id": "Q-07",
+      "skeleton": "Q7",
+      "payload": "audience",
+      "text": "이걸 함께 쓸 사람들은 대략 어떤 분들인가요?",
+      "options": [
+        {
+          "value": "나 혼자",
+          "scene": "저 혼자 폰으로 가끔 봐요"
+        },
+        {
+          "value": "가족과 같이",
+          "scene": "60대 부모님도 폰으로 같이 봐요"
+        }
+      ],
+      "free": true,
+      "unknown": true
+    },
+    {
+      "id": "Q-08",
+      "skeleton": "Q8",
+      "payload": "ia",
+      "text": "이 흐름이 맞나요? 어디가 다른가요?",
+      "options": [
+        {
+          "value": "맞아요",
+          "scene": "등록 → 약 일정 → 공유 링크 순서가 실제와 같아요"
+        },
+        {
+          "value": "달라요",
+          "scene": "공유 링크가 먼저 있고 약은 나중에 넣어요"
+        }
+      ],
+      "free": true,
+      "unknown": true
+    },
+    {
+      "id": "Q-11",
+      "kind": "pushback",
+      "skeleton": "Q11",
+      "payload": "pushback",
+      "text": "PRD에는 복약 상태가 '예정·먹임·건너뜀' 셋뿐인데, 실제로는 시각이 지나도록 안 먹인 약이 꼭 생깁니다. 저는 시각이 지나면 그 약을 맨 위에 크게 보이고 '지금 먹이세요'라고 알리는 쪽(A)이 맞다고 봅니다 — 놓친 약을 다시 찾는 일이 가장 잦기 때문입니다. 그래도 다른 쪽이 나은 경우가 있을까요?",
+      "options": [
+        {
+          "value": "A",
+          "scene": "시각이 지나면 '지금 먹이세요 · 보리 관절약'이 맨 위에 크게 보이고 바로 먹임 표시를 할 수 있어요"
+        },
+        {
+          "value": "B",
+          "scene": "시각이 지나도 목록 자리는 그대로 두고 알림만 한 번 더 와요"
+        },
+        {
+          "value": "PRD대로",
+          "scene": "PRD에 적힌 대로 세 상태만 두고 특별한 처리는 하지 않아요"
+        }
+      ],
+      "recommended": "A",
+      "why": "놓친 약을 다시 찾는 일이 가장 잦아서, 그 약이 먼저 보여야 합니다.",
+      "free": true,
+      "unknown": true
+    },
+    {
+      "id": "Q-12",
+      "skeleton": "Q12",
+      "payload": "delegation",
+      "text": "여기까지 말씀하신 것 외에는 제가 정해도 될까요? 꼭 직접 고르고 싶은 게 있나요?",
+      "options": [
+        {
+          "value": "네, 다 정해 주세요",
+          "scene": "색과 화면 순서까지 전부 맡길게요"
+        },
+        {
+          "value": "색은 제가 고를게요",
+          "scene": "색만 나중에 보여 주면 직접 고를게요"
+        }
+      ],
+      "free": true,
+      "unknown": true
+    }
+  ],
+  "flows": [
+    {
+      "id": "FL-1",
+      "question": "부모님이 공유 링크를 열어서 먹임 표시까지입니다. 실제와 다른 화면이 있나요?",
+      "narrative": "보호자가 보낸 링크를 폰에서 열면 지금 먹일 약 하나가 보이고, 먹인 뒤 '먹였어요'를 누르면 끝납니다.",
+      "steps": [
+        {
+          "label": "링크를 열면",
+          "html": "<div style='padding:12px;font:13px sans-serif'><b>보리 · 관절약</b><div style='margin-top:6px;color:#555'>저녁 6시 · 한 알</div><div style='margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:8px'>먹이는 법 보기</div></div>"
+        },
+        {
+          "label": "먹이는 법 확인",
+          "html": "<div style='padding:12px;font:13px sans-serif'><div style='padding:8px;border:1px solid #ddd;border-radius:8px;margin-bottom:6px'>사료에 섞어서</div><div style='padding:8px;border:2px solid #0F6E63;border-radius:8px;margin-bottom:6px'>한 알 · 물과 함께</div></div>"
+        },
+        {
+          "label": "먹였어요 누르기",
+          "html": "<div style='padding:12px;font:13px sans-serif'><div style='padding:8px;border:1px solid #ddd;border-radius:8px'>저녁 6시 12분</div><div style='margin-top:10px;padding:10px;border-radius:8px;background:#0F6E63;color:#fff;text-align:center'>먹였어요</div></div>"
+        }
+      ],
+      "free": true,
+      "unknown": true
+    }
+  ],
+  "tiles": [
+    {
+      "id": "G-01",
+      "axis": "밀도",
+      "variant": "낮음",
+      "html": "<div style='padding:12px;font:13px sans-serif'><b>오늘 복약</b><div style='margin-top:14px;padding:6px 0;border-top:1px solid #ddd'>아침 8시 콩이 · 심장약</div><div style='margin-top:14px;padding:6px 0;border-top:1px solid #ddd'>저녁 6시 보리 · 관절약</div></div>"
+    },
+    {
+      "id": "G-02",
+      "axis": "밀도",
+      "variant": "높음",
+      "html": "<div style='padding:12px;font:13px serif'><b>오늘 복약</b><div style='margin-top:4px;padding:6px 0;border-top:1px solid #ddd'>아침 8시 콩이 · 심장약</div><div style='margin-top:4px;padding:6px 0;border-top:1px solid #ddd'>점심 1시 콩이 · 안약</div><div style='margin-top:4px;padding:6px 0;border-top:1px solid #ddd'>저녁 6시 보리 · 관절약</div></div>"
+    },
+    {
+      "id": "G-03",
+      "axis": "타이포",
+      "variant": "또렷한",
+      "html": "<div style='padding:12px;font-family:Pretendard,sans-serif;font-size:13px'><b>오늘 복약</b><div style='margin-top:8px;padding:6px 0;border-top:1px solid #ddd'>아침 8시 콩이 · 심장약</div></div>"
+    },
+    {
+      "id": "G-04",
+      "axis": "타이포",
+      "variant": "부드러운",
+      "html": "<div style='padding:12px;font-family:\"Noto Serif KR\",serif;font-size:13px'><b>오늘 복약</b><div style='margin-top:8px;padding:6px 0;border-top:1px solid #ddd'>아침 8시 콩이 · 심장약</div></div>"
+    }
+  ],
+  "pairs": [
+    {
+      "axis": "색온도",
+      "left": {
+        "id": "W-1-L",
+        "variant": "따뜻함",
+        "html": "<div style='background:#FBF6EF;padding:16px;font:13px sans-serif;color:#3A2E22'>콩이 · 심장약 아침 8시</div>"
+      },
+      "right": {
+        "id": "W-1-R",
+        "variant": "차가움",
+        "html": "<div style='background:#F2F6F8;padding:16px;font:13px sans-serif;color:#1E2A33'>콩이 · 심장약 아침 8시</div>"
+      }
+    },
+    {
+      "axis": "형태",
+      "always": true,
+      "left": {
+        "id": "W-2-L",
+        "variant": "둥근 카드",
+        "html": "<div style='padding:12px;font:13px sans-serif;color:#1C2228'><div style='padding:12px;border:1px solid #ddd;border-radius:14px'>아침 8시 콩이 · 심장약</div></div>"
+      },
+      "right": {
+        "id": "W-2-R",
+        "variant": "각진 카드",
+        "html": "<div style='padding:12px;font:13px sans-serif;color:#1C2228'><div style='padding:12px;border:1px solid #ddd;border-radius:0'>아침 8시 콩이 · 심장약</div></div>"
+      }
+    },
+    {
+      "axis": "채도",
+      "always": true,
+      "left": {
+        "id": "W-3-L",
+        "variant": "연함",
+        "html": "<div style='background:#F4EFE9;padding:16px;font:13px sans-serif;color:#3A2E22'>지금 먹이세요 · 보리 관절약</div>"
+      },
+      "right": {
+        "id": "W-3-R",
+        "variant": "진함",
+        "html": "<div style='background:#F9E2C8;padding:16px;font:13px sans-serif;color:#6B3E0F'>지금 먹이세요 · 보리 관절약</div>"
+      }
+    },
+    {
+      "axis": "강조",
+      "always": true,
+      "left": {
+        "id": "W-4-L",
+        "variant": "굵게",
+        "html": "<div style='padding:12px;font:13px sans-serif;color:#1C2228'><div style='padding:6px 0'>아침 8시 콩이 · 심장약</div><div style='padding:6px 0;font-weight:700'>지금 먹이세요 · 보리 관절약</div></div>"
+      },
+      "right": {
+        "id": "W-4-R",
+        "variant": "색배지",
+        "html": "<div style='padding:12px;font:13px sans-serif;color:#1C2228'><div style='padding:6px 0'>아침 8시 콩이 · 심장약</div><div style='padding:6px 0;background:#FDE8E8;color:#8A1C1C'>지금 먹이세요 · 보리 관절약</div></div>"
+      }
+    }
+  ]
+}
+</script>
+
+<main>
+  <div class="bar">
+    <div class="steps"><span id="s0" class="on">1 질문</span><span id="s1">2 골라 보기</span><span id="s2">3 둘 중 하나</span><span id="s3">4 완료</span></div>
+    <div class="prog"><i id="prog"></i></div>
+    <div class="status"><span id="conn">저장소 연결 중…</span><span id="cnt"></span></div>
+  </div>
+  <h1 id="title"></h1>
+  <p class="sub" id="intro"></p>
+  <p class="hint">디자인 용어를 몰라도 됩니다. 모르면 '모르겠음'을 누르세요. 답하기 싫은 항목은 건너뛰어도 됩니다.</p>
+
+  <section id="step0"></section>
+  <section id="step1" hidden><p class="hint">전부 하지 않아도 됩니다. 눈에 띄는 것부터 눌러 주세요.</p><div class="banner" id="banner"></div><div class="tiles" id="tiles"></div></section>
+  <section id="step2" hidden><p class="hint">앞에서 갈리지 않았거나 한 번 더 확인할 것만 다시 묻습니다. 왼쪽/오른쪽 중 더 편한 쪽을 누르세요. 둘 다 아니어도 됩니다.</p><div id="pairs"></div></section>
+  <section id="step3" hidden><div class="done"><h2>다 했습니다</h2><p>이 화면을 닫고 채팅으로 돌아가 "다 했어요"라고 말해 주세요.</p><p class="hint" id="doneinfo"></p></div></section>
+
+  <div class="nav"><button class="btn ghost" id="prev">이전</button><button class="btn" id="next">다음</button></div>
+
+  <div class="fallback" id="fallback">
+    <p class="hint">저장소에 연결되지 않아 이 브라우저에만 저장됐습니다. 아래 내용을 복사해 채팅에 붙여 주세요.</p>
+    <textarea id="export" readonly></textarea>
+  </div>
+</main>
+
+<script>
+(function () {
+  const DATA = JSON.parse(document.getElementById('harness-data').textContent);
+  DATA.flows = DATA.flows || [];
+  const $ = (id) => document.getElementById(id);
+  const state = { answers: {}, step: 0, db: null, dbErr: null };
+  const LS_KEY = 'harness-interview-answers';
+
+  /* ---------- 저장: db 우선, 없으면 localStorage. 읽기 실패와 연결 실패를 구분한다 ---------- */
+  async function initDb() {
+    try {
+      const db = window.claude && window.claude.use ? await window.claude.use('db') : null;
+      if (!db) { state.db = null; $('conn').textContent = '저장소 없음 — 이 브라우저에만 저장'; $('fallback').classList.add('show'); loadLocal(); return; }
+      state.db = db;
+      try {
+        const snap = await db.collection('answers').get();
+        (snap.docs || []).forEach((d) => { const v = d.data(); if (v && v.id) state.answers[v.id] = v; });
+        $('conn').textContent = '저장소 연결됨 · 답은 누르는 즉시 저장';
+      } catch (e) {
+        // 읽기 실패 ≠ 연결 실패. 저장은 될 수 있다. 코드를 화면에 보인다.
+        state.dbErr = e && e.code ? e.code : String(e);
+        $('conn').innerHTML = '연결됨 · 이전 답 읽기 실패 <span class="err">(' + state.dbErr + ')</span> — 새 답은 저장됩니다';
+      }
+    } catch (e) { state.db = null; $('conn').textContent = '저장소 없음 (' + (e && e.code ? e.code : e) + ') — 이 브라우저에만 저장'; $('fallback').classList.add('show'); loadLocal(); }
+    render();
+  }
+  function loadLocal() { try { const raw = localStorage.getItem(LS_KEY); if (raw) state.answers = JSON.parse(raw); } catch (e) {} }
+  function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(state.answers)); } catch (e) {} $('export').value = JSON.stringify(state.answers, null, 1); }
+  async function save(rec, el) {
+    rec.ts = new Date().toISOString(); state.answers[rec.id] = rec; updateProgress();
+    if (!state.db) { saveLocal(); mark(el, '이 브라우저에 저장됨'); return; }
+    try { await state.db.doc('answers/' + rec.id).set(rec); mark(el, '저장됨'); }
+    catch (e) { const code = e && e.code ? e.code : String(e); saveLocal(); mark(el, '저장 실패 (' + code + ') — 브라우저에 보관', true); $('fallback').classList.add('show'); }
+  }
+  function mark(el, text, bad) { if (!el) return; el.textContent = text; el.className = 'saved' + (bad ? ' err' : ''); }
+
+  /* ---------- 진행률 ---------- */
+  function items() { return DATA.questions.length + DATA.flows.length + DATA.tiles.length + undecidedPairs().length; }
+  function answeredCount() { return Object.keys(state.answers).filter((k) => !k.startsWith('meta')).length; }
+  function updateProgress() { const n = items(), a = Math.min(answeredCount(), n); $('prog').style.width = (n ? Math.round(a / n * 100) : 0) + '%'; $('cnt').textContent = a + ' / ' + n; }
+
+  /* ---------- 갤러리 반응으로 갈리지 않은 축만 월드컵에 노출. always:true 쌍은 항상 노출(재검증) ---------- */
+  function undecidedPairs() {
+    const byAxis = {};
+    DATA.tiles.forEach((t) => { const a = state.answers[t.id]; if (!a) return; (byAxis[t.axis] = byAxis[t.axis] || {})[t.variant] = (byAxis[t.axis][t.variant] || []).concat(a.verdict); });
+    return DATA.pairs.filter((p) => {
+      if (p.always) return true;
+      const v = byAxis[p.axis]; if (!v) return true;
+      const liked = Object.keys(v).filter((k) => v[k].includes('좋다'));
+      const disliked = Object.keys(v).filter((k) => v[k].includes('싫다'));
+      // 한 변형만 좋다 이고 다른 변형에 좋다 가 없으면 결정됨. 좋다 가 둘 이상이거나 0 이면 미결.
+      return !(liked.length === 1 && (disliked.length >= 1 || Object.keys(v).length === 1));
+    });
+  }
+
+  /* ---------- 렌더 ---------- */
+  function render() {
+    $('title').textContent = DATA.title; $('intro').textContent = DATA.intro; $('banner').textContent = DATA.banner;
+    renderQuestions(); renderTiles(); renderPairs(); showStep(state.step); updateProgress();
+  }
+  // 회수 레코드에 질문 → 페이로드 → 소비처 매핑 필드(skeleton·payload·recommended)를 항상 싣는다.
+  function qrec(q, a) { return Object.assign({ id: q.id, kind: q.kind || 'question', skeleton: q.skeleton || '', payload: q.payload || '', recommended: q.recommended || '', question: q.text, free: a.free || '' }, a); }
+  function renderQuestions() {
+    const root = $('step0'); root.innerHTML = '';
+    DATA.questions.forEach((q) => {
+      const a = state.answers[q.id] || {};
+      const card = document.createElement('div'); card.className = 'card';
+      const hint = q.kind === 'pushback' ? '저희 추천은 표시해 두었습니다 — 실제로 쓸 때를 떠올려 다르게 보이면 골라 주세요.'
+        : q.kind === 'pattern' ? '다른 서비스들이 같은 일을 푸는 방식입니다(서비스 이름은 가렸습니다). 실제로 쓸 때를 떠올려 골라 주세요.' : '';
+      card.innerHTML = '<p class="q">' + esc(q.text) + '</p>' + (hint ? '<p class="hint">' + hint + '</p>' : '');
+      const opts = document.createElement('div'); opts.className = 'opts';
+      q.options.forEach((o) => {
+        const b = document.createElement('button'); b.className = 'opt' + (a.value === o.value ? ' sel' : '');
+        const rec = q.kind === 'pushback' && q.recommended && o.value === q.recommended;
+        b.innerHTML = '<b>' + esc(o.value) + '</b>' + (rec ? '<span class="rec">하네스 추천</span>' : '') + '<br><span style="color:var(--ink-2);font-size:14px">' + esc(o.scene) + '</span>'
+          + (rec && q.why ? '<br><span style="color:var(--ink-2);font-size:13px">추천 이유: ' + esc(q.why) + '</span>' : '');
+        b.onclick = () => { a.value = o.value; a.unknown = false; save(qrec(q, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b);
+      });
+      if (q.unknown) { const b = document.createElement('button'); b.className = 'opt unk' + (a.unknown ? ' sel' : ''); b.textContent = '모르겠음 — 기본값으로 진행해도 돼요'; b.onclick = () => { a.unknown = true; a.value = ''; save(qrec(q, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b); }
+      card.appendChild(opts);
+      if (q.free) { const ta = document.createElement('textarea'); ta.placeholder = q.options.length ? '덧붙일 말이 있으면 자유롭게 (선택)' : '떠오르는 대로 한두 줄'; ta.value = a.free || ''; ta.onchange = () => { a.free = ta.value; save(qrec(q, a), card.querySelector('.saved')); }; card.appendChild(ta); }
+      const row = document.createElement('div'); row.className = 'row'; row.innerHTML = '<span class="saved">' + (a.ts ? '저장됨' : '') + '</span>'; card.appendChild(row);
+      root.appendChild(card);
+    });
+    renderFlows();
+  }
+  /* ---------- 흐름(flows[]): 시나리오 아래 실제 화면 조각을 순서대로. 조각 클릭 = '여기가 달라요' ---------- */
+  function frec(f, a) { return Object.assign({ id: f.id, kind: 'flow', question: f.question, step_id: a.step_id || '', step_label: a.step_label || '', free: a.free || '' }, a); }
+  function renderFlows() {
+    const root = $('step0');
+    DATA.flows.forEach((f) => {
+      const a = state.answers[f.id] || {};
+      const card = document.createElement('div'); card.className = 'card';
+      card.innerHTML = '<p class="q">' + esc(f.question) + '</p><p class="narr">' + esc(f.narrative || '') + '</p><p class="hint">실제와 다른 화면이 있으면 그 화면을 누르세요. 다 맞으면 아래 \'이 흐름이 맞아요\'를 누르세요.</p>';
+      const flow = document.createElement('div'); flow.className = 'flow';
+      (f.steps || []).forEach((s, i) => {
+        const sid = 'S' + (i + 1);
+        const d = document.createElement('div'); d.className = 'fstep' + (a.step_id === sid ? ' sel' : '');
+        d.innerHTML = '<div class="lab">' + esc(s.label) + '</div><div class="stim">' + s.html + '</div><div class="mark">여기가 달라요</div>';
+        d.onclick = () => { a.step_id = sid; a.step_label = s.label; a.unknown = false; save(frec(f, a), card.querySelector('.saved')); renderQuestions(); };
+        flow.appendChild(d);
+      });
+      card.appendChild(flow);
+      const opts = document.createElement('div'); opts.className = 'opts';
+      const ok = document.createElement('button'); ok.className = 'opt' + (a.step_id === 'ok' ? ' sel' : ''); ok.textContent = '이 흐름이 맞아요'; ok.onclick = () => { a.step_id = 'ok'; a.step_label = ''; a.unknown = false; save(frec(f, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(ok);
+      if (f.unknown) { const b = document.createElement('button'); b.className = 'opt unk' + (a.unknown ? ' sel' : ''); b.textContent = '모르겠음 — 기본값으로 진행해도 돼요'; b.onclick = () => { a.unknown = true; a.step_id = ''; a.step_label = ''; save(frec(f, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b); }
+      card.appendChild(opts);
+      if (f.free) { const ta = document.createElement('textarea'); ta.placeholder = '어디가 어떻게 다른지 한 줄 (선택)'; ta.value = a.free || ''; ta.onchange = () => { a.free = ta.value; save(frec(f, a), card.querySelector('.saved')); }; card.appendChild(ta); }
+      const row = document.createElement('div'); row.className = 'row'; row.innerHTML = '<span class="saved">' + (a.ts ? '저장됨' : '') + '</span>'; card.appendChild(row);
+      root.appendChild(card);
+    });
+  }
+  function renderTiles() {
+    const root = $('tiles'); root.innerHTML = '';
+    DATA.tiles.forEach((t) => {
+      const a = state.answers[t.id] || {};
+      const el = document.createElement('div'); el.className = 'tile';
+      el.innerHTML = '<div class="id">' + esc(t.id) + '</div><div class="stim">' + t.html + '</div>';
+      const v = document.createElement('div'); v.className = 'verd';
+      ['좋다', '싫다', '애매'].forEach((k) => { const b = document.createElement('button'); b.textContent = k; if (a.verdict === k) b.className = 'sel'; b.onclick = () => { a.verdict = k; save(Object.assign({ id: t.id, kind: 'tile', axis_hidden: true }, a), el.querySelector('.saved')); renderTiles(); renderPairs(); updateProgress(); }; v.appendChild(b); });
+      el.appendChild(v);
+      const ta = document.createElement('textarea'); ta.style.minHeight = '40px'; ta.placeholder = '왜요? (한 줄, 선택)'; ta.value = a.reason || ''; ta.onchange = () => { a.reason = ta.value; save(Object.assign({ id: t.id, kind: 'tile' }, a), el.querySelector('.saved')); }; el.appendChild(ta);
+      const row = document.createElement('div'); row.className = 'row'; row.innerHTML = '<span class="saved">' + (a.ts ? '저장됨' : '') + '</span>'; el.appendChild(row);
+      root.appendChild(el);
+    });
+  }
+  function renderPairs() {
+    const root = $('pairs'); root.innerHTML = '';
+    const list = undecidedPairs();
+    if (!list.length) { root.innerHTML = '<p class="hint">앞 단계 답으로 전부 갈렸습니다. 다음으로 넘어가세요.</p>'; return; }
+    list.forEach((p) => {
+      // W-n 은 DATA.pairs 안의 자리 번호 — 노출되는 쌍이 바뀌어도 같은 쌍은 같은 번호를 갖는다.
+      const id = 'W-' + (DATA.pairs.indexOf(p) + 1); const a = state.answers[id] || {};
+      const card = document.createElement('div'); card.className = 'card';
+      card.innerHTML = '<p class="q">어느 쪽이 더 편한가요?</p>';
+      const pair = document.createElement('div'); pair.className = 'pair';
+      [['left', p.left], ['right', p.right]].forEach(([side, s]) => { const d = document.createElement('div'); d.className = 'stim' + (a.choice === side ? ' sel' : ''); d.innerHTML = s.html; d.onclick = () => { a.choice = side; a.chosen_id = s.id; save(Object.assign({ id, kind: 'pair', axis_hidden: true, always: !!p.always, left_id: p.left.id, right_id: p.right.id }, a), card.querySelector('.saved')); renderPairs(); }; pair.appendChild(d); });
+      card.appendChild(pair);
+      const none = document.createElement('button'); none.className = 'opt unk' + (a.choice === 'none' ? ' sel' : ''); none.textContent = '둘 다 아님'; none.style.marginTop = '8px'; none.onclick = () => { a.choice = 'none'; a.chosen_id = ''; save(Object.assign({ id, kind: 'pair', axis_hidden: true, always: !!p.always, left_id: p.left.id, right_id: p.right.id }, a), card.querySelector('.saved')); renderPairs(); }; card.appendChild(none);
+      const ta = document.createElement('textarea'); ta.style.minHeight = '40px'; ta.placeholder = '왜요? (한 줄, 선택)'; ta.value = a.reason || ''; ta.onchange = () => { a.reason = ta.value; save(Object.assign({ id, kind: 'pair', axis_hidden: true, always: !!p.always, left_id: p.left.id, right_id: p.right.id }, a), card.querySelector('.saved')); }; card.appendChild(ta);
+      const row = document.createElement('div'); row.className = 'row'; row.innerHTML = '<span class="saved">' + (a.ts ? '저장됨' : '') + '</span>'; card.appendChild(row);
+      root.appendChild(card);
+    });
+  }
+  function showStep(n) {
+    state.step = n; [0, 1, 2, 3].forEach((i) => { $('step' + i).hidden = i !== n; const s = $('s' + i); s.className = i === n ? 'on' : (i < n ? 'done' : ''); });
+    $('prev').disabled = n === 0; $('next').textContent = n === 2 ? '완료' : '다음'; $('next').hidden = n === 3;
+    if (n === 2) renderPairs();
+    if (n === 3) { const rec = { id: 'meta-status', kind: 'meta', done: true, answered: answeredCount(), total: items() }; save(rec, null); $('doneinfo').textContent = '답한 항목 ' + rec.answered + ' / ' + rec.total; }
+    window.scrollTo(0, 0);
+  }
+  $('prev').onclick = () => showStep(Math.max(0, state.step - 1));
+  $('next').onclick = () => showStep(Math.min(3, state.step + 1));
+  function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  render(); initDb();
+})();
+</script>

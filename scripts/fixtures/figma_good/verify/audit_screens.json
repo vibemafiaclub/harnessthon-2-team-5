@@ -1,0 +1,97 @@
+{
+ "stage": "design",
+ "page": "Screens",
+ "nodes_inspected": 120,
+ "passed_machine": true,
+ "passed": false,
+ "requires_human_review": [
+  "contrast-text-aa"
+ ],
+ "violations": [],
+ "violations_per_rule": {
+  "primary-action-visible": 0
+ },
+ "applicable_per_rule": {
+  "primary-action-visible": 7,
+  "frame-spec": 7
+ },
+ "unchecked_blockers": [
+  {
+   "rule": "contrast-text-aa"
+  }
+ ],
+ "summary": {
+  "blocker": 0,
+  "warning": 0,
+  "skipped_out_of_stage": 0,
+  "skipped_unimplemented": 1
+ },
+ "text_inventory": [
+  {
+   "frame": "01 홈 / normal",
+   "id": "10:1",
+   "texts": [
+    "오늘 남은 복약 2건",
+    "콩이 · 심장약 아침 8시",
+    "먹였어요"
+   ],
+   "total": 3
+  },
+  {
+   "frame": "01 홈 / empty",
+   "id": "10:2",
+   "texts": [
+    "아직 등록된 약이 없어요",
+    "먹였어요"
+   ],
+   "total": 2
+  },
+  {
+   "frame": "01 홈 / long",
+   "id": "10:3",
+   "texts": [
+    "아주아주 긴 약 이름과 용법 안내 테스트",
+    "먹였어요"
+   ],
+   "total": 2
+  },
+  {
+   "frame": "02 대리인 확인 / normal",
+   "id": "20:1",
+   "texts": [
+    "지금 먹여야 할 약",
+    "보리 · 관절약 저녁 6시",
+    "먹였어요"
+   ],
+   "total": 3
+  },
+  {
+   "frame": "02 대리인 확인 / empty",
+   "id": "20:2",
+   "texts": [
+    "지금 먹일 약이 없어요",
+    "먹였어요"
+   ],
+   "total": 2
+  },
+  {
+   "frame": "02 대리인 확인 / long",
+   "id": "20:3",
+   "texts": [
+    "먹일 약이 아주 많은 경우",
+    "먹였어요"
+   ],
+   "total": 2
+  },
+  {
+   "frame": "02 대리인 확인 / error",
+   "id": "20:4",
+   "texts": [
+    "링크가 만료됐어요",
+    "먹였어요"
+   ],
+   "total": 2
+  }
+ ],
+ "reactions": []
+}

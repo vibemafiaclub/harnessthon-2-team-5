@@ -1,0 +1,20 @@
+{
+ "stage": "design",
+ "page": "Components",
+ "nodes_inspected": 30,
+ "passed_machine": true,
+ "passed": true,
+ "requires_human_review": [],
+ "violations": [],
+ "violations_per_rule": {},
+ "applicable_per_rule": {
+  "variant-state-coverage": 1
+ },
+ "unchecked_blockers": [],
+ "summary": {
+  "blocker": 0,
+  "warning": 0,
+  "skipped_out_of_stage": 0,
+  "skipped_unimplemented": 0
+ }
+}

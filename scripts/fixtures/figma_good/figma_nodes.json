@@ -1,0 +1,83 @@
+{
+ "variables": {
+  "primitive": {
+   "color/primitive/primary/500": "V:color/primitive/primary/500",
+   "color/primitive/neutral/0": "V:color/primitive/neutral/0",
+   "color/primitive/neutral/900": "V:color/primitive/neutral/900"
+  },
+  "semantic": {
+   "color/semantic/bg/page": "V:color/semantic/bg/page",
+   "color/semantic/text/primary": "V:color/semantic/text/primary",
+   "color/semantic/status/state-1/bg": "V:color/semantic/status/state-1/bg",
+   "color/semantic/status/state-1/text": "V:color/semantic/status/state-1/text",
+   "spacing/unit": "V:spacing/unit",
+   "spacing/scale/1": "V:spacing/scale/1",
+   "spacing/scale/2": "V:spacing/scale/2",
+   "radius/scale/sm": "V:radius/scale/sm",
+   "layout/touch_target_min": "V:layout/touch_target_min"
+  },
+  "text_styles": {
+   "display": "S:1",
+   "body": "S:2"
+  },
+  "font_substitution": null
+ },
+ "components": {
+  "Button/Primary": {
+   "id": "3:1",
+   "variants": [
+    "Default",
+    "Disabled"
+   ]
+  }
+ },
+ "screens": [
+  {
+   "id": "01_home",
+   "name": "홈",
+   "frames": [
+    {
+     "state": "normal",
+     "id": "10:1",
+     "name": "01 홈 / normal"
+    },
+    {
+     "state": "empty",
+     "id": "10:2",
+     "name": "01 홈 / empty"
+    },
+    {
+     "state": "long",
+     "id": "10:3",
+     "name": "01 홈 / long"
+    }
+   ]
+  },
+  {
+   "id": "02_confirm",
+   "name": "대리인 확인",
+   "frames": [
+    {
+     "state": "normal",
+     "id": "20:1",
+     "name": "02 대리인 확인 / normal"
+    },
+    {
+     "state": "empty",
+     "id": "20:2",
+     "name": "02 대리인 확인 / empty"
+    },
+    {
+     "state": "long",
+     "id": "20:3",
+     "name": "02 대리인 확인 / long"
+    },
+    {
+     "state": "error",
+     "id": "20:4",
+     "name": "02 대리인 확인 / error"
+    }
+   ]
+  }
+ ]
+}

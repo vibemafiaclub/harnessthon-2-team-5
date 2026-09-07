@@ -18,6 +18,12 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
+# 0) 검사기 자체 시험 — 검사기가 빈 템플릿을 통과시키거나 심은 결함을 놓치면 아래 게이트 결과는 무의미하다(계획 24).
+if ! bash scripts/selftest.sh > /tmp/selftest.$$.log 2>&1; then
+  echo "검사기 자체 시험 실패 — scripts/selftest.sh 종료 코드 $? (로그: /tmp/selftest.$$.log)"; tail -15 /tmp/selftest.$$.log; exit 2
+fi
+rm -f /tmp/selftest.$$.log
+
 RUN_ID="${1:-}"
 [ -z "$RUN_ID" ] && { echo "사용법: scripts/eval.sh <run-id> [--stage wireframe|design]"; exit 2; }
 shift
