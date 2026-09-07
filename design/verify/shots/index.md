@@ -1,30 +1,32 @@
-# Figma Screen Captures
+# Figma 화면 캡처 원장
 
-**Captured:** 2026-09-07 02:00 UTC
+> **캡처 시각은 실제 PNG 파일의 mtime 이다.** 2026-09-07T06:56Z 의 Figma 쓰기(F-9 비활성 CTA 수정)
+> 이후 재캡처하지 못했으므로 24장 전부 낡은 상태다 — CR-3 이 이를 stale 로 잡는 것이 정상이다.
+> 특히 `06_groupcompose_none.png` 와 `07_datepropose_empty.png` 는 수정 **전** 이미지다.
 
-| Filename | Frame Name | Node ID | Size |
-|----------|-----------|---------|------|
-| 00_onboarding_connected.png | 00 Onboarding / connected | 14:298 | 17K |
-| 00_onboarding_invite.png | 00 Onboarding / invite | 14:294 | 22K |
-| 00_onboarding_start.png | 00 Onboarding / start | 14:290 | 21K |
-| 01_home_empty.png | 01 Home / empty | 14:33 | 23K |
-| 01_home_loading.png | 01 Home / loading | 14:41 | 13K |
-| 01_home_normal.png | 01 Home / normal | 14:25 | 40K |
-| 02_meetingdetail_confirmed.png | 02 MeetingDetail / confirmed | 14:265 | 22K |
-| 02_meetingdetail_deadline.png | 02 MeetingDetail / deadline | 14:226 | 36K |
-| 02_meetingdetail_normal.png | 02 MeetingDetail / normal | 14:12 | 26K |
-| 03_guestreply_answering.png | 03 GuestReply / answering | 14:160 | 40K |
-| 03_guestreply_empty.png | 03 GuestReply / empty | 14:97 | 38K |
-| 03_guestreply_submitted.png | 03 GuestReply / submitted | 14:204 | 29K |
-| 04_contacts_empty.png | 04 Contacts / empty | 36:321 | 25K |
-| 04_contacts_loading.png | 04 Contacts / loading | 36:352 | 14K |
-| 04_contacts_normal.png | 04 Contacts / normal | 35:195 | 42K |
-| 05_contactedit_edit.png | 05 ContactEdit / edit | 36:395 | 35K |
-| 05_contactedit_new.png | 05 ContactEdit / new | 42:239 | 26K |
-| 05_contactedit_oneonone.png | 05 ContactEdit / oneonone | 43:241 | 29K |
-| 06_groupcompose_noname.png | 06 GroupCompose / noname | 45:247 | 33K |
-| 06_groupcompose_none.png | 06 GroupCompose / none | 44:245 | 33K |
-| 06_groupcompose_selecting.png | 06 GroupCompose / selecting | 43:286 | 34K |
-| 07_datepropose_empty.png | 07 DatePropose / empty | 46:306 | 32K |
-| 07_datepropose_selected.png | 07 DatePropose / selected | 45:441 | 37K |
-| 07_datepropose_sent.png | 07 DatePropose / sent | 46:356 | 25K |
+| 파일 | 노드 id | 캡처 시각(ISO) | lastModified(ISO) | sha |
+|---|---|---|---|---|
+| 00_onboarding_connected.png | 14:298 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | cf2d5a74bc5f |
+| 00_onboarding_invite.png | 14:294 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | 465fc69f1437 |
+| 00_onboarding_start.png | 14:290 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | ce66f85a7f87 |
+| 01_home_empty.png | 14:33 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | 70bd2b7746eb |
+| 01_home_loading.png | 14:41 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | 06aca9c82485 |
+| 01_home_normal.png | 14:25 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | 0d341858f571 |
+| 02_meetingdetail_confirmed.png | 14:265 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | 21bbdfc087bb |
+| 02_meetingdetail_deadline.png | 14:226 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | ec6549aaa14d |
+| 02_meetingdetail_normal.png | 14:12 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | 9f497f821b32 |
+| 03_guestreply_answering.png | 14:160 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | f71662a81181 |
+| 03_guestreply_empty.png | 14:97 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | 726ec451f25f |
+| 03_guestreply_submitted.png | 14:204 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | 419bd6e5c35e |
+| 04_contacts_empty.png | 36:321 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | e7a418e9d8f4 |
+| 04_contacts_loading.png | 36:352 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | 4c1b0fe0bb64 |
+| 04_contacts_normal.png | 35:195 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | 6684c25ac046 |
+| 05_contactedit_edit.png | 36:395 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | d6b9df7b79d0 |
+| 05_contactedit_new.png | 42:239 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | fdcda46a7573 |
+| 05_contactedit_oneonone.png | 43:241 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | 2eb47b72bd23 |
+| 06_groupcompose_noname.png | 45:247 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | b196b21f37da |
+| 06_groupcompose_none.png | 44:245 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | 19fa1055c10c |
+| 06_groupcompose_selecting.png | 43:286 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | 74e017848900 |
+| 07_datepropose_empty.png | 46:306 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | 909bc53afce2 |
+| 07_datepropose_selected.png | 45:441 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | b7f3257a3651 |
+| 07_datepropose_sent.png | 46:356 | 2026-09-06T17:06:16Z | 2026-09-07T06:56:49Z | b07e8fcaf7b8 |
