@@ -119,6 +119,7 @@ sed -E 's/R-2 돌봄 대리인\(가족·펫시터\)$/R-2 돌봄 대리인(가족
 sed -E 's/^- source_refs: \[A-05, R-G-03, W-1\]$/- source_refs: [A-05]/' "$G" > "$TMP/m_b7b.md";                       mut "B-7b confirmed 근거 1건"        "B-7b" "$TMP/m_b7b.md" "$R" "$S" "$PR"
 sed -E 's/\| ① — 등록 0건 상태가 PRD 에 없음 \|/|  |/' "$G" > "$TMP/m_b12.md";                                          mut "B-12 하네스 추천 공백"          "B-12" "$TMP/m_b12.md" "$R" "$S" "$PR"
 grep -v '^| 첫 진입·온보딩(등록 0건) |' "$G" > "$TMP/m_b16.md";                                                            mut "B-16 첫 진입 행 삭제(+B-4 T-1 대조)" "B-4 B-16" "$TMP/m_b16.md" "$R" "$S" "$PR"
+grep -v '^| A-05 | 추천 수락' "$G" > "$TMP/m_b27.md";                                                             mut "B-27 §6 추천 수락 행 삭제"      "B-27" "$TMP/m_b27.md" "$R" "$S" "$PR"
 grep -v '^| 계정 진입(가입·로그인·비로그인 시작) |' "$G" > "$TMP/m_b16g.md";                                              mut "B-16 계정 진입 행 삭제(D-50)"   "B-16" "$TMP/m_b16g.md" "$R" "$S" "$PR"
 grep -v '^| 2 | 복약 놓침 |' "$G" > "$TMP/m_b17.md";                                                                     mut "B-17 §2d 1행뿐"                 "B-17" "$TMP/m_b17.md" "$R" "$S" "$PR"
 grep -v '^| REF-5 |' "$G" > "$TMP/m_b18.md";                                                                             mut "B-18 §9 과업 T-3 커버 부족"     "B-18" "$TMP/m_b18.md" "$R" "$S" "$PR"
@@ -129,7 +130,7 @@ sed -E 's/^H-02 \[interview\/constraint\]$/H-02 [interview\/blocked]/' "$R" > "$
 grep -v '^H-01 \[interview/interview_page\]' "$R" | grep -v '^  결정할 것: 인터뷰 페이지' > "$TMP/m_b24b.md";              mut "B-24 state.calls 2 ≠ raw H- 1" "B-24" "$G" "$TMP/m_b24b.md" "$S" "$PR"
 sed -E 's/^A-05: .*$/A-05: "아침에 먹였는지 기억이 안 나서 한 번 더 먹일 뻔했어요" [UNCLEAR]/; s/^A-01: .*$/A-01: "저녁에 앉아서 약 봉투 세 개를 펼쳐 놓고 뭘 언제 먹였는지 정리해요" [UNCLEAR]/; s/^A-02: .*$/A-02: "오늘 남은 약이 몇 개인지요" [UNCLEAR]/; s/^A-07: .*$/A-07: "저는 가끔, 부모님은 60대인데 폰으로만 봐요" [UNCLEAR]/; s/^A-08: .*$/A-08: "부모님은 그냥 지금 뭘 먹이면 되는지만 알면 돼요" [UNCLEAR]/' "$R" > "$TMP/m_b25.md"; mut "B-25 [UNCLEAR] 5/9" "B-25" "$G" "$TMP/m_b25.md" "$S" "$PR"
 { cat "$R"; printf 'F-2 (Q-05): 하나 더\nA-F-2: "네"\nF-3 (Q-05): 또 하나\nA-F-3: "네"\n'; } > "$TMP/m_b23.md";              mut "B-23 같은 원 질문 되묻기 3회"   "B-23" "$G" "$TMP/m_b23.md" "$S" "$PR"
-sed -E 's/"answered": 19/"answered": 18/' "$S" > "$TMP/m_b22.json";                                                      mut "B-22 answered ≠ raw 합계"       "B-22" "$G" "$R" "$TMP/m_b22.json" "$PR"
+sed -E 's/"answered": 20/"answered": 18/' "$S" > "$TMP/m_b22.json";                                                      mut "B-22 answered ≠ raw 합계"       "B-22" "$G" "$R" "$TMP/m_b22.json" "$PR"
 sed -E 's/^\| P-3 \| PASS \|/| P-3 | FAIL |/' "$PR" > "$TMP/m_b21.md";                                                   mut "B-21 페이지 리포트에 FAIL"      "B-21" "$G" "$R" "$S" "$TMP/m_b21.md"
 
 echo "## 3. check-interview-page"
@@ -142,6 +143,11 @@ expect_fail_subset "템플릿 샘플 데이터 그대로는 통과 불가(P-11 �
 # P-15·P-16 (team-3 비교 반영): effect 한 줄 삭제 → P-15 만, 투어 장면의 press 삭제 → P-16 만 FAIL. 골든 JSON 을 바꿔 템플릿 골격에 다시 주입한다
 mutpage() { node scripts/fixtures/mutate-interview-page.js "$FX/interview_golden.json" "$1" "$2"; }
 mutpage "$TMP/cip_m15.html" effect; expect_fail_exact "P-15 effect 삭제" "P-15" "$TMP/cip_m15.md" $CIP --page "$TMP/cip_m15.html" "${CIPARGS[@]}" --out "$TMP/cip_m15.md"
+mutpage "$TMP/cip_m3r.html" recommended;   expect_fail_exact "P-3 결정형(Q2) recommended 삭제" "P-3" "$TMP/cip_m3r.md" $CIP --page "$TMP/cip_m3r.html" "${CIPARGS[@]}" --out "$TMP/cip_m3r.md"
+mutpage "$TMP/cip_m18.html" verifies;      expect_fail_exact "P-18 재검증 질문 삭제" "P-18" "$TMP/cip_m18.md" $CIP --page "$TMP/cip_m18.html" "${CIPARGS[@]}" --out "$TMP/cip_m18.md"
+mutpage "$TMP/cip_m17.html" pattern-html;  expect_fail_exact "P-17 패턴 선택지 html 삭제" "P-17" "$TMP/cip_m17.md" $CIP --page "$TMP/cip_m17.html" "${CIPARGS[@]}" --out "$TMP/cip_m17.md"
+mutpage "$TMP/cip_m12.html" pattern-drop;  expect_fail_exact "P-12 패턴 질문 삭제(references 과업 수 미달)" "P-12" "$TMP/cip_m12.md" $CIP --page "$TMP/cip_m12.html" "${CIPARGS[@]}" --out "$TMP/cip_m12.md"
+mutpage "$TMP/cip_m19.html" service-name;  expect_fail_exact "P-19 레퍼런스 서비스명 노출" "P-19" "$TMP/cip_m19.md" $CIP --page "$TMP/cip_m19.html" "${CIPARGS[@]}" --out "$TMP/cip_m19.md"
 mutpage "$TMP/cip_m16.html" press;  expect_fail_exact "P-16 투어 press 삭제" "P-16" "$TMP/cip_m16.md" $CIP --page "$TMP/cip_m16.html" "${CIPARGS[@]}" --out "$TMP/cip_m16.md"
 expect_rc "없는 페이지 → 종료 2" 2 $CIP --page "$TMP/nope.html"
 

@@ -46,6 +46,7 @@
  *   B-24  사람 호출 원장 ^H-nn [<stage>/<kind>]: 4라벨(결정할 것·선택지·추천·안 정하면), kind ∈ 허용 집합, 건수 ≤ human_calls_max(7), state.human_gates.calls[] 있으면 건수 1:1
  *   B-25  답변 활용률: raw ^A-nn ID 가 brief §2·2b·2c·2d·3·4·5·6·9·10·11 어디든 등장 ≥2/3; [UNCLEAR] 수 / 본질문(^Q-nn) 수 < 1/2
  *   B-26  §11 '누가 쓰는가:'·'사용자 수준(익숙함·연령·기기):' 줄 공백 0
+ *   B-27  추천 수락 정합(I-4): raw `A-nn [ACCEPTED]` 수 == §6 '추천 수락' 행 수 == state delegations kind accepted 수 — 추천 수락은 답이 아니라 위임이라 세 곳에 같은 수로 남아야 한다
  */
 const fs = require('fs'); const path = require('path'); const cp = require('child_process');
 const ROOT = path.resolve(__dirname, '..');
@@ -375,6 +376,13 @@ const callsMismatch = calls != null && calls.length !== hBlocks.length;
 add('B-24', hBlocks.length <= hmax && hBad.length === 0 && !callsMismatch, `사람 호출 원장 H- ${hBlocks.length}건 (≤${hmax}), 4라벨·kind 위반 ${hBad.length}, state.calls[] ${calls == null ? '없음(대조 생략)' : calls.length + '건' + (callsMismatch ? ' ≠ H-' : ' 일치')}`,
   [...hBad, ...(callsMismatch ? [`state.human_gates.calls ${calls.length} ≠ raw H- ${hBlocks.length}`] : [])].join('; ') || (hBlocks.length ? hBlocks.map((b) => b.id).join(', ') : 'H- 없음'));
 
+/* B-27 추천 수락 정합 — raw [ACCEPTED] == §6 '추천 수락' 행 == delegations kind accepted */
+{
+  const acc = rawLines.filter((l) => /^A-\d+[a-z]?\s*\[ACCEPTED\]/.test(l)).length;
+  const s6acc = tableRows(sec('6')).filter((c) => /추천 수락/.test(c.join(' '))).length;
+  const dacc = ((state && state.human_gates && Array.isArray(state.human_gates.delegations)) ? state.human_gates.delegations : []).filter((d) => d && d.kind === 'accepted').length;
+  add('B-27', acc === s6acc && s6acc === dacc, `추천 수락 raw ${acc} · §6 행 ${s6acc} · delegations ${dacc}`, acc === s6acc && s6acc === dacc ? (acc ? '세 곳 일치' : '추천 수락 0건 일치') : '세 수가 달라야 할 이유가 없다 — 회수(0-D)·§6·state 중 빠진 곳을 채운다');
+}
 /* B-25 답변 활용률 ≥2/3, [UNCLEAR] 비율 <1/2 */
 const aIds = [...new Set(rawLines.map((l) => (l.match(/^A-\d+/) || [])[0]).filter(Boolean))];
 const s6noId = tableRows(sec('6')).map((c) => c.slice(1).join(' ')).join('\n');   // §6 가정 ID(A-nn) 는 답변 ID 와 겹치므로 첫 셀 제외

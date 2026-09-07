@@ -173,10 +173,30 @@
    "effect": "어떤 상황을 화면 맨 위에 크게 띄울지가 달라집니다."
   },
   {
+   "id": "Q-05b",
+   "skeleton": "Q5",
+   "payload": "state_priority",
+   "verifies": "Q-05",
+   "text": "한 번만 더 여쭐게요. 아침 약을 먹였는지 기억이 안 나는 상황이에요. 이때 화면이 맨 먼저 보여 줘야 하는 건 뭘까요?",
+   "effect": "앞 질문의 답을 실제 장면으로 한 번 더 확인합니다. 둘이 다르면 이쪽을 따릅니다.",
+   "options": [
+    {
+     "value": "먹였는지 여부",
+     "scene": "'아침 약 · 먹임 08:10'이 맨 위에 크게 보여요"
+    },
+    {
+     "value": "다음 약 시간",
+     "scene": "'다음 약 저녁 7시'가 맨 위에 크게 보이고 아침 기록은 아래에 있어요"
+    }
+   ],
+   "free": true,
+   "unknown": true
+  },
+  {
    "id": "Q-02",
    "skeleton": "Q2",
    "payload": "top_info",
-   "text": "홈을 열었을 때 딱 하나만 보인다면 무엇이어야 할까요?",
+   "text": "앱을 열자마자 딱 하나만 보인다면요. 저는 '오늘 남은 약 수'가 먼저 보여야 한다고 봅니다 — 지금 할 일을 정해 주니까요. 그래도 더 급한 게 있을까요?",
    "options": [
     {
      "value": "오늘 남은 약 수",
@@ -189,14 +209,36 @@
    ],
    "free": true,
    "unknown": true,
-   "effect": "첫 화면 맨 위에 무엇이 가장 크게 놓이는지가 달라집니다."
+   "effect": "첫 화면 맨 위에 무엇이 가장 크게 놓이는지가 달라집니다.",
+   "recommended": "오늘 남은 약 수",
+   "why": "지금 할 일을 바로 정해 주기 때문입니다."
+  },
+  {
+   "id": "Q-02b",
+   "skeleton": "Q2",
+   "payload": "top_info",
+   "verifies": "Q-02",
+   "text": "한 번만 더요. 저녁에 앱을 열었는데 오늘 약 세 개 중 하나를 아직 못 먹였어요. 맨 위에 뭐가 보여야 할까요?",
+   "effect": "앞 질문의 답을 실제 장면으로 한 번 더 확인합니다.",
+   "options": [
+    {
+     "value": "남은 약 1개",
+     "scene": "'아직 안 먹인 약 1개 · 저녁 7시'가 맨 위에 크게 보여요"
+    },
+    {
+     "value": "오늘 먹인 기록",
+     "scene": "'오늘 2/3 먹임'이 맨 위에 보이고 남은 약은 아래에 있어요"
+    }
+   ],
+   "free": true,
+   "unknown": true
   },
   {
    "id": "Q-04a",
    "kind": "pattern",
    "skeleton": "Q4'",
    "payload": "pattern",
-   "text": "처음 앱을 열어 약을 등록할 때, 다른 서비스들은 보통 이렇게 시작합니다. 실제로 쓸 때 어느 쪽이 편할까요?",
+   "text": "처음 앱을 열어 약을 등록할 때, 다른 서비스들은 보통 이렇게 시작합니다. 저는 '등록 버튼 하나' 쪽이 이 앱에 맞다고 봅니다 — 처음 온 사람이 할 일이 하나뿐이라서요. 그래도 실제로 쓸 때 다른 쪽이 편할까요?",
    "options": [
     {
      "value": "등록 버튼 하나",
@@ -213,14 +255,16 @@
    ],
    "free": true,
    "unknown": true,
-   "effect": "그 일을 하는 화면의 모양이 통째로 달라집니다."
+   "effect": "그 일을 하는 화면의 모양이 통째로 달라집니다.",
+   "recommended": "등록 버튼 하나",
+   "why": "처음 온 사람이 할 일이 하나뿐이라 그것만 크게 보이는 쪽이 빠르기 때문입니다."
   },
   {
    "id": "Q-04b",
    "kind": "pattern",
    "skeleton": "Q4'",
    "payload": "pattern",
-   "text": "약을 고를 때 두 번 먹이는 실수를 막는 방식입니다. 실제로 쓸 때 어느 쪽이 편할까요?",
+   "text": "약을 고를 때 두 번 먹이는 실수를 막는 방식입니다. 저는 '이미 먹임 잠금' 쪽이 이 앱에 맞다고 봅니다 — 처음 온 사람이 할 일이 하나뿐이라서요. 그래도 실제로 쓸 때 다른 쪽이 편할까요?",
    "options": [
     {
      "value": "이미 먹임 잠금",
@@ -237,31 +281,9 @@
    ],
    "free": true,
    "unknown": true,
-   "effect": "그 일을 하는 화면의 모양이 통째로 달라집니다."
-  },
-  {
-   "id": "Q-04c",
-   "kind": "pattern",
-   "skeleton": "Q4'",
-   "payload": "pattern",
-   "text": "놓친 약을 확인하는 방식입니다. 실제로 쓸 때 어느 쪽이 편할까요?",
-   "options": [
-    {
-     "value": "맨 위에 모아서",
-     "scene": "놓친 약이 홈 맨 위에 빨간 칸으로 모여 있어요",
-     "html": "<div style='padding:16px'><b style='font-size:20px'>맨 위에 모아서</b><div style='margin-top:14px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>놓친 약이 홈 맨 위에 빨간 칸으로 모여 있어요</div></div>",
-     "cta": false
-    },
-    {
-     "value": "알림 목록에서",
-     "scene": "홈은 그대로 두고 알림 목록에 들어가면 놓친 약이 보여요",
-     "html": "<div style='padding:16px'><b style='font-size:20px'>알림 목록에서</b><div style='margin-top:14px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>홈은 그대로 두고 알림 목록에 들어가면 놓친 약이 보여요</div></div>",
-     "cta": false
-    }
-   ],
-   "free": true,
-   "unknown": true,
-   "effect": "그 일을 하는 화면의 모양이 통째로 달라집니다."
+   "effect": "그 일을 하는 화면의 모양이 통째로 달라집니다.",
+   "recommended": "이미 먹임 잠금",
+   "why": "처음 온 사람이 할 일이 하나뿐이라 그것만 크게 보이는 쪽이 빠르기 때문입니다."
   },
   {
    "id": "Q-06",

@@ -32,6 +32,8 @@
  *   P-13 페이지 skeleton 집합 ⊆ prompts §6 정본 세트(fast/full)
  *   P-14 파일 크기 ≤ agent_gallery_html_kb_max
  *   P-15 frame 존재(app_title·cta 문자열) · questions 전건 effect("이걸 정하면 ○○가 달라집니다" 한 줄) ≥6자 (team-3 비교 후보 3)
+ *   P-18 재검증 존재(I-3): verifies 가 붙은 질문 ≥1 이고 그 원 질문의 skeleton 이 Q5(fast) 또는 Q5·Q2(full) — §1-12. 없으면 FAIL
+ *   P-19 서비스명 비노출(U-2/U-3): references.md '서비스' 열의 이름이 페이지 노출 텍스트(P-4 조각)에 0건
  *   P-17 kind:pattern 의 options 전건 html(≥40자, 자리표시자 0) — 패턴은 글이 아니라 폰 프레임 그림으로 보인다(U-3)
  *   P-16 flows[].steps: 마지막을 뺀 전 장면에 press(≥2자) + 강조할 곳(html 에 data-press 또는 press == 그 장면의 cta) · states[] 항목마다 label·html ("따라가 보기" 투어, 후보 5)
  */
@@ -221,6 +223,10 @@ if (!D) {
     const id = q.id || '(id 없음)'; const opts = Array.isArray(q.options) ? q.options : [];
     if (q.unknown !== true) p3.push(`${id} unknown≠true`); if (q.free !== true) p3.push(`${id} free≠true`);
     opts.forEach((o, i) => { if (!o || !String(o.value || '').trim()) p3.push(`${id}.options[${i}] value 없음`); if (!o || chars(o.scene) < 8) p3.push(`${id}.options[${i}] scene ${chars(o && o.scene)}자 < 8`); });
+    /* 결정형(§1-10·§1-14: Q2·Q10·Q11·Q11b·pattern)은 recommended·why 필수, 취향형(Q1·Q5·Q3 계열·Q6a)은 recommended 금지(앵커링) — 감사 지적: 있을 때만 검사하면 골든 Q-02 가 무검으로 통과했다 */
+    const sk = normSk(String(q.skeleton || '')); const isDecision = !q.verifies && (q.kind === 'pattern' || ['Q2', 'Q10', 'Q11', 'Q11b'].includes(sk)); /* 재검증 질문(verifies)은 추천 없이 묻는다 — 앵커링 방지 */ const isTaste = ['Q1', 'Q5', 'Q3', 'Q3b', 'Q3c', 'Q6a', 'Q5b'].includes(sk);
+    if (isDecision && q.kind !== 'pushback' && q.recommended == null) p3.push(`${id} 결정형(${sk || q.kind})인데 recommended 없음`);
+    if (isTaste && q.recommended != null) p3.push(`${id} 취향형(${sk})에 recommended — 앵커링 금지`);
     if (q.kind !== 'pushback' && q.recommended != null) { if (!opts.some((o) => o && o.value === q.recommended)) p3.push(`${id} recommended(${q.recommended}) 가 options.value 에 없음`); if (!String(q.why || '').trim()) p3.push(`${id} 추천이 있는데 why 없음`); }
     if (q.kind === 'pushback') { if (opts.length !== 3) p3.push(`${id} pushback options ${opts.length} ≠ 3`); if (!opts.some((o) => o && o.value === q.recommended)) p3.push(`${id} recommended(${q.recommended == null ? '없음' : q.recommended}) 가 options.value 에 없음`); if (!String(q.why || '').trim()) p3.push(`${id} why 없음`); }
     if (q.kind === 'pattern' && opts.length < 2) p3.push(`${id} pattern options ${opts.length} < 2`);
@@ -350,7 +356,15 @@ if (!D) {
     FL.forEach((f) => { const steps = Array.isArray(f.steps) ? f.steps : []; steps.forEach((s, i) => { const sid = `${f.id}.steps[${i}]`; if (!s) { p16.push(`${sid} 없음`); return; }
       if (i < steps.length - 1) { if (chars(s.press) < 2) p16.push(`${sid} press 없음(마지막 장면만 생략 가능)`); else if (!/data-press/.test(String(s.html || '')) && s.press !== s.cta) p16.push(`${sid} 강조할 곳 없음 — html 에 data-press 를 두거나 press 를 그 장면의 cta 와 같게`); }
       (Array.isArray(s.states) ? s.states : []).forEach((st, j) => { if (!st || chars(st.label) < 1 || !String(st.html || '').trim()) p16.push(`${sid}.states[${j}] label·html 필요`); }); }); });
-    { const p17 = []; Q.filter((q) => q.kind === 'pattern').forEach((q) => (q.options || []).forEach((o, i) => { const h = String((o && o.html) || ''); if (h.trim().length < 40) p17.push(`${q.id}.options[${i}] html ${h.trim().length}자 < 40`); else if (PLACEHOLDER.test(FW.stripTags(h))) p17.push(`${q.id}.options[${i}] 자리표시자`); }));
+    { const vq = Q.filter((q) => q.verifies); const byId = new Map(Q.map((q) => [q.id, q])); const tgt = vq.map((q) => normSk(String((byId.get(q.verifies) || {}).skeleton || '')));
+    const need = mode === 'fast' ? ['Q5'] : ['Q5', 'Q2']; const missing = need.filter((k) => !tgt.includes(k));
+    add('P-18', vq.length >= 1 && missing.length === 0, `재검증 질문 ${vq.length}건, 원 질문 ${tgt.join(',') || '없음'} (필요: ${need.join('·')})`, missing.length ? `재검증 없는 핵심 답: ${missing.join(', ')}` : vq.map((q) => `${q.id}→${q.verifies}`).join(', ')); }
+  { const p19 = []; const refsTxt = read(A.refs) || ''; const names = []; let hdr = null;
+    for (const line of refsTxt.split('\n')) { if (!/^\s*\|/.test(line)) continue; const cells = line.split('|').slice(1, -1).map((c) => c.trim()); if (cells.every((c) => /^:?-{2,}:?$/.test(c))) continue; if (!hdr) { hdr = cells; continue; } const si = hdr.findIndex((h) => /서비스/.test(h)); if (si >= 0 && /^REF-/i.test(cells[0] || '')) { const nm = String(cells[si] || '').replace(/[*`]/g, '').trim(); if (nm.length >= 2) names.push(nm); } }
+    const seen = new Set(names); const exposed = segs.map(([w, t]) => [w, String(t || '')]);
+    for (const nm of seen) for (const [w, t] of exposed) if (t.includes(nm)) p19.push(`${w}:「${nm}」`);
+    add('P-19', p19.length === 0, `references.md 서비스명 ${seen.size}개 중 페이지 노출 ${p19.length}건`, short(p19) || (seen.size ? '노출 0건' : 'references.md 서비스 열 없음/레퍼런스 없음')); }
+  { const p17 = []; Q.filter((q) => q.kind === 'pattern').forEach((q) => (q.options || []).forEach((o, i) => { const h = String((o && o.html) || ''); if (h.trim().length < 40) p17.push(`${q.id}.options[${i}] html ${h.trim().length}자 < 40`); else if (PLACEHOLDER.test(FW.stripTags(h))) p17.push(`${q.id}.options[${i}] 자리표시자`); }));
     add('P-17', p17.length === 0, `패턴 선택지 그림 위반 ${p17.length}건 (pattern 질문 ${Q.filter((q) => q.kind === 'pattern').length})`, short(p17) || '패턴 선택지 전건 html 있음'); }
   add('P-16', p16.length === 0, `투어 형식 위반 ${p16.length}건 (흐름 ${FL.length})`, short(p16) || (FL.length ? `전 장면 press·강조 위치 있음` : '흐름 없음'));
   }

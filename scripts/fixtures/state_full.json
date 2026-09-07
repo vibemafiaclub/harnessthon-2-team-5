@@ -14,7 +14,7 @@
       "started_at": "2026-09-07T01:00:00Z",
       "done_at": "2026-09-07T01:30:00Z",
       "exit_check": "design/verify/exit_stage0.md",
-      "answered": 19
+      "answered": 20
     },
     "tokens": {
       "status": "done",
@@ -73,6 +73,13 @@
         "kind": "q12",
         "default_taken": true,
         "ts": "2026-09-07T01:15:00Z"
+      },
+      {
+        "stage": "interview",
+        "item": "Q-02b",
+        "kind": "accepted",
+        "default_taken": "오늘 남은 약 수",
+        "ts": "2026-09-07T01:16:00Z"
       }
     ],
     "token_set_choice": {
