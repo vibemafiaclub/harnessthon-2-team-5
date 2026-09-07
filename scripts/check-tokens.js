@@ -7,6 +7,7 @@
  * 종료 코드 0 PASS / 1 FAIL / 2 입력 오류(tokens·state 없음). 나머지 입력이 없으면 그 항목 FAIL(지정 안 했어도 — 1단계 산출물은 전부 있어야 한다).
  *   K-1  tokens.json: 빈 문자열 0(_note 류 제외), 6카테고리 rationale, typography.family.fallback
  *   K-2  build-rules 종료 0 + audit --compile-only 종료 0
+ *   K-3b 미감 정합 M-1(text·neutral.900 순검정 아님)·M-2(중립색 채도 전부 0 또는 전부 >0)·M-3(elevation sm<md<lg blur·opacity) — token_sets.json 에서 직접 재계산
  *   K-3  wcag_tokens.md: 선택 세트 행 ≥10, FAIL 0, 필수 행(WCAG text.primary/bg.page·on-primary·단조성 neutral·강약 text·M-1·M-2·M-3) PASS
  *   K-4  design.md §1~§13 존재, 줄 ≤ agent_design_md_lines_max, §2b '- 왜 …:' 4, §4A+§4C 행 == brief §4 confidence 수, §7 행 3 + 역할 열, §8 ≥2줄 + 사용자 수준, §9 아이콘 사전·§10 장치·§12 최장 문자열
  *   K-5  design.md 에 hex 0건
@@ -76,6 +77,20 @@ const rows = (x) => (x || '').split('\n').filter((l) => /^\|/.test(l) && !/^\|\s
     const t = lines.filter((l) => /^T-0[1-9] /.test(l)); const t1 = t.filter((l) => /^T-01 (SET-[A-Z] \| (이유: \S.*|사용자 위임.*)|없음 \| 이유: \S.*)$/.test(l)).length; const last = t[t.length - 1] || ''; const set = (last.match(/^T-0[1-9] (SET-[A-Z])/) || [])[1]; const hn = lines.filter((l) => /^H-[0-9]{2} \[tokens\/token_choice\]/.test(l)).length;
     const ok = t1 === 1 && !!set && set === st.chosen && (st.delegated ? hn === 0 : hn === 1);
     add('K-10', ok, `T-01 유효 ${t1} / 최종 T 세트 ${set || '없음'} / state.chosen ${st.chosen} / H-nn [tokens/token_choice] ${hn} (위임 ${!!st.delegated})`, t.join(' ; ').slice(0, 160) || 'T- 줄 없음'); } }
+/* K-3b 미감 정합 M-1~M-3 — token_sets.json 에서 직접 재계산(wcag_tokens.md 의 PASS 문자열은 기록일 뿐, 감사 지적) */
+{ const sTxt = read(P('sets')); const chosen = (S.human_gates && S.human_gates.token_set_choice && S.human_gates.token_set_choice.chosen) || '';
+  if (sTxt == null) add('K-3b', false, 'token_sets.json 없음', P('sets'));
+  else { let SS; try { SS = JSON.parse(sTxt); } catch (e) { SS = null; } const set = SS && Array.isArray(SS.sets) ? SS.sets.find((x) => x.id === chosen) : null;
+    if (!set) add('K-3b', false, `선택 세트 ${chosen || '(없음)'} 가 token_sets.json 에 없음`, P('sets'));
+    else { const t = set.tokens || {}; const hex = (v) => { const m = /^#([0-9a-f]{6})$/i.exec(String(v).trim()); return m ? m[1].toUpperCase() : null; }; const chroma = (h) => { const c = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); return Math.max(...c) - Math.min(...c); };
+      const res = (v) => { let x = v, n = 0; while (typeof x === 'string' && /^\{.*\}$/.test(x) && n++ < 10) x = x.slice(1, -1).split('.').reduce((a, k) => a && a[k], t); return x; };
+      const g = (p) => p.split('.').reduce((a, k) => a && a[k], t);
+      const tp = res(g('color.semantic.text.primary')), ts = res(g('color.semantic.text.secondary')), n9 = g('color.primitive.neutral.900');
+      const m1 = [tp, ts, n9].every((v) => hex(v) && hex(v) !== '000000');
+      const neutral = g('color.primitive.neutral') || {}; const ns = Object.entries(neutral).filter(([k]) => k !== '0').map(([k, v]) => [k, hex(v) ? chroma(hex(v)) : NaN]);
+      const m2 = ns.length > 0 && (ns.every(([, c]) => c === 0) || ns.every(([, c]) => c > 0));
+      const e = g('elevation.scale') || {}; const m3 = !!(e.sm && e.md && e.lg) && e.sm.blur < e.md.blur && e.md.blur < e.lg.blur && e.sm.opacity < e.md.opacity && e.md.opacity < e.lg.opacity;
+      add('K-3b', m1 && m2 && m3, `M-1 순검정 없음 ${m1} · M-2 중립색 채도 일관 ${m2} · M-3 그림자 단조 ${m3} (세트 ${chosen})`, `text.primary=${tp} neutral.900=${n9} / neutral chroma ${ns.map(([k, c]) => k + ':' + c).join(' ')} / blur ${e.sm && e.sm.blur}<${e.md && e.md.blur}<${e.lg && e.lg.blur}`); } } }
 /* K-9 */
 { const sTxt = read(P('sets')); if (sTxt == null) add('K-9', false, 'token_sets.json 없음', P('sets'));
   else { let SS; try { SS = JSON.parse(sTxt); } catch (e) { SS = null; } const sets = SS && Array.isArray(SS.sets) ? SS.sets : []; const g = (o, p) => p.split('.').reduce((a, k) => a && a[k], o); const K = ['typography.family.body', 'color.primitive.primary.500', 'radius.usage.card', 'spacing.unit']; let f = 0; const det = [];

@@ -17,7 +17,7 @@
  *   P-0  git diff --quiet -- templates/ 종료 코드 0 (템플릿 무변조, D-28)
  *   P-1  기준 골격(HEAD)과 생성물에서 harness-data 블록을 뺀 나머지가 바이트 동일
  *   P-2  JSON 유효 · questions ≤ human_interview_questions_max · [0]=Q1 · [1]=Q5 · tiles ≤ human_gallery_tiles_max
- *        · pairs ≤ human_worldcup_rounds_max(기본 6) · flows[].steps ≤ agent_flow_steps_max
+ *        · pairs ≤ human_worldcup_rounds_max(기본 7) · flows[].steps ≤ agent_flow_steps_max
  *   P-3  questions(+flows) 전건 unknown===true && free===true · options 전건 value 있음·scene ≥8자
  *        · kind:pushback 은 options 정확히 3 + recommended + why · kind:pattern 은 options ≥2 · 어느 kind 든 recommended 가 있으면 options.value 중 하나 + why (결정형 추천 선명시)
  *   P-4  사용자 노출 텍스트(title·intro·banner·frame·text·effect·why·value·scene·tile/pair/flow html·title·cta·press·then·states 텍스트 노드) 금지어(디자인 14 + 문서 용어 12) 0 + text·scene 에 TASTE_PATTERN 0 + text 에 열린 결정 질문(OPEN_DECISION_PATTERN, 추천 문장 '저는 …봅니다' 없이) 0
@@ -206,7 +206,7 @@ if (!D) {
   for (let n = 3; n <= 13; n++) add('P-' + n, false, 'harness-data JSON 무효 — 검사 불가', 'P-2 참조');
 } else {
   const Q = Array.isArray(D.questions) ? D.questions : [], T = Array.isArray(D.tiles) ? D.tiles : [], P = Array.isArray(D.pairs) ? D.pairs : [], FL = Array.isArray(D.flows) ? D.flows : [];
-  const qmax = cap('human_interview_questions_max', mode === 'fast' ? 10 : 12), tmax = cap('human_gallery_tiles_max', 24), pmax = cap('human_worldcup_rounds_max', 6), fsmax = cap('agent_flow_steps_max', 4);
+  const qmax = cap('human_interview_questions_max', mode === 'fast' ? 10 : 12), tmax = cap('human_gallery_tiles_max', 24), pmax = cap('human_worldcup_rounds_max', 7), fsmax = cap('agent_flow_steps_max', 4);
   const p2 = [];
   if (Q.length > qmax) p2.push(`질문 ${Q.length} > ${qmax}`);
   if (skel(Q[0]) !== 'Q1') p2.push(`questions[0] 이 Q1 아님(${skel(Q[0]) || '없음'})`);

@@ -15,5 +15,8 @@ if (mode === 'pattern-html') { const q = d.questions.find((q) => q.kind === 'pat
 if (mode === 'pattern-drop') d.questions = d.questions.filter((q) => q.kind !== 'pattern');
 if (mode === 'open-question') { const q = d.questions.find((q) => q.kind === 'pushback'); q.text = '이 앱에는 어떤 로그인을 넣을까요?'; }
 if (mode === 'taste-recommended') { const q = d.questions.find((q) => q.skeleton === 'Q1'); q.recommended = q.options[0].value; q.why = '이유'; }
+if (mode === 'frame') delete d.frame;
+if (mode === 'tile-elements') d.tiles[0].html = '<div><b>a</b><i>b</i><u>c</u><s>d</s><em>e</em><span>f</span><small>g</small><div>h</div><p>i</p><b>j</b><i>k</i><u>l</u></div>';
+if (mode === 'contrast') d.tiles[0].html = d.tiles[0].html.replace(/color:#[0-9A-Fa-f]{6}/, 'color:#DDDDDD').replace('<b', "<b style='color:#EEEEEE'");
 if (mode === 'service-name') d.intro = d.intro + ' 서비스A 처럼 만들어요.';
 fs.writeFileSync(out, tpl.replace(RE, () => '<script id="harness-data" type="application/json">\n' + JSON.stringify(d, null, 1) + '\n</script>'));

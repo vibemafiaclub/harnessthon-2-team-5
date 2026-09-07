@@ -29,6 +29,7 @@
  *        d: 번들 text_inventory 가 있으면 초안 텍스트 집합 일치율 ≥90% (없으면 N/A)
  *   F-10 `check-c-report.js` 종료 코드 0 (리포트는 --out 과 같은 폴더의 exit_stage3_c.md)
  *   F-12 final_review.md 에 '## 대신 정한 것' 절: 행 수 ≥ state.human_gates.delegations[] 수(전 단계 합본 — 0단계 모르겠음·Q12·추천 수락·예산 60%·2단계 ai_pick 등), 행 텍스트 금지어 0 — 사용자가 마지막에 '하네스가 묻지 않고 정한 것' 전부를 한 번에 본다(U-6)
+ *   F-9e drafts screen_*.html 연결 sha256 == state.human_gates.draft_approval.draft_hash (승인 뒤 변경 감지 — 2-H 규약)
  *   F-11 C 판정 처리 원장(D-40) — c_report.json 의 verdict fail 전건(local 포함)마다 `--c-routing`(기본 design/verify/c_routing.md) 표에
  *        `| <화면 id> | <C-id> | <분류> | <처리: 수정|처리 안 함> | <근거> |` 행이 있고, 처리가 '수정' 이면 근거에 재캡처 파일명(.png) 또는 커밋 해시(7자 이상),
  *        '처리 안 함' 이면 근거(사유) ≥8자. fail 0건이면 원장 없이 PASS. 정본 스키마(screens[])가 아니면 FAIL(D-41 — 조용히 PASS 하지 않는다). 리포트를 받아 보고만 하는 것은 라우팅이 아니다.
@@ -273,6 +274,12 @@ else {
   const rate = total ? matched / total : 0;
   add('F-9d', rate >= 0.9, `초안 텍스트 집합 일치율 ${(rate * 100).toFixed(1)}% (≥90%, ${matched}/${total})`, per.join(' '));
 }
+
+/* ---- F-9e 승인본 해시 — 승인 뒤 초안이 바뀌면 그 승인은 무효(2-H: draft_hash = cat screen_*.html | shasum -a 256) ---- */
+{ const DA = HG.draft_approval || {}; const dir = P('drafts'); const files = (fs.existsSync(dir) && fs.statSync(dir).isDirectory()) ? fs.readdirSync(dir).filter((f) => /^screen_.*\.html$/.test(f)).sort() : [];
+  if (!files.length) add('F-9e', false, 'drafts 에 screen_*.html 없음 — 해시 대조 불가', dir);
+  else { const h = require('crypto').createHash('sha256'); for (const f of files) h.update(fs.readFileSync(path.join(dir, f))); const now = h.digest('hex'); const rec = String(DA.draft_hash || '');
+    add('F-9e', rec.length >= 8 && now.startsWith(rec.slice(0, 8)) && rec === now.slice(0, rec.length), `승인 해시 ${rec ? rec.slice(0, 12) : '(없음)'} vs 현재 ${now.slice(0, 12)} (${files.length}개 파일)`, rec === now ? '승인본과 동일' : rec ? '승인 뒤 초안이 바뀌었거나 승인 기록이 없다 — 2-H 재승인' : 'state.human_gates.draft_approval.draft_hash 없음'); } }
 
 /* ---- F-10 check-c-report.js ---- */
 const cOut = A.out ? path.join(path.dirname(A.out), 'exit_stage3_c.md') : 'design/verify/exit_stage3_c.md';

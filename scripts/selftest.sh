@@ -151,6 +151,9 @@ mutpage "$TMP/cip_m12.html" pattern-drop;  expect_fail_exact "P-12 패턴 질문
 mutpage "$TMP/cip_m19.html" service-name;  expect_fail_exact "P-19 레퍼런스 서비스명 노출" "P-19" "$TMP/cip_m19.md" $CIP --page "$TMP/cip_m19.html" "${CIPARGS[@]}" --out "$TMP/cip_m19.md"
 mutpage "$TMP/cip_mo.html" open-question;  expect_fail_exact "P-4 열린 결정 질문(추천 없이 '어떤 로그인을 넣을까요')" "P-4" "$TMP/cip_mo.md" $CIP --page "$TMP/cip_mo.html" "${CIPARGS[@]}" --out "$TMP/cip_mo.md"
 mutpage "$TMP/cip_mt.html" taste-recommended; expect_fail_exact "P-3 취향형(Q1)에 recommended — 앵커링" "P-3" "$TMP/cip_mt.md" $CIP --page "$TMP/cip_mt.html" "${CIPARGS[@]}" --out "$TMP/cip_mt.md"
+mutpage "$TMP/cip_mf.html" frame;          expect_fail_exact "P-15 frame 삭제" "P-15" "$TMP/cip_mf.md" $CIP --page "$TMP/cip_mf.html" "${CIPARGS[@]}" --out "$TMP/cip_mf.md"
+mutpage "$TMP/cip_m7.html" tile-elements;  expect_fail_subset "P-7 타일 요소 12개" "P-7" "$TMP/cip_m7.md" $CIP --page "$TMP/cip_m7.html" "${CIPARGS[@]}" --out "$TMP/cip_m7.md"
+mutpage "$TMP/cip_m9.html" contrast;       expect_fail_subset "P-9 대비 4.5:1 미만" "P-9" "$TMP/cip_m9.md" $CIP --page "$TMP/cip_m9.html" "${CIPARGS[@]}" --out "$TMP/cip_m9.md"
 mutpage "$TMP/cip_m16.html" press;  expect_fail_exact "P-16 투어 press 삭제" "P-16" "$TMP/cip_m16.md" $CIP --page "$TMP/cip_m16.html" "${CIPARGS[@]}" --out "$TMP/cip_m16.md"
 expect_rc "없는 페이지 → 종료 2" 2 $CIP --page "$TMP/nope.html"
 
@@ -169,6 +172,9 @@ echo "## 4. check-c-report"
 CCR="node scripts/check-c-report.js"; FG="$FX/figma_good"
 expect_pass "골든(figma_good/verify/c_report.json)" "$TMP/ccr_good.md" $CCR --report "$FG/verify/c_report.json" --brief "$FG/brief.md" --state "$S" --shots "$FG/verify/shots/index.md" --out "$TMP/ccr_good.md"
 expect_fail_exact "결함(c_report_bad.json): positive false 무예외·score 2 무근거" "CR-5 CR-6" "$TMP/ccr_bad.md" $CCR --report "$FX/c_report_bad.json" --brief "$FG/brief.md" --state "$S" --shots "$FG/verify/shots/index.md" --detector "$FG/verify/c_detector_test.md" --out "$TMP/ccr_bad.md"
+# CR-8: top_info.match=false → CR-8 만 FAIL
+node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));d.screens[0].top_info.match=false;fs.writeFileSync(process.argv[2],JSON.stringify(d));' "$FG/verify/c_report.json" "$TMP/c_report_m8.json"
+expect_fail_exact "CR-8 top_info.match=false" "CR-8" "$TMP/ccr_m8.md" $CCR --report "$TMP/c_report_m8.json" --brief "$FG/brief.md" --state "$S" --shots "$FG/verify/shots/index.md" --detector "$FG/verify/c_detector_test.md" --out "$TMP/ccr_m8.md"
 # CR-11: c_detector 없는 state → full 에서 FAIL
 node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));delete d.stages.figma.c_detector;fs.writeFileSync(process.argv[2],JSON.stringify(d));' "$S" "$TMP/state_nodet.json"
 expect_fail_exact "CR-11 검출력 시험 미실행(full)" "CR-11" "$TMP/ccr_m11.md" $CCR --report "$FG/verify/c_report.json" --brief "$FG/brief.md" --state "$TMP/state_nodet.json" --shots "$FG/verify/shots/index.md" --out "$TMP/ccr_m11.md"
@@ -204,11 +210,17 @@ expect_fail_subset "H-11 §2 화면 파일 삭제" "H-11" "$TMP/ch_m11.md" $CH -
 rm -rf "$TMP/html_m12"; cp -R "$FX/html_good" "$TMP/html_m12"; sed -i '' -E 's/^\| 초대 보내기·공유 \| S-1 \| 2 \|/| 초대 보내기·공유 | S-1 | 9 |/' "$TMP/html_m12/brief.md"
 expect_fail_exact "H-12 §2c 담당 화면 # 파일 없음" "H-12" "$TMP/ch_m12.md" $CH --drafts "$TMP/html_m12/drafts" --brief "$TMP/html_m12/brief.md" --stimuli "$TMP/html_m12/stimuli" --out "$TMP/ch_m12.md"
 
+rm -rf "$TMP/html_m15"; cp -R "$FX/html_good" "$TMP/html_m15"; sed -i '' 's/ data-role="top-info"//' "$TMP/html_m15/drafts/screen_01_home.html"
+expect_fail_exact "H-15 top-info 삭제" "H-15" "$TMP/ch_m15.md" $CH --drafts "$TMP/html_m15/drafts" --brief "$TMP/html_m15/brief.md" --stimuli "$TMP/html_m15/stimuli" --out "$TMP/ch_m15.md"
+
 echo "## 6c. check-tokens (1단계 K-1~K-12)"
 TG="$FX/tokens_good"; CT="node scripts/check-tokens.js"; CTARGS=(--tokens "$TG/tokens.json" --state "$S" --design "$TG/design.md" --brief "$FX/brief_golden.md" --wcag "$TG/verify/wcag_tokens.md" --raw "$TG/interview_raw.md" --rules-out "$TMP/tg_rules.json")
 expect_pass "골든(tokens_good/)" "$TMP/ct_good.md" $CT "${CTARGS[@]}" --compare "$TG/stimuli/design_guide_compare.html" --sets "$TG/stimuli/token_sets.json" --out "$TMP/ct_good.md"
 sed -E 's#<section data-set="SET-C">.*</section></main>#</main>#' "$TG/stimuli/design_guide_compare.html" > "$TMP/cmp_m6.html"; expect_fail_exact "K-6 세트 수 부족" "K-6" "$TMP/ct_m6.md" $CT "${CTARGS[@]}" --compare "$TMP/cmp_m6.html" --sets "$TG/stimuli/token_sets.json" --out "$TMP/ct_m6.md"
 node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));d.sets[1].tokens=JSON.parse(JSON.stringify(d.sets[0].tokens));d.sets[1].tokens.spacing.unit=4;fs.writeFileSync(process.argv[2],JSON.stringify(d));' "$TG/stimuli/token_sets.json" "$TMP/sets_m9.json"; expect_fail_exact "K-9 세트 쌍 1키만 다름" "K-9" "$TMP/ct_m9.md" $CT "${CTARGS[@]}" --compare "$TG/stimuli/design_guide_compare.html" --sets "$TMP/sets_m9.json" --out "$TMP/ct_m9.md"
+awk -F'|' 'BEGIN{OFS="|"} /^\| 1 \| 홈/ && $4!="" {$4=" "} {print}' "$TG/design.md" > "$TMP/design_m11.md"; expect_fail_exact "K-11 §5 1등 정보 셀 공백" "K-11" "$TMP/ct_m11.md" $CT --tokens "$TG/tokens.json" --state "$S" --design "$TMP/design_m11.md" --brief "$FX/brief_golden.md" --wcag "$TG/verify/wcag_tokens.md" --raw "$TG/interview_raw.md" --rules-out "$TMP/tg_rules.json" --compare "$TG/stimuli/design_guide_compare.html" --sets "$TG/stimuli/token_sets.json" --out "$TMP/ct_m11.md"
+node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));d.sets[0].tokens.color.primitive.neutral["900"]="#000000";fs.writeFileSync(process.argv[2],JSON.stringify(d));' "$TG/stimuli/token_sets.json" "$TMP/sets_m1.json"; expect_fail_exact "K-3b M-1 순검정 neutral.900" "K-3b" "$TMP/ct_m3b1.md" $CT "${CTARGS[@]}" --compare "$TG/stimuli/design_guide_compare.html" --sets "$TMP/sets_m1.json" --out "$TMP/ct_m3b1.md"
+node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));d.sets[0].tokens.elevation.scale.sm.blur=30;fs.writeFileSync(process.argv[2],JSON.stringify(d));' "$TG/stimuli/token_sets.json" "$TMP/sets_m3.json"; expect_fail_exact "K-3b M-3 그림자 단조 위반" "K-3b" "$TMP/ct_m3b3.md" $CT "${CTARGS[@]}" --compare "$TG/stimuli/design_guide_compare.html" --sets "$TMP/sets_m3.json" --out "$TMP/ct_m3b3.md"
 sed -E 's/^T-01 SET-A \| 이유: .*$/T-01 SET-A | 이유: /' "$TG/interview_raw.md" > "$TMP/raw_m10.md"; expect_fail_exact "K-10 T-01 이유 공백" "K-10" "$TMP/ct_m10.md" $CT --tokens "$TG/tokens.json" --state "$S" --design "$TG/design.md" --brief "$FX/brief_golden.md" --wcag "$TG/verify/wcag_tokens.md" --raw "$TMP/raw_m10.md" --rules-out "$TMP/tg_rules.json" --compare "$TG/stimuli/design_guide_compare.html" --sets "$TG/stimuli/token_sets.json" --out "$TMP/ct_m10.md"
 
 echo "## 7. check-figma (F-10 이 check-c-report 를 실제로 부른다)"
@@ -227,6 +239,8 @@ expect_fail_exact "F-11 구 스키마(fails[]) c_report → 조용한 PASS 금�
 # F-12: final_review 에서 '대신 정한 것' 절 삭제 → F-12 만 FAIL
 mkdir -p "$TMP/m12"; awk '/^## 대신 정한 것/{exit} {print}' "$FG/verify/final_review.md" > "$TMP/m12/final_review.md"
 expect_fail_exact "F-12 대신 정한 것 절 삭제" "F-12" "$TMP/cf_m12.md" node scripts/check-figma.js "${CFARGS[@]}" --review "$TMP/m12/final_review.md" --c-report "$FG/verify/c_report.json" --c-routing "$TMP/c_routing_ok.md" --out "$TMP/cf_m12.md"
+rm -rf "$TMP/drafts_m9e"; cp -R "$FG/drafts" "$TMP/drafts_m9e"; printf '\n<!-- 승인 뒤 수정 -->\n' >> "$TMP/drafts_m9e/screen_01_home.html"
+expect_fail_exact "F-9e 승인 뒤 초안 변경(draft_hash 불일치)" "F-9e" "$TMP/cf_m9e.md" node scripts/check-figma.js --figma "$FG/figma.md" --state "$S" --nodes "$FG/figma_nodes.json" --brief "$FG/brief.md" --drafts "$TMP/drafts_m9e" --audit "$FG/verify/audit_screens.json,$FG/verify/audit_components.json" --shots "$TMP/shots" --review "$FG/verify/final_review.md" --tokens "$FG/tokens.json" --shots-index "$FG/verify/shots/index.md" --c-report "$FG/verify/c_report.json" --c-routing "$TMP/c_routing_ok.md" --out "$TMP/cf_m9e.md"
 expect_pass "F-11 처리 원장 있음(수정+커밋)" "$TMP/cf_f11b.md" node scripts/check-figma.js "${CFARGS[@]}" --c-report "$TMP/verify_f11/c_report.json" --c-routing "$TMP/c_routing_ok.md" --out "$TMP/cf_f11b.md"
 
 echo "## 8. audit-core 규칙 검출력 (fixtures/audit/cases.json)"

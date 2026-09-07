@@ -12,6 +12,20 @@
      "primitive": {
       "primary": {
        "500": "#0F6E63"
+      },
+      "neutral": {
+       "0": "#FFFFFF",
+       "100": "#F3F5F3",
+       "300": "#CDD1CE",
+       "500": "#8A8F8A",
+       "700": "#4A4F4A",
+       "900": "#1C2228"
+      }
+     },
+     "semantic": {
+      "text": {
+       "primary": "{color.primitive.neutral.900}",
+       "secondary": "{color.primitive.neutral.700}"
       }
      }
     },
@@ -22,6 +36,22 @@
     },
     "spacing": {
      "unit": 8
+    },
+    "elevation": {
+     "scale": {
+      "sm": {
+       "blur": 2,
+       "opacity": 0.06
+      },
+      "md": {
+       "blur": 8,
+       "opacity": 0.1
+      },
+      "lg": {
+       "blur": 20,
+       "opacity": 0.16
+      }
+     }
     }
    }
   },
@@ -37,6 +67,20 @@
      "primitive": {
       "primary": {
        "500": "#2B6CB0"
+      },
+      "neutral": {
+       "0": "#FFFFFF",
+       "100": "#F3F5F3",
+       "300": "#CDD1CE",
+       "500": "#8A8F8A",
+       "700": "#4A4F4A",
+       "900": "#1C2228"
+      }
+     },
+     "semantic": {
+      "text": {
+       "primary": "{color.primitive.neutral.900}",
+       "secondary": "{color.primitive.neutral.700}"
       }
      }
     },
@@ -47,6 +91,22 @@
     },
     "spacing": {
      "unit": 8
+    },
+    "elevation": {
+     "scale": {
+      "sm": {
+       "blur": 2,
+       "opacity": 0.06
+      },
+      "md": {
+       "blur": 8,
+       "opacity": 0.1
+      },
+      "lg": {
+       "blur": 20,
+       "opacity": 0.16
+      }
+     }
     }
    }
   },
@@ -62,6 +122,20 @@
      "primitive": {
       "primary": {
        "500": "#B7791F"
+      },
+      "neutral": {
+       "0": "#FFFFFF",
+       "100": "#F3F5F3",
+       "300": "#CDD1CE",
+       "500": "#8A8F8A",
+       "700": "#4A4F4A",
+       "900": "#1C2228"
+      }
+     },
+     "semantic": {
+      "text": {
+       "primary": "{color.primitive.neutral.900}",
+       "secondary": "{color.primitive.neutral.700}"
       }
      }
     },
@@ -72,6 +146,22 @@
     },
     "spacing": {
      "unit": 4
+    },
+    "elevation": {
+     "scale": {
+      "sm": {
+       "blur": 2,
+       "opacity": 0.06
+      },
+      "md": {
+       "blur": 8,
+       "opacity": 0.1
+      },
+      "lg": {
+       "blur": 20,
+       "opacity": 0.16
+      }
+     }
     }
    }
   }

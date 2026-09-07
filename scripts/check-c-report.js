@@ -221,7 +221,7 @@ if (!parseErr) {
   add('CR-10', !noScreens && bad10.length === 0, noScreens ? 'screens 없음' : `SLOP-SWEEP 없는 화면 ${bad10.length}건`, bad10.join(', ') || '전 화면 SLOP-SWEEP 존재');
 }
 
-/* ---- CR-11 검출력 시험 (full) ---- */
+/* ---- CR-11 검출력 시험 (full·fast 공통) ---- */
 {
   const det = input('detector');
   const flag = state && state.stages && state.stages.figma ? state.stages.figma.c_detector : undefined;

@@ -114,7 +114,7 @@ fast 에서 잘린 항목은 전부 brief §6 가정 로그에 "시간 예산으
 | 4 | 2 | 축별 선택 · 초안 승인 | 비교 HTML → 선택 / index.html → 승인(취향형, 선택 기록 후 추천 공개). kind `axis_choice` / `draft_approval` |
 | 5 | 3 | 최종 확인 | **메인이 화면 프레임 스크린샷을 직접 열어 본 뒤** Figma 링크 + 검사 파일 수치 + 3축 자체 채점(보기 좋음 / 쓰기 쉬움 / 이 서비스다움)을 쉬운 말로(1=AI 가 만든 티, 3=신입, 5=시니어) 고지 → ack(결정형: '이대로 마무리 / 더 다듬기' 중 추천 먼저). 컴포넌트·마스터 확인은 화면 확인을 대체하지 못한다. kind `final_ack` |
 
-추가 호출이 허용되는 예외 2개: 0단계 `[CONSTRAINT]` 충돌 질의(kind `constraint`), 3단계 `taste_gap` 질의(kind `taste_gap`). 결정형으로만 열리는 호출 2종: 게이트 4항을 채운 BLOCKED 승격(`blocked`), 상한 초과·같은 이유 2회 반복의 진행/보정/중단(`cap_exceeded`). 이 10종 밖의 kind 로 부르거나 누적이 `caps.human_calls_max`(7 = 5곳 + 예외 2)를 넘으면 하네스 결함이고, check-brief B-24 가 FAIL 로 잡는다.
+추가 호출이 허용되는 예외 2개: 0단계 `[CONSTRAINT]` 충돌 질의(kind `constraint`), 3단계 `taste_gap` 질의(kind `taste_gap`). 결정형으로만 열리는 호출 2종: 게이트 4항을 채운 BLOCKED 승격(`blocked`), 상한 초과·같은 이유 2회 반복의 진행/보정/중단(`cap_exceeded`). 이 11종(정본 check-brief KINDS) 밖의 kind 로 부르거나 누적이 `caps.human_calls_max`(7 = 5곳 + 예외 2)를 넘으면 하네스 결함이고, check-brief B-24 가 FAIL 로 잡는다.
 
 **호출 품질 게이트** — 사용자를 부를 때 ①무엇을 결정하는지 ②선택지 ③하네스 추천과 이유 ④결정 안 하면 뭐가 막히는지, 4개를 한 화면에 못 담으면 **부르지 않는다**. 사용자가 자료를 구하거나 정리하는 일은 0이다. 열린 결정 질문("무엇을 넣을까요 / 몇 개로 할까요 / 어떻게 보이면 좋을까요")은 금지다 — 입장은 하네스가 만들고 사용자는 반응한다. 시각 판단을 묻는 호출(`taste_gap`·초안 승인)은 최신 렌더(스크린샷 또는 페이지 링크)를 첨부해야 게이트를 통과한다.
 
@@ -135,7 +135,7 @@ fast 에서 잘린 항목은 전부 brief §6 가정 로그에 "시간 예산으
 안 정하면: <기본값으로 무엇이 진행되는지 / 무엇이 막히는지>
 ```
 
-사용자를 부르기 전에 `design/interview_raw.md` 에 `H-nn [<stage>/<kind>]` 한 줄 + 위 4줄을 append 하고 `state.human_gates.calls[]` 에 `{stage, kind, ts}` 를 기록한다. 사용자의 답 원문은 같은 블록 바로 아래 `답: <원문>` 줄로. `stage` 는 `interview`·`tokens`·`draft`·`figma`, **kind 허용 목록 10종**: `interview_page` · `rule_ack` · `constraint` · `blocked` · `token_set` · `axis_choice` · `draft_approval` · `taste_gap` · `final_ack` · `cap_exceeded`(같은 이유 2회 반복 브리핑 포함). 되묻기(`F-n`)와 갤러리·월드컵 반응(`R-`·`W-`)은 H- 원장에 넣지 않는다. check-brief B-24 가 센다 — H- 항목마다 4줄 골격 존재 · kind 10종 안 · 누적 ≤ `caps.human_calls_max`. 이것이 "그 외에 부르면 결함" 의 판정 수단이다.
+사용자를 부르기 전에 `design/interview_raw.md` 에 `H-nn [<stage>/<kind>]` 한 줄 + 위 4줄을 append 하고 `state.human_gates.calls[]` 에 `{stage, kind, ts}` 를 기록한다. 사용자의 답 원문은 같은 블록 바로 아래 `답: <원문>` 줄로. `stage` 는 `interview`·`tokens`·`draft`·`figma`, **kind 허용 목록 11종(정본은 `scripts/check-brief.js` KINDS — 여기 목록은 사본)**: `interview_page` · `followup` · `constraint` · `blocked` · `token_choice` · `axis_choice` · `draft_approval` · `taste_gap` · `cap_exceeded`(같은 이유 2회 반복 브리핑 포함) · `repeat_brief` · `final_ack`. 되묻기(`F-n`)와 갤러리·월드컵 반응(`R-`·`W-`)은 H- 원장에 넣지 않는다. check-brief B-24 가 센다 — H- 항목마다 4줄 골격 존재 · kind 10종 안 · 누적 ≤ `caps.human_calls_max`. 이것이 "그 외에 부르면 결함" 의 판정 수단이다.
 
 **게이트 미충족 BLOCKED** — 4항을 못 채우는 BLOCKED 는 보내지 않는다. 메인이 가장 보수적 기본값으로 `ASSUMPTION:` 강등 + `delegations[]` 기록(kind `unknown`) + brief §6 가정 로그 후 같은 서브를 재호출한다(위 '서브가 지킬 것' 참조).
 

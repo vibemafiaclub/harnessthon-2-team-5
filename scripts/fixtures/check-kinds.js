@@ -9,6 +9,8 @@ let bad = 0, seen = 0;
 for (const f of files) {
   const t = fs.readFileSync(f, 'utf8'); const rel = path.relative(root, f);
   for (const m of t.matchAll(/\[(interview|tokens|draft|figma)\/([a-z_]+)\]/g)) { seen++; if (!KINDS.has(m[2])) { bad++; console.log(`[NG] ${rel}: [${m[1]}/${m[2]}] — KINDS 에 없음`); } }
+  /* 나열형: 'kind 허용 목록 …: `a` · `b`' / '허용 집합 …: a · b' 줄의 백틱·중점 토큰 전부 */
+  for (const line of t.split('\n')) { if (!/kind/.test(line) || !/(허용 목록|허용 집합|KINDS)/.test(line)) continue; for (const m of line.matchAll(/`([a-z_]{4,})`|(?:^|[·:(\s])([a-z]+_[a-z_]+)(?=[\s·).,])/g)) { const k = m[1] || m[2]; if (!k || ['q12', 'unknown', 'accepted', 'budget60', 'human_calls_max', 'check_brief', 'stage', 'kind'].includes(k) || k.length < 5) continue; if (/^(interview|tokens|draft|figma)$/.test(k)) continue; seen++; if (!KINDS.has(k)) { bad++; console.log(`[NG] ${rel}: 나열형 kind '${k}' — KINDS 에 없음`); } } }
   for (const m of t.matchAll(/kind `([a-z_]+)`/g)) { seen++; const k = m[1]; if (['q12', 'unknown', 'accepted', 'budget60'].includes(k)) continue; /* delegations kind 는 별도 어휘 */ if (!KINDS.has(k)) { bad++; console.log(`[NG] ${rel}: kind \`${k}\` — KINDS 에 없음`); } }
 }
 console.log(`kinds: 문서 참조 ${seen}건, 정본 ${KINDS.size}종, 불일치 ${bad}`);

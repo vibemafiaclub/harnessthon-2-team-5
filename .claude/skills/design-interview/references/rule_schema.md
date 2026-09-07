@@ -10,7 +10,7 @@
 |---|---|---|---|
 | `rule_id` | ✓ | `RULE-NN` | 이후 단계(design.md·A/C 검증·decisions.md)가 이 ID 로 참조 |
 | `statement` | ✓ | 한 문장, 판정 가능한 형태 | "자연스러워야 한다" 는 판정문이 아니다. "같은 목록 안 구분 방식은 1종" 처럼 예/아니오가 갈려야 한다 |
-| `plain` | ✓ | 같은 규칙을 디자인 용어 없이 쓴 한 줄 | 0-H ack 표가 statement 대신 이것을 사용자에게 보인다. 금지어 14개(`scripts/lib/forbidden-words.js` 정본)가 들어가면 FAIL(check-brief B-19). 예: statement "같은 목록 안 구분 방식은 1종" → plain "목록의 줄들은 전부 같은 모양으로 나눈다 — 어떤 줄은 카드, 어떤 줄은 선처럼 섞지 않는다" |
+| `plain` | ✓ | 같은 규칙을 디자인 용어 없이 쓴 한 줄 | 0-H ack 표가 statement 대신 이것을 사용자에게 보인다. 금지어 26개(`scripts/lib/forbidden-words.js` 정본)가 들어가면 FAIL(check-brief B-19). 예: statement "같은 목록 안 구분 방식은 1종" → plain "목록의 줄들은 전부 같은 모양으로 나눈다 — 어떤 줄은 카드, 어떤 줄은 선처럼 섞지 않는다" |
 | `source_quote` | ✓ | `interview_raw.md` 에 **실제로 존재하는** 원문 인용 | 근거 없는 기준은 하네스가 발명한 취향이다. grep 으로 존재 확인 |
 | `source_refs` | ✓ | `[R-05, W-2-1, A-03]` | 근거 개수·종류 → confidence. 3건 미만 또는 종류 1가지 = provisional |
 | `axis` | ✓ | 6축 중 하나 또는 `IA` / `domain` | 진술 vs 반응 대조표와 연결 |
