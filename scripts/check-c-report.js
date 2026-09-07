@@ -14,7 +14,9 @@
  * 검사 ID (계획 20 단일 번호표):
  *   CR-1  JSON 유효, screens[] ≥1, screens 수 ≥ brief §2 화면 수
  *   CR-2  각 screen ran===true, screenshots == 상태 수(states[] → shots/index.md 의 그 화면 파일 수 → 3~5 범위)
- *   CR-3  shots/index.md 파일마다 최신 행의 캡처 시각 ≥ Figma lastModified, 리포트의 화면마다 index 행 존재
+ *   CR-3  shots/index.md 파일마다 캡처 시각 ≥ Figma lastModified, 리포트의 화면마다 index 행 존재.
+ *         **PNG 가 index.md 옆에 있으면 캡처 시각은 파일의 실제 mtime 이다**(D-42 — index 에 적힌 시각은 자기 신고라 위조된다). index 시각이 mtime 보다 2분 넘게 미래면 FAIL(위조 의심),
+ *         index 의 sha(≥8 hex)가 파일 sha256 접두와 다르면 FAIL. PNG 가 없으면 index 시각으로 판정하되 근거에 '자기 신고' 를 남긴다.
  *   CR-4  verdict 는 pass|fail 뿐(중간값 금지). fail 전건에 diagnosis∈{local,direction,taste_gap,repeat}·elements·evidence
  *   CR-5  score.ui|ux|fit <3 이면 그 축 매핑 검사에 fail ≥1 — ui=C-1·C-3·C-5·C-7·C-8 / ux=C-2·C-4·C-6·C-10·tasks 헤맴/불가 / fit=positive.unique_element·brand_device
  *   CR-6  positive 7키(unique_element, dominant_number, form_differs_by_kind, surface_layers, brand_device, visual_elements_justified, looks_professional)
@@ -85,7 +87,8 @@ function parseIndex(txt) {
       const ts = line.match(ISO) || [];
       const captured = (capIdx >= 0 && (cells[capIdx] || '').match(ISO) || [])[0] || ts[0] || null;
       const modified = (modIdx >= 0 && (cells[modIdx] || '').match(ISO) || [])[0] || (ts.length > 1 ? ts[1] : null);
-      rows.set(file, { captured, modified });
+      const shaCell = cells.find((c) => /^[0-9a-f]{8,64}$/i.test(c)) || null;
+      rows.set(file, { captured, modified, sha: shaCell ? shaCell.toLowerCase() : null });
     } else if (/\.png/i.test(line)) {
       const file = (line.match(/[\w.\-\/]+\.png/i) || [''])[0].split('/').pop(); const ts = line.match(ISO) || [];
       rows.set(file, { captured: ts[0] || null, modified: ts.length > 1 ? ts[1] : null });
@@ -123,14 +126,22 @@ if (!parseErr) {
   /* ---- CR-3 캡처 시각 ≥ lastModified ---- */
   if (index == null) skip('CR-3', shotsIn, 'shots/index.md 캡처 시각 대조');
   else {
-    const stale = [], missing = [], noRow = [];
+    const stale = [], missing = [], noRow = [], forged = [], shaBad = []; let fromFile = 0, selfReported = 0;
+    const shotsDir = path.dirname(shotsIn.path);
     for (const [f, r] of index) {
+      const fp = path.join(shotsDir, f); let mtimeISO = null;
+      if (fs.existsSync(fp) && fs.statSync(fp).isFile()) {
+        const st = fs.statSync(fp); mtimeISO = st.mtime.toISOString(); fromFile++;
+        if (r.captured && !isNaN(Date.parse(r.captured)) && Date.parse(r.captured) - st.mtime.getTime() > 120000) forged.push(`${f}: index 캡처 ${r.captured} > 파일 mtime ${mtimeISO} (자기 신고가 파일보다 미래)`);
+        if (r.sha && r.sha.length >= 8) { const real = require('crypto').createHash('sha256').update(fs.readFileSync(fp)).digest('hex'); if (!real.startsWith(r.sha)) shaBad.push(`${f}: index sha ${r.sha} ≠ 파일 sha256 ${real.slice(0, 12)}`); }
+        r.captured = mtimeISO; /* 파일이 있으면 mtime 이 정본 */
+      } else selfReported++;
       if (!r.captured || !r.modified) { missing.push(f); continue; }
       const c = Date.parse(r.captured), m = Date.parse(r.modified);
       if (isNaN(c) || isNaN(m)) missing.push(f + '(시각 파싱 불가)'); else if (c < m) stale.push(`${f}: 캡처 ${r.captured} < 수정 ${r.modified}`);
     }
     for (const s of screens) if (nn(s) && indexFilesOf(s).length === 0) noRow.push(s.id);
-    add('CR-3', index.size > 0 && !stale.length && !missing.length && !noRow.length, `index ${index.size}파일, 낡은 캡처 ${stale.length}, 시각 누락 ${missing.length}, index 에 없는 화면 ${noRow.length}`, [...stale, ...missing.map((f) => f + ':시각 누락'), ...noRow.map((s) => s + ':행 없음')].join('; ') || '전 파일 캡처 ≥ lastModified');
+    add('CR-3', index.size > 0 && !stale.length && !missing.length && !noRow.length && !forged.length && !shaBad.length, `index ${index.size}파일(실측 mtime ${fromFile}, 자기 신고 ${selfReported}), 낡은 캡처 ${stale.length}, 시각 위조 의심 ${forged.length}, sha 불일치 ${shaBad.length}, 시각 누락 ${missing.length}, index 에 없는 화면 ${noRow.length}`, [...forged, ...shaBad, ...stale, ...missing.map((f) => f + ':시각 누락'), ...noRow.map((s) => s + ':행 없음')].join('; ') || (fromFile ? `전 파일 mtime ≥ lastModified` : '전 파일 캡처 ≥ lastModified (PNG 없음 — index 자기 신고 기준)'));
   }
 
   /* ---- CR-4 verdict pass|fail · fail 3필드 ---- */

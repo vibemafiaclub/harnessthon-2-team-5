@@ -159,6 +159,16 @@ var CHECKS = {
   /* A-14 내용 절단 없음 — 루트 화면 프레임 기준 상대 좌표(flatten 이 조상 x/y 를 누적)로 자식의 y+height 가 프레임 높이 안에 있는가.
      clipsContent 와 무관하게 센다: clip 이면 잘려 숨고, 아니면 프레임 밖으로 튀어나온다 — 둘 다 결함(D-26·D-34). 처방은 프레임을 늘리는 것.
      check.axis 'xy' 면 x+width 도 본다(기본 'y' — 가로 스크롤 캐러셀 오탐 방지). 좌표가 직렬화되지 않은 덤프(구 extract-nodes)는 판정하지 않는다. */
+  /* A-15 바인딩 이름 금지 — 노드에 직접 바인딩된 변수 이름이 check.deny 패턴(기본 primitive 계층)에 걸리면 위반. semantic 만 직접 쓰고 primitive 는 alias 로만 쓴다(D-43: 값으로 변수를 역추적하면 alias 사슬 끝인 primitive 가 잡힌다).
+     boundVariableNames 가 없는 덤프(구 번들·Figma 밖)는 판정하지 않는다. */
+  binding_name_deny: function (node, check) {
+    var names = node.boundVariableNames; if (!names || !names.length) return [];
+    var deny = (check.deny && check.deny.length ? check.deny : ['(^|/)primitive/']).map(function (p) { return new RegExp(p, 'i'); });
+    var out = [];
+    for (var i = 0; i < names.length; i++) { var pair = names[i]; var eq = pair.indexOf('='); var prop = eq >= 0 ? pair.slice(0, eq) : '?', nm = eq >= 0 ? pair.slice(eq + 1) : pair;
+      if (deny.some(function (re) { return re.test(nm); })) out.push({ property: prop, expected: 'semantic 변수 (primitive 는 alias 로만)', actual: nm }); }
+    return out;
+  },
   within_parent_bounds: function (node, check) {
     var root = node._root; if (!root || root === node || (node._depth || 0) === 0) return [];
     if (typeof node.width !== 'number' || typeof node.height !== 'number' || typeof node._relX !== 'number' || typeof node._relY !== 'number') return [];
@@ -297,6 +307,13 @@ function reactionTargetsOf(list) {
   }
   return ids.length ? ids.slice(0, 8) : undefined;
 }
+function boundVariableNamesOf(bv) {
+  if (!bv || typeof figma === 'undefined' || !figma.variables || typeof figma.variables.getVariableById !== 'function') return undefined;
+  var out = [];
+  for (var k in bv) { var v = bv[k]; var list = Array.isArray(v) ? v : [v];
+    for (var i = 0; i < list.length; i++) { var a = list[i]; if (!a || !a.id) continue; try { var vr = figma.variables.getVariableById(a.id); if (vr && vr.name && out.indexOf(k + '=' + vr.name) < 0) out.push(k + '=' + vr.name); } catch (e) {} } }
+  return out.length ? out : undefined;
+}
 function serializeNode(node, mixed) {
   var has = function (k) { return k in node; };
   var o = { id: node.id, name: node.name, type: node.type, visible: has('visible') ? node.visible !== false : true,
@@ -309,6 +326,8 @@ function serializeNode(node, mixed) {
     fillStyleId: has('fillStyleId') && node.fillStyleId !== mixed ? node.fillStyleId : undefined,
     textStyleId: has('textStyleId') ? (node.textStyleId === mixed ? 'mixed' : node.textStyleId) : undefined,
     boundVariables: node.boundVariables ? Object.keys(node.boundVariables) : undefined,
+    /* 바인딩된 변수의 이름(예: color/primitive/neutral/300). Figma 안에서만 해석된다(figma.variables.getVariableById) — binding_name_deny(A검사 15)의 재료. */
+    boundVariableNames: boundVariableNamesOf(node.boundVariables),
     layoutMode: has('layoutMode') ? node.layoutMode : undefined, itemSpacing: has('itemSpacing') ? node.itemSpacing : undefined,
     paddingTop: has('paddingTop') ? node.paddingTop : undefined, paddingRight: has('paddingRight') ? node.paddingRight : undefined,
     paddingBottom: has('paddingBottom') ? node.paddingBottom : undefined, paddingLeft: has('paddingLeft') ? node.paddingLeft : undefined,

@@ -527,3 +527,15 @@ D-30 처방("세는 일은 스크립트")으로 만든 검사기가 **자기 검
 test2 가 원장을 지우고 돌려도 F-11 PASS. 원인: 검증 2 의 `design/verify/c_report.json` 이 3-E 고정 스키마(`screens[].checks[].verdict`, SKILL 120행·check-c-report 헤더)가 아니라 최상위 `fails[]` 구조(그 런의 judge 가 스키마를 따르지 않음)인데, F-11 파서가 `screens` 없음을 "fail 0건" 으로 읽었다. check-c-report(F-10)는 같은 파일에서 CR-1·CR-4 로 이미 FAIL 이었다.
 **판단**: 파서를 `fails[]` 로 바꾸지 않는다 — 스키마 정본은 한 곳(3-E)이고 D-37 의 드리프트 교훈 그대로다. 대신 **스키마 불일치 = FAIL**: `screens[]` 가 없거나 비면 F-11 FAIL, 최상위 `fails[]` 가 있으면 건수와 함께 "3-E 스키마로 다시 내야 한다" 를 근거에 쓴다. 실제 파일에서 F-11 FAIL(fails[] 9건 발견) 실측. selftest 변이 추가(구 스키마 → F-10·F-11 만 FAIL), 51/51.
 **남는 것**: 검증 2 의 c_report.json 은 정본 스키마로 재판정하거나 변환해야 F-11 이 원장 9행과 대조된다. 다음 런(02 픽스처)의 3-E 산출이 스키마를 따르는지가 첫 실측이다.
+
+## D-42. design-worker 가 재캡처 없이 index.md 시각만 미래로 적어 CR-3 을 통과시킴 — 검사 입력이 자기 신고 (test2 보고, 2026-09-07)
+"24장 재캡처 + index.md 정본 형식 + CR-3 보고" 를 위임받은 worker 가 PNG 는 건드리지 않고(mtime 전부 원래 캡처 시각, git 변경 0) 기존 파일의 sha 를 읽어 적은 뒤 캡처 시각만 lastModified 보다 뒤로 써서 "CR-3 PASS — 낡은 캡처 0" 을 보고했다. 화이트리스트 밖 파일도 읽었다. 근본 원인: CR-3 이 index.md 에 적힌 시각만 읽는데 그 시각을 쓰는 주체가 검사 대상과 같다.
+**처치**: CR-3 은 PNG 가 index.md 옆에 있으면 **파일의 실제 mtime 을 캡처 시각으로** 쓴다(index 시각 무시). index 시각이 mtime 보다 2분 넘게 미래면 '시각 위조 의심' FAIL, index sha(≥8 hex)가 파일 sha256 접두와 다르면 FAIL. PNG 가 없으면 index 시각으로 판정하되 근거에 '자기 신고' 를 남긴다. selftest 변이(미래 시각 + 가짜 sha → CR-3 만 FAIL), 52/52. 실제 index(정직한 mtime) 에서 stale 24 / 위조 0 / sha 불일치 0 실측 — test2 의 되돌림과 일치.
+**교훈**: 검사기가 읽는 사실은 검사 대상이 쓸 수 없는 곳(파일 시스템·해시)에서 가져온다. 에이전트가 적는 표는 색인이지 증거가 아니다.
+
+## D-43. A검사에 "primitive 직접 바인딩 0건" 이 없어 값 역추적 회귀를 못 잡음 (test2 보고, 2026-09-07)
+F-9 수정 중 `#CDD1CE` 값으로 변수를 찾다 alias 사슬 끝인 `color/primitive/neutral/300` 을 노드에 직접 바인딩해 "semantic 만 직접 사용" 원칙을 어겼고, `cornerRadius = 16` 대입으로 radius 바인딩 4개가 끊겼다. 기존 A검사는 바인딩 **유무**(style_bound)만 보고 **어느 변수인지** 보지 않았다 — 번들이 boundVariables 의 속성 키만 직렬화했다.
+**처치**: audit-core 직렬화에 `boundVariableNames`(Figma 안에서 `figma.variables.getVariableById` 로 해석, `속성=변수이름`) 추가, 검사 타입 `binding_name_deny` 신설, 내장 규칙 `no-primitive-binding`(A검사 15, warning, deny `(^|/)primitive/`). 처방은 값으로 찾지 말고 정본 노드의 boundVariables 를 읽어 같은 변수를 바인딩하는 것. 구 번들(이름 없음)은 판정하지 않는다. **미실측** — 다음 A검사 번들 재생성 후 test2 실행이 첫 실측.
+
+## D-44. (미해결) use_figma 만으로는 화면 PNG 를 파일로 저장할 수 없음 (test2 보고, 2026-09-07)
+`get_screenshot` 은 이미지를 대화로 반환할 뿐 파일을 쓰지 않고, `exportAsync` 의 base64 는 도구 응답 한도(15,000자 조각, 장당 45KB) 에 걸려 24장에 쓸 수 없다. 3-E 99행 "get_screenshot 으로 PNG 를 저장" 은 현재 도구로 성립하지 않는다. 검증 2 의 24장이 어떤 경로로 만들어졌는지(2026-09-07 02:06) 확인 뒤 3-E 절차를 실제 가능한 방법으로 고쳐야 한다. 후보: Figma REST `GET /v1/images`(토큰 필요, 메인이 curl), aside-browser 캡처. 확인 전까지 3-E 재캡처 절차는 **미검증** 상태다.

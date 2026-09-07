@@ -21,6 +21,7 @@
  *   frame-spec              (A-9)  frame_spec: 폭 == design.md §2 폭, 높이 ≥ 최소, 상태바·탭바(--bars 이름 패턴) 존재. 값은 --design 의 '화면 규격' 줄 → --frame-* 플래그 → 기본 390/844 순.
  *   primary-action-visible  (A-13) primary_action_visible: 루트 프레임마다 Action/Primary 정확히 1개, y+height ≤ 최소 높이(첫 화면) 또는 조상 Bar/Action.
  *   content-not-cut         (A-14) within_parent_bounds: 루트 프레임 자손의 y+height ≤ 프레임 높이.
+ *   no-primitive-binding    (A-15) binding_name_deny: 노드에 직접 바인딩된 변수 이름에 primitive 계층 0건 (D-43).
  *   A-12(text_overflow)는 guide/core.rules.json 의 text-not-clipped 가 담당한다 — audit-core 가 구현했으므로 더 이상 unchecked 가 아니다.
  *
  * 반환 JSON 추가 필드 (audit() 결과 위에):
@@ -76,6 +77,9 @@ function builtinRules(spec) {
     { id: 'content-not-cut', title: '내용 절단 없음 (A검사 14)', stage: ['design'], severity: 'blocker', applies_to: { descendants_only: true, root_node_types: ['FRAME'] },
       check: { type: 'within_parent_bounds', axis: 'y', tolerance: 1 }, autofix: false,
       fix_hint: '프레임 높이를 내용에 맞춰 늘린다(hug). clip content 로 잘라 숨기지 않는다(D-34).' },
+    { id: 'no-primitive-binding', title: 'primitive 직접 바인딩 없음 (A검사 15)', stage: ['design'], severity: 'warning', applies_to: {},
+      check: { type: 'binding_name_deny', deny: ['(^|/)primitive/'] }, autofix: false,
+      fix_hint: 'semantic 변수만 노드에 직접 바인딩한다. 값(#hex)으로 변수를 찾지 말고 정본 노드의 boundVariables 를 읽어 같은 변수를 바인딩한다(D-43).' },
   ];
 }
 const projectIds = new Set(rules.map((r) => r.id));
