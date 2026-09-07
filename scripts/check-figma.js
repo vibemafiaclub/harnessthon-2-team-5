@@ -91,7 +91,7 @@ function draftInfo(dir) {
 const drafts = draftInfo(P('drafts'));
 
 /* ---- figma_nodes.json → 프레임 목록 {screen(nn), state, id, name, primary} ---- */
-const stateOf = (v, name) => { if (typeof v === 'string' && STATES.includes(v.toLowerCase())) return v.toLowerCase(); const m = String(name || '').match(/\/\s*([a-z]+)\s*$/i); return (m && STATES.includes(m[1].toLowerCase())) ? m[1].toLowerCase() : null; };
+const stateOf = (v, name) => { if (typeof v === 'string' && STATES.includes(v.toLowerCase())) return v.toLowerCase(); const m = String(name || '').replace(/\s*\[[^\]]*\]\s*$/, '').match(/\/\s*([a-z]+)\s*$/i); /* 이름 접미사 [no-primary]·[no-tabbar] 는 상태·파일명에서 버린다 */ return (m && STATES.includes(m[1].toLowerCase())) ? m[1].toLowerCase() : null; };
 function collectFrames(screens) {
   const out = [];
   const push = (screen, st, f) => { const o = f && typeof f === 'object' ? f : {}; out.push({ screen, state: st, id: o.id || (typeof f === 'string' ? f : null), name: o.name || '', primary: o.primary_action !== undefined ? (o.primary_action ? 1 : 0) : null }); };

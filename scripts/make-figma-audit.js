@@ -8,7 +8,7 @@
  * 사용법:
  *   node scripts/make-figma-audit.js --project design/project.rules.json --stage design \
  *        --out design/verify/figma_audit.js [--cap 25] [--max-nodes 4000] [--page Screens] \
- *        [--design design/design.md] [--frame-width 390] [--frame-min-height 844] \
+ *        [--design design/design.md] [--brief design/brief.md | --tab-screens 01,03] [--frame-width 390] [--frame-min-height 844] \
  *        [--bars "Bar/Status|StatusBar,Bar/Tab|TabBar"] [--no-builtin] \
  *        [--budget 18000] [--text-per-frame 60] [--reactions-max 120]
  *   → 생성된 파일 본문을 use_figma 코드로 1회 실행(호출 전 figma-use 스킬 로드). 반환 JSON 을
@@ -18,7 +18,8 @@
  * 그 페이지의 자식 전부. 선택 상태를 전제하지 않는다.
  *
  * 내장 규칙(A검사 9·13·14 — 3-D 보완 항목의 결정론화). project.rules.json 에 같은 id 가 있으면 프로젝트 것을 쓰고 주입하지 않는다. --no-builtin 으로 끈다.
- *   frame-spec              (A-9)  frame_spec: 폭 == design.md §2 폭, 높이 ≥ 최소, 상태바·탭바(--bars 이름 패턴) 존재. 값은 --design 의 '화면 규격' 줄 → --frame-* 플래그 → 기본 390/844 순.
+ *   frame-spec              (A-9)  frame_spec: 폭 == design.md §2 폭, 높이 ≥ 최소, 상태바 존재. 탭바는 **brief §2 진입 경로가 탭/앱 실행 직후인 화면에만** 있어야 하고 나머지(push·modal·외부)에는 없어야 한다 —
+ *                                  목록은 --tab-screens 또는 --brief §2 표(진입 경로 열이 /탭|앱 실행|첫 진입/ 인 행의 # 두 자리)에서. 둘 다 없으면 전부 요구(이름 접미사 [no-tabbar] 로 제외). 값은 --design 의 '화면 규격' 줄 → --frame-* 플래그 → 기본 390/844 순.
  *   primary-action-visible  (A-13) primary_action_visible: 루트 프레임마다 Action/Primary 정확히 1개, y+height ≤ 최소 높이(첫 화면) 또는 조상 Bar/Action.
  *   content-not-cut         (A-14) within_parent_bounds: 루트 프레임 자손의 y+height ≤ 프레임 높이.
  *   no-primitive-binding    (A-15) binding_name_deny: 노드에 직접 바인딩된 변수 이름에 primitive 계층 0건 (D-43).
@@ -59,6 +60,18 @@ function frameSpecFromDesign(file) {
   return spec;
 }
 const fromDesign = frameSpecFromDesign(A.design);
+/* 탭 화면 목록: --tab-screens 가 우선, 없으면 --brief §2 표에서. 진입 경로 열이 탭/앱 실행/첫 진입이면 루트(탭) 화면. */
+function tabScreensFromBrief(file) {
+  if (!file || !fs.existsSync(file)) return null;
+  const lines = fs.readFileSync(file, 'utf8').split('\n'); const start = lines.findIndex((l) => /^##\s*2\.\s/.test(l)); if (start < 0) return null;
+  let header = null; const out = [];
+  for (let i = start + 1; i < lines.length; i++) { const l = lines[i]; if (/^##\s/.test(l)) break; if (!/^\s*\|/.test(l)) continue; const cells = l.split('|').slice(1, -1).map((c) => c.trim()); if (cells.every((c) => /^:?-{2,}:?$/.test(c))) continue;
+    if (!header) { header = cells; continue; } const ei = header.findIndex((h) => /진입/.test(h)); if (ei < 0) continue; const nn = String(cells[0] || '').replace(/[^0-9]/g, ''); if (!nn) continue;
+    if (/탭|앱 실행|첫 진입|바로 진입/.test(cells[ei] || '')) out.push(nn.padStart(2, '0')); }
+  return header ? out : null;
+}
+const TAB_SCREENS = A['tab-screens'] ? String(A['tab-screens']).split(',').map((s) => s.trim().padStart(2, '0')).filter(Boolean) : tabScreensFromBrief(A.brief);
+if (!TAB_SCREENS) console.error('[make-figma-audit] 경고: 탭 화면 목록 없음(--tab-screens 또는 --brief §2) — 탭바를 전 프레임에 요구한다([no-tabbar] 접미사로 제외)');
 const FRAME = {
   width: Number(A['frame-width']) || fromDesign.width || 390,
   min_height: Number(A['frame-min-height']) || fromDesign.min_height || 844,
@@ -69,11 +82,11 @@ function builtinRules(spec) {
   const barPatterns = spec.bars.map((b) => '^(?:' + b + ')');
   return [
     { id: 'frame-spec', title: '프레임 규격 (A검사 9)', stage: ['design'], severity: 'blocker', applies_to: { root_only: true, node_types: ['FRAME'] },
-      check: { type: 'frame_spec', width: spec.width, min_height: spec.min_height, required_children: barPatterns }, autofix: false,
-      fix_hint: `폭 ${spec.width} 고정, 높이 ≥${spec.min_height}(내용에 맞춰 늘림, hug 허용), 상태바·탭바 노드 이름은 ${spec.bars.join(' / ')} 로. 같은 화면 두 벌 금지(D-34). 앱 탭바가 없어야 하는 외부(초대 링크) 화면은 프레임 description 에 no-tabbar.` },
+      check: { type: 'frame_spec', width: spec.width, min_height: spec.min_height, required_children: barPatterns, tab_screens: TAB_SCREENS || undefined }, autofix: false,
+      fix_hint: `폭 ${spec.width} 고정, 높이 ≥${spec.min_height}(내용에 맞춰 늘림, hug 허용), 상태바·탭바 노드 이름은 ${spec.bars.join(' / ')} 로. 같은 화면 두 벌 금지(D-34). 탭바는 brief §2 진입 경로가 탭인 화면(${(TAB_SCREENS || []).join(',') || '목록 없음'})에만 — push·modal·외부 화면에는 없어야 한다.` },
     { id: 'primary-action-visible', title: '주 행동 가시성 (A검사 13)', stage: ['design'], severity: 'blocker', applies_to: { root_only: true, node_types: ['FRAME'] },
       check: { type: 'primary_action_visible', name: '^Action\\/Primary$', bar: '^Bar\\/Action', fold: spec.min_height, no_primary_marker: 'no-primary' }, autofix: false,
-      fix_hint: `주 행동 노드 이름 Action/Primary 정확히 1개. 첫 화면(y+height ≤ ${spec.min_height}) 안에 두거나 Bar/Action 하단 고정 바 안에. 주 행동 없는 화면은 프레임 description(또는 이름)에 no-primary (D-26).` },
+      fix_hint: `주 행동 노드 이름 Action/Primary 정확히 1개. 첫 화면(y+height ≤ ${spec.min_height}) 안에 두거나 Bar/Action 하단 고정 바 안에. 주 행동 없는 화면은 프레임 이름 접미사 [no-primary] (FRAME 에는 description 이 없다, D-26).` },
     { id: 'content-not-cut', title: '내용 절단 없음 (A검사 14)', stage: ['design'], severity: 'blocker', applies_to: { descendants_only: true, root_node_types: ['FRAME'] },
       check: { type: 'within_parent_bounds', axis: 'y', tolerance: 1 }, autofix: false,
       fix_hint: '프레임 높이를 내용에 맞춰 늘린다(hug). clip content 로 잘라 숨기지 않는다(D-34).' },
@@ -106,7 +119,7 @@ catch (e) { return JSON.stringify({ error: String(e && e.message || e), nodes_se
 var report = audit({ rules: RULES, stage: STAGE, nodes: tree, target: page.name, perRuleCap: CAP });
 report.page = page.name; report.roots = roots.length; report.generated_at = ${JSON.stringify(new Date().toISOString())};
 report.builtin_rules = ${JSON.stringify(builtin.map((r) => r.id))};
-report.frame_spec = ${JSON.stringify({ width: FRAME.width, min_height: FRAME.min_height, bars: FRAME.bars, source: FRAME.source })};
+report.frame_spec = ${JSON.stringify({ width: FRAME.width, min_height: FRAME.min_height, bars: FRAME.bars, source: FRAME.source, tab_screens: TAB_SCREENS })};
 /* 승인본 대조(F-9)·흐름 연결(A-16) 재료. use_figma 반환 상한(약 20KB) 안에 맞춘다 — 넘치면 프레임당 텍스트를 반씩 줄이고, 그래도 넘치면 reactions 를 자른다. 잘렸음은 필드로 남긴다. */
 report.text_inventory = textInventory(tree, { perFrame: TEXT_PER_FRAME, maxChars: 40 });
 report.reactions = reactionEdges(tree, { max: REACTIONS_MAX });

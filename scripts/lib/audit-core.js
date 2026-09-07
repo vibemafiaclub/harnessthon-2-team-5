@@ -182,7 +182,7 @@ var CHECKS = {
     return out;
   },
   /* A-13 주 행동 가시성 — 루트 화면 프레임마다 `Action/Primary`(check.name) 가 정확히 1개이고, 그 노드가 첫 화면(y+height ≤ check.fold, 기본 844) 안에 있거나
-     조상에 `Bar/Action`(check.bar, 하단 고정 바) 이 있다. 주 행동이 없는 화면은 description·이름·자식 이름에 no-primary(check.no_primary_marker) 를 적어 제외한다(D-26). */
+     조상에 `Bar/Action`(check.bar, 하단 고정 바) 이 있다. 주 행동이 없는 화면은 프레임 **이름** 접미사 [no-primary](또는 자식 이름 — FRAME 에는 description 이 없다)로 제외한다(D-26). */
   primary_action_visible: function (node, check) {
     if ((node._depth || 0) !== 0) return [];
     var nameRe = new RegExp(check.name || '^Action\\/Primary$');
@@ -193,7 +193,7 @@ var CHECKS = {
     var prim = desc.filter(function (d) { return nameRe.test(d.name || ''); });
     if (prim.length === 0) {
       var optOut = [node.description || '', node.name || ''].join(' ').indexOf(marker) >= 0 || desc.some(function (d) { return (d.name || '').indexOf(marker) >= 0; });
-      return optOut ? [] : [{ property: 'Action/Primary', expected: '정확히 1개 (주 행동 없는 화면은 description 에 ' + marker + ')', actual: '0개' }];
+      return optOut ? [] : [{ property: 'Action/Primary', expected: '정확히 1개 (주 행동 없는 화면은 프레임 이름 접미사 [' + marker + '])', actual: '0개' }];
     }
     if (prim.length > 1) return [{ property: 'Action/Primary', expected: '정확히 1개', actual: prim.length + '개: ' + prim.map(function (p) { return p.id || p.name; }).join(', ') }];
     var p = prim[0];
@@ -213,12 +213,22 @@ var CHECKS = {
     if (w && typeof node.width === 'number' && Math.abs(node.width - w) > 0.5) out.push({ property: 'width', expected: w, actual: Math.round(node.width) });
     if (minH && typeof node.height === 'number' && node.height < minH - 0.5) out.push({ property: 'height', expected: '≥' + minH + ' (내용에 맞춰 늘림)', actual: Math.round(node.height) });
     var desc = visibleDescendants(node);
-    /* 외부(초대 링크) 화면처럼 앱 탭바가 있으면 안 되는 프레임은 description 또는 이름에 no-tabbar 를 적어 탭바 요구만 뺀다(test2 실측: GuestReply 3장). 상태바 요구는 남는다. */
-    var optOut = ((node.description || '') + ' ' + (node.name || '')).indexOf(check.tabbar_optout_marker || 'no-tabbar') >= 0;
+    /* 탭바는 화면 하나하나의 예외가 아니라 IA 의 성질이다(test2 반박, D-46): brief §2 진입 경로가 '탭/앱 실행 직후' 인 루트 화면에만 탭바가 있고,
+       행 탭·+ 버튼·완료 직후·초대 링크로 들어가는 push/modal/외부 화면에는 없어야 한다. check.tab_screens(['01','03'] — 프레임 이름 앞 번호)가 있으면 그 기준으로
+       양방향(있어야 하는데 없음 / 없어야 하는데 있음)을 본다. 없으면 구 동작(전부 요구)이되 이름 접미사 [no-tabbar] 로 뺄 수 있다. FRAME 에는 description 이 없으므로 표시는 이름뿐이다. */
+    var nm = String(node.name || ''); var nn = (nm.match(/^\s*(\d{2})\b/) || [])[1] || null;
+    var tabScreens = Array.isArray(check.tab_screens) ? check.tab_screens.map(String) : null;
+    var optOut = /\[no-tabbar\]/i.test(nm) || nm.indexOf(check.tabbar_optout_marker || 'no-tabbar') >= 0;
+    var isTab = function (pat) { return /tab/i.test(pat); };
     (check.required_children || []).forEach(function (pat) {
-      var re = new RegExp(pat);
-      if (optOut && /tab/i.test(pat)) return;
-      if (!desc.some(function (d) { return re.test(d.name || ''); })) out.push({ property: 'children', expected: '이름이 /' + pat + '/ 인 보이는 자손 ≥1', actual: '없음' });
+      var re = new RegExp(pat); var present = desc.some(function (d) { return re.test(d.name || ''); });
+      if (isTab(pat)) {
+        if (tabScreens) {
+          var wantTab = nn != null && tabScreens.indexOf(nn) >= 0;
+          if (wantTab && !present) out.push({ property: 'children', expected: '탭바(/' + pat + '/) — brief §2 진입 경로가 탭인 화면 ' + nn, actual: '없음' });
+          if (!wantTab && present) out.push({ property: 'children', expected: '탭바 없음 — brief §2 진입 경로가 탭이 아닌(push·modal·외부) 화면' + (nn ? ' ' + nn : ''), actual: '탭바 있음' });
+        } else if (!optOut && !present) out.push({ property: 'children', expected: '이름이 /' + pat + '/ 인 보이는 자손 ≥1 (없어야 하는 화면은 이름 접미사 [no-tabbar])', actual: '없음' });
+      } else if (!present) out.push({ property: 'children', expected: '이름이 /' + pat + '/ 인 보이는 자손 ≥1', actual: '없음' });
     });
     return out;
   },
