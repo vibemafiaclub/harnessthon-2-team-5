@@ -553,3 +553,9 @@ team-3(`harnessthon-2-team-3`) 인터뷰 스킬과 4항목 비교에서 시각 �
 ④ **결정형 추천 미리 표시** — recommended·why 를 어느 kind 든 허용(P-3), Q2 를 결정형으로 재작성(§6), '아직 안 고른 질문은 추천대로' 버튼 → `accepted_recommended` 로 저장하고 raw `[ACCEPTED]`·§6 '추천 수락'·delegations 로 **직접 답과 구분**(I-3: 추천 수락은 위임). 취향형에는 추천 없음(앵커링 원칙 유지).
 ⑤ **따라가 보기 투어** — flows 를 한 번에 장면 하나 + 누를 곳 강조(`press`/`data-press`) + `then` + `states[]` 세그먼트 + 이전/다음 + 여기가 달라요(P-16).
 selftest 54/54(P-15·P-16 변이 포함), headless Chrome 렌더로 질문·갤러리 화면 육안 확인. **미실측** — 다음 런(02 픽스처)이 첫 실측. team-3 에서 가져오지 않은 것: "확정된 것은 다시 묻지 않는다", 추천값 그대로를 답으로 치는 규약(평가 기준 3 과 충돌).
+
+## D-43 후속 — A-15 가 집계에 없었음 (test2 실측, 2026-09-07)
+`builtin_rules` 에는 `no-primitive-binding` 이 있는데 `violations_per_rule`·`applicable_per_rule`·`not_applicable` 어디에도 없었다. 원인: 검사 타입 `binding_name_deny` 를 `CHECKS` 에는 넣고 `AUDIT_IMPLEMENTED` 목록에는 안 넣어 `skipped_unimplemented` 로 조용히 빠졌고, warning 이라 `unchecked_blockers` 에도 안 올라 보이지 않았다. **처치**: 목록에 등록 + `audit()` 시작 시 CHECKS 와 AUDIT_IMPLEMENTED 가 어긋나면 오류로 중단 + 보고에 `skipped_unimplemented_rules[]`(이름) 추가. 합성 노드 프로브로 A-15 히트(`fills=color/primitive/neutral/300`) 확인. 실제 파일 실측은 test2 재실행 대기.
+
+## D-46. A검사 규칙 두 건이 검증 2 자산과 어긋남 + 번들 반환이 예산을 넘겨 잘린 채 저장됨 (test2 보고, 2026-09-07)
+(a) `primary-action-visible` 24/24 FAIL — `Action/Primary` 명명 규약(D-26)이 파일보다 늦게 생겼다. 소급하지 않는다(다음 런). (b) `frame-spec` 15건 중 GuestReply 3장은 초대 링크로 들어오는 **외부 화면**이라 앱 탭바가 없는 것이 맞다 — 규칙 공백. **처치**: 프레임 description/이름에 `no-tabbar` 가 있으면 탭바 요구만 뺀다(상태바 요구 유지, 3-C 9b). (c) 반환 예산: 예산 초과 시 text_inventory·reactions 만 줄이고 `violations[]` 는 안 줄여 위반이 많은 파일에서 20KB 한도에 잘린 JSON 이 정상 결과로 저장됐다. **처치**: 규칙당 상한을 10→5→3→1 로 낮춰 목록만 자르고(`violations_truncated_cap`, 건수는 유지), 끝까지 넘치면 `over_budget: true`. (d) 값 직접 대입(`cornerRadius = 16`, `fontSize = 17`)이 바인딩·스타일을 조용히 끊는 회귀 2회 → 3-B 에 "정본 노드의 boundVariables·textStyleId 를 복사, 값 대입 금지" 규칙.

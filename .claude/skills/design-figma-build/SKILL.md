@@ -33,6 +33,7 @@ argument-hint: "<figma file url | --new>"
 - 타이포 scale 9단계(display~overline)는 텍스트 스타일로. **먼저 `figma.listAvailableFontsAsync()` 로 tokens.json 의 `typography.family.body/display` 가 로드 가능한지 확인**한다. 불가하면 `typography.family.fallback` 으로 교체하고, 교체 사실을 `figma_nodes.json` 의 `font_substitution` 과 brief §6 가정 로그에 기록한다. 사용자에게 폰트 설치를 요청하지 않는다.
 - 라이트/다크 모드는 brief 에 요구가 있을 때만. 없으면 단일 모드.
 - 생성한 variable ID·style ID 전부 반환·기록. 한 호출에 컬렉션 하나씩. **tokens.json 의 Variables 대상 leaf 수 == 만든 Variables 수**(typography·elevation·icon 은 스타일이라 제외) — check-figma F-9c 가 센다.
+- **값 직접 대입 금지 — 정본 노드의 바인딩·스타일 id 를 복사한다.** `n.cornerRadius = 16`, `t.fontSize = 17` 처럼 값을 대입하면 그 속성의 변수 바인딩·텍스트 스타일이 **조용히 끊긴다**(test2 실측 2회: radius 변수 4개, `type/body-large` 스타일). 고칠 때는 정본 노드(같은 컴포넌트의 variant)의 `boundVariables`·`textStyleId` 를 읽어 `setBoundVariable`·`setTextStyleIdAsync` 로 같은 것을 붙인다. 값(#hex)으로 변수를 역추적하지 않는다 — alias 사슬 끝의 primitive 가 잡힌다(A검사 15).
 - **바인딩 paint 의 리터럴 color 도 변수 값과 같게 쓴다.** Figma 는 리터럴을 그대로 렌더한다 — 바인딩만 걸고 리터럴을 검정으로 두면 검정으로 보인다(팀 디자이너 실측 사고). **audit-core 는 리터럴∈팔레트(`color_allowlist`)와 바인딩 존재(`style_bound`)를 따로 본다 — 리터럴=변수값 대조는 미구현이라**(serializeNode 가 boundVariables 의 키만 직렬화한다) 바인딩은 primary 인데 리터럴이 팔레트 안의 다른 색이면 둘 다 통과한다. **3-A 직후 스크린샷 렌더가 유일한 방어**다.
 - 날짜·카운트·D-day·시간 스타일은 tabular numerals 를 켠다. 면 전용 색 변수는 설명에 "면 전용 — 텍스트 금지".
 - **호출 예산**: Figma MCP 는 하루 200회·분당 10회(Pro 좌석 기준). 시작 전에 예상 호출 수를 상태 파일에 적고, 노드를 하나씩 만지지 말고 화면·컴포넌트 묶음 단위로 실행한다. **토큰·변수를 바꾼 직후에는 반드시 스크린샷을 렌더한다** — 노드 속성으로는 대비 사고가 안 잡힌다(위 리터럴 사고도 스크린샷에서만 보인다).
@@ -87,6 +88,7 @@ argument-hint: "<figma file url | --new>"
 10. **고정 요소 겹침** — 하단 탭바·고정 액션바가 있으면 스크롤 콘텐츠 하단 여백이 그 높이 이상. 콘텐츠가 가려지면 FAIL.
 11. **터치 영역** — 프로토타입 연결(reactions)이 있는 노드는 blocker(`touch-target-min`), 이름으로 추정한 노드(Button·Tab·Input·Checkbox 등, 인터랙티브 조상 없음)는 warning(`touch-target-min-inferred`)으로 3-G 사람 게이트가 본다. 시안에 무엇이 눌리는지는 기계가 이름으로 확신할 수 없다. 시각 크기를 키우지 말고 패딩·히트영역으로.
 12. **텍스트 오버플로** — 도메인 최장 문자열·최대 수치를 넣은 `long` 프레임에서 잘림·겹침 0.
+9b. **프레임 규격 예외** — 앱 탭바가 없어야 하는 화면(초대 링크로 들어오는 외부 화면 등, brief §2 진입 경로가 '링크')은 프레임 description 에 `no-tabbar` 를 적는다. A검사 9 가 그 프레임의 탭바 요구만 뺀다(상태바 요구는 유지). 표시 없이 탭바가 없으면 FAIL.
 13. **주 행동 가시성** — 화면 프레임마다 `Action/Primary` 가 정확히 1개(없으면 프레임 description 에 `no-primary`), 그 노드의 절대 y+height ≤ 프레임 높이 이거나 조상에 `Bar/Action` 존재. 잘림·스크롤 뒤 = FAIL (D-26).
 14. **내용 절단 없음** — 화면 프레임 안 모든 자식의 절대 y+height ≤ 프레임 높이(clip content 로 잘린 노드 0). 잘려 있으면 FAIL — 프레임을 늘린다.
 15. **승인본 대조(충실도)** — `node scripts/check-figma.js` F-9 가 센다(판정이 아니라 산술 — judge 2콜은 계속 블라인드): a) drafts 각 화면의 `data-state` 수 == 그 화면의 프레임 수 b) `data-role="primary-action"` 수 × 상태 수 == `Action/Primary` 수 c) tokens.json Variables 대상 leaf 수 == `figma_nodes.variables` 수 d) 번들 `text_inventory` 가 있으면 초안 텍스트 집합 일치율 ≥90%(없거나 잘렸으면 N/A). a_report 에는 F-9 의 a~d 행을 기준값·측정값과 함께 옮겨 적는다.

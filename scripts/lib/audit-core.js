@@ -12,7 +12,8 @@ var AUDIT_CATALOG = ['contrast_ratio', 'min_size', 'min_font_size', 'image_fill_
   'color_allowlist', 'color_denylist', 'style_bound', 'multiple_of', 'scale_allowlist', 'reuse_ratio', 'name_pattern', 'variant_states_present',
   'within_parent_bounds', 'primary_action_visible', 'frame_spec', 'icon_foreign_fill'];
 var AUDIT_IMPLEMENTED = ['color_allowlist', 'color_denylist', 'multiple_of', 'scale_allowlist', 'name_pattern', 'min_font_size', 'min_size', 'style_bound', 'variant_states_present',
-  'text_overflow', 'within_parent_bounds', 'primary_action_visible', 'frame_spec', 'icon_foreign_fill'];
+  'text_overflow', 'within_parent_bounds', 'primary_action_visible', 'frame_spec', 'icon_foreign_fill', 'binding_name_deny'];
+/* 검사 타입을 CHECKS 에 넣고 이 목록에 안 넣으면 조용히 skipped_unimplemented 가 된다(D-43 실측: A-15 가 규칙 목록에만 있고 집계에 없음). 두 곳이 어긋나면 audit() 이 시작 시 오류를 낸다. */
 
 var HEX6 = /^#?[0-9a-fA-F]{6}$/;
 function normHex(v) { if (typeof v !== 'string' || !HEX6.test(v)) return null; return ('#' + v.replace('#', '')).toUpperCase(); }
@@ -212,8 +213,11 @@ var CHECKS = {
     if (w && typeof node.width === 'number' && Math.abs(node.width - w) > 0.5) out.push({ property: 'width', expected: w, actual: Math.round(node.width) });
     if (minH && typeof node.height === 'number' && node.height < minH - 0.5) out.push({ property: 'height', expected: '≥' + minH + ' (내용에 맞춰 늘림)', actual: Math.round(node.height) });
     var desc = visibleDescendants(node);
+    /* 외부(초대 링크) 화면처럼 앱 탭바가 있으면 안 되는 프레임은 description 또는 이름에 no-tabbar 를 적어 탭바 요구만 뺀다(test2 실측: GuestReply 3장). 상태바 요구는 남는다. */
+    var optOut = ((node.description || '') + ' ' + (node.name || '')).indexOf(check.tabbar_optout_marker || 'no-tabbar') >= 0;
     (check.required_children || []).forEach(function (pat) {
       var re = new RegExp(pat);
+      if (optOut && /tab/i.test(pat)) return;
       if (!desc.some(function (d) { return re.test(d.name || ''); })) out.push({ property: 'children', expected: '이름이 /' + pat + '/ 인 보이는 자손 ≥1', actual: '없음' });
     });
     return out;
@@ -257,14 +261,16 @@ function audit(opts) {
   var rules = opts.rules, stage = opts.stage, nodes = opts.nodes, target = opts.target, cap = opts.perRuleCap || 0;
   /* 숨은 노드와 숨은 조상 아래의 노드는 렌더되지 않으므로 판정하지 않는다 */
   var flat = flatten(nodes).filter(function (n) { return n.visible !== false && !n._hidden; });
-  var violations = [], unchecked = [], summary = { blocker: 0, warning: 0, skipped_out_of_stage: 0, skipped_unimplemented: 0 }, perRule = {}, applicable = {};
+  var violations = [], unchecked = [], summary = { blocker: 0, warning: 0, skipped_out_of_stage: 0, skipped_unimplemented: 0 }, perRule = {}, applicable = {}, skippedRules = [];
+  var missing = Object.keys(CHECKS).filter(function (t) { return AUDIT_IMPLEMENTED.indexOf(t) < 0; });
+  if (missing.length) throw new Error('CHECKS 에 있으나 AUDIT_IMPLEMENTED 에 없는 검사 타입: ' + missing.join(', '));
   /* 검사 컨텍스트: 같은 이름의 INSTANCE 개수(반복 컴포넌트 판정용) */
   var instanceCount = {}; flat.forEach(function (n) { if (n.type === 'INSTANCE' && n.name) instanceCount[n.name] = (instanceCount[n.name] || 0) + 1; });
   var ctx = { flat: flat, instanceCount: instanceCount };
   rules.forEach(function (rule) {
     if ((rule.stage || []).indexOf(stage) < 0) { summary.skipped_out_of_stage++; return; }
     if (AUDIT_IMPLEMENTED.indexOf(rule.check.type) < 0) {
-      summary.skipped_unimplemented++;
+      summary.skipped_unimplemented++; skippedRules.push(rule.id + ':' + rule.check.type);
       if (rule.severity === 'blocker') unchecked.push({ rule: rule.id, title: rule.title, reason: 'skipped_unimplemented', requires_human_review: true, fix_hint: rule.fix_hint });
       return;
     }
@@ -289,7 +295,7 @@ function audit(opts) {
     violations: violations, violations_per_rule: perRule, applicable_per_rule: applicable,
     /* 적용 대상 노드가 0개인 규칙 — "위반 0" 과 "대상 없음" 을 구분한다(실측: variant 규칙이 Components 페이지를 안 봐서 0건이 통과처럼 보임) */
     not_applicable: Object.keys(applicable).filter(function (id) { return applicable[id] === 0; }),
-    truncated_per_rule_cap: cap || null, unchecked_blockers: unchecked, summary: summary };
+    truncated_per_rule_cap: cap || null, unchecked_blockers: unchecked, skipped_unimplemented_rules: skippedRules, summary: summary };
 }
 /* Figma 노드 → 판정용 평면 객체. PAGE 처럼 속성이 없는 노드도 안전하게. */
 function paintsOf(list) {

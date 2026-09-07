@@ -28,7 +28,7 @@
  *   text_inventory: [{frame, id, texts[], total}] — 프레임당 ≤ --text-per-frame 개, 각 ≤40자. check-figma F-9 가 초안 텍스트 집합과 일치율을 센다.
  *   reactions:      [{from_frame, to_frame | null + to_id}] — 프로토타입 연결을 화면 프레임 단위 간선으로. check-figma A-16 이 brief §2 진입 경로와 대조한다.
  *   builtin_rules, frame_spec, bytes, text_inventory_truncated / reactions_truncated(잘렸을 때만).
- *   --budget(UTF-8 바이트) 를 넘으면 프레임당 텍스트 수를 반씩 줄이고, 그래도 넘으면 reactions 를 40개로 자른다. 잘렸음은 필드로 남긴다.
+ *   --budget(UTF-8 바이트) 를 넘으면 프레임당 텍스트 수를 반씩 줄이고, 그래도 넘으면 reactions 를 40개로, 그래도 넘으면 violations[] 를 규칙당 10→5→3→1 로 자른다(violations_truncated_cap). 건수는 유지. 끝까지 넘치면 over_budget: true.
  */
 const fs = require('fs'); const path = require('path');
 const { compile } = require('./audit');
@@ -70,7 +70,7 @@ function builtinRules(spec) {
   return [
     { id: 'frame-spec', title: '프레임 규격 (A검사 9)', stage: ['design'], severity: 'blocker', applies_to: { root_only: true, node_types: ['FRAME'] },
       check: { type: 'frame_spec', width: spec.width, min_height: spec.min_height, required_children: barPatterns }, autofix: false,
-      fix_hint: `폭 ${spec.width} 고정, 높이 ≥${spec.min_height}(내용에 맞춰 늘림, hug 허용), 상태바·탭바 노드 이름은 ${spec.bars.join(' / ')} 로. 같은 화면 두 벌 금지(D-34).` },
+      fix_hint: `폭 ${spec.width} 고정, 높이 ≥${spec.min_height}(내용에 맞춰 늘림, hug 허용), 상태바·탭바 노드 이름은 ${spec.bars.join(' / ')} 로. 같은 화면 두 벌 금지(D-34). 앱 탭바가 없어야 하는 외부(초대 링크) 화면은 프레임 description 에 no-tabbar.` },
     { id: 'primary-action-visible', title: '주 행동 가시성 (A검사 13)', stage: ['design'], severity: 'blocker', applies_to: { root_only: true, node_types: ['FRAME'] },
       check: { type: 'primary_action_visible', name: '^Action\\/Primary$', bar: '^Bar\\/Action', fold: spec.min_height, no_primary_marker: 'no-primary' }, autofix: false,
       fix_hint: `주 행동 노드 이름 Action/Primary 정확히 1개. 첫 화면(y+height ≤ ${spec.min_height}) 안에 두거나 Bar/Action 하단 고정 바 안에. 주 행동 없는 화면은 프레임 description(또는 이름)에 no-primary (D-26).` },
@@ -113,6 +113,10 @@ report.reactions = reactionEdges(tree, { max: REACTIONS_MAX });
 var per = TEXT_PER_FRAME;
 while (utf8Len(JSON.stringify(report)) > BUDGET && per > 1) { per = Math.floor(per / 2); report.text_inventory = textInventory(tree, { perFrame: per, maxChars: 40 }); report.text_inventory_truncated = true; }
 if (utf8Len(JSON.stringify(report)) > BUDGET && report.reactions.length > 40) { report.reactions = report.reactions.slice(0, 40); report.reactions_truncated = true; }
+/* 그래도 넘치면 violations[] 를 규칙당 상한을 낮춰 자른다(위반이 많은 파일에서 20KB 한도에 걸려 JSON 이 잘린 채 저장되던 문제). 건수(violations_per_rule)는 그대로 — 목록만 준다. */
+var capNow = CAP || 25; var steps = [10, 5, 3, 1];
+for (var si = 0; si < steps.length && utf8Len(JSON.stringify(report)) > BUDGET; si++) { capNow = steps[si]; var seen = {}; report.violations = report.violations.filter(function (v) { seen[v.rule] = (seen[v.rule] || 0) + 1; return seen[v.rule] <= capNow; }); report.violations_truncated_cap = capNow; }
+if (utf8Len(JSON.stringify(report)) > BUDGET) report.over_budget = true; /* 마지막까지 넘치면 표시 — 잘린 JSON 을 정상으로 읽지 않게 */
 report.bytes = utf8Len(JSON.stringify(report));
 return JSON.stringify(report);
 `;
