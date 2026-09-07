@@ -614,3 +614,7 @@ test2 는 검증 2 의 `design/tokens.json`(한글 키, D-9 이전 산출)을 �
 
 ## D-57. 6라운드 독립 감사 반영 (2026-09-07 밤) — 상 9 / 중 4(U-1·U-6·V-1·V-2, 전부 문서 기본값·표기)
 **처치**: ① 드리프트 7 — draft-html 금지어 14→26·H-6 4종·별도 error grep 삭제, figma-build 미구현 목록에서 text_overflow 제거, harness 2단계 종료 산출 경로(html_check.md / exit_stage2.md), state.json _note 호출 상한 구성(9), check-brief 기본값 7→9, check-prd-analysis 미확정 기본값 5→8, 0-H 종료조건 목록에 B-27. ② 규약: P-20 always 대비쌍 축 커버(fast 5축 / full 타이포·채도 — 그동안 `always` 를 읽는 검사가 0건), P-10 기본 payload 17종(form_axis·emphasis_axis), CR-12 인용 있는데 텍스트 목록 없으면 N/A 가 아니라 FAIL. 변이 2(P-20 always 삭제, B-24 호출 건수 상한 초과). selftest 105/105. 미변이 검사 목록(P-1·P-5·P-8·B-1~B-2·Z-1~Z-4·CR-1~CR-2·F-0~F-3 등)은 골든 통과·빈 템플릿 FAIL 로만 간접 확인 — 다음 런 뒤 추가.
+
+## D-58. 7라운드 독립 감사 반영 (2026-09-07 밤) — 상 11 / 중 2(U-1·V-1, 각 문서 한 줄)
+**처치**: draft-html H-6 4종 표기(121행), design-tokens K 리포트 행 수 15→14, Z-8 에 흐름 후보·감성 키워드 상한, 0-H 종료조건 목록 순서(B-26→B-27), 폰 프레임 하단 구성(인터뷰 자극 56+34 / 초안 49+34=83)은 별개 규격임을 명시, 과업 헤맴 허용치(2-D 전 칸 찾음 / CR-7 ≤1)가 의도임을 c_checks 에 명시. 미처리(다음 런 뒤): stimuli_qa.md·ack_screen.md 존재 검사, K-7·K-8a 전용 변이. selftest 105/105.
+**7라운드 추이**: 상 0→8→2→10→4→9→11. 등락은 판정자마다 드리프트 계산이 달라서였고, 검사 수(selftest 45→105)와 변이는 단조 증가.
