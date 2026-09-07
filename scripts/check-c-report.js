@@ -24,6 +24,8 @@
  *   CR-7  tasks[] 전 화면·전 역할: 불가 0, 헤맴 ≤1(리포트 전체), task 마다 role, brief §2b T-n 전부 추적, §2 역할 열의 역할마다 추적 ≥1
  *   CR-8  top_info.match===true 전 화면 (declared·blind_first 비어 있지 않음)
  *   CR-9  diagnosis repeat(또는 repeat:true) 이면 state.stages.figma.c_fail_reasons 에 같은 화면·같은 검사 id
+ *   CR-11 [full] C 검출력 시험(3-E): state.stages.figma.c_detector === 'PASS' + 리포트(--detector, 기본 verify/c_detector_test.md) 존재 — 판정자가 심은 슬롭을 잡았다는 증거 없이 실제 화면 판정을 채택하지 않는다(V-3). fast 는 N/A
+ *   CR-12 fail 의 evidence 에 따옴표(「」·'' ·"")로 인용한 화면 문자열이 --audit(audit_screens.json) text_inventory 에 실제로 있어야 한다 — 판정자 오독(없는 오타 '서배') 차단. 인용이 없거나 inventory 가 잘렸으면 N/A
  *   CR-10 화면마다 SLOP-SWEEP 항목(checks[] id "SLOP-SWEEP" 의 evidence/elements 또는 screen.slop_sweep) 존재
  *
  * c_report.json 스키마(3-E 고정 스키마 + 계획 22 확장):
@@ -44,8 +46,9 @@ function args(argv) { const o = {}; for (let i = 2; i < argv.length; i++) { cons
 const A = args(process.argv);
 if (!A.report) { console.error('--report <c_report.json> 필요'); process.exit(2); }
 if (!fs.existsSync(A.report)) { console.error('파일 없음: ' + A.report); process.exit(2); }
-const DEF = { shots: 'design/verify/shots/index.md', state: 'design/state.json', brief: 'design/brief.md' };
-function input(k) { const p = A[k] || DEF[k]; const exists = fs.existsSync(p); return { path: p, explicit: !!A[k], text: exists ? fs.readFileSync(p, 'utf8') : null }; }
+const DEF = { shots: 'design/verify/shots/index.md', state: 'design/state.json', brief: 'design/brief.md', detector: 'design/verify/c_detector_test.md', audit: 'design/verify/audit_screens.json' };
+/* detector·audit 의 기본 경로는 리포트(c_report.json)와 같은 폴더 — 픽스처·복사본 폴더에서도 같이 움직이게 */
+function input(k) { let p = A[k] || DEF[k]; if (!A[k] && (k === 'detector' || k === 'audit') && A.report) p = path.join(path.dirname(A.report), path.basename(DEF[k])); const exists = fs.existsSync(p); return { path: p, explicit: !!A[k], text: exists ? fs.readFileSync(p, 'utf8') : null }; }
 const shotsIn = input('shots'), stateIn = input('state'), briefIn = input('brief');
 let state = null; if (stateIn.text != null) { try { state = JSON.parse(stateIn.text); } catch (e) { stateIn.err = e.message; } }
 
@@ -216,6 +219,24 @@ if (!parseErr) {
     if (!ok) bad10.push(String(s.id));
   }
   add('CR-10', !noScreens && bad10.length === 0, noScreens ? 'screens 없음' : `SLOP-SWEEP 없는 화면 ${bad10.length}건`, bad10.join(', ') || '전 화면 SLOP-SWEEP 존재');
+}
+
+/* ---- CR-11 검출력 시험 (full) ---- */
+{
+  const mode = state && state.mode ? state.mode : 'full'; const det = input('detector');
+  const flag = state && state.stages && state.stages.figma ? state.stages.figma.c_detector : undefined;
+  if (mode === 'fast') add('CR-11', true, 'fast — C 검출력 시험 생략(§6 가정 로그에 기록)', 'N/A');
+  else add('CR-11', flag === 'PASS' && det.text != null, `c_detector ${flag == null ? '없음' : flag} · 리포트 ${det.text != null ? '있음' : '없음'} (${det.path})`, flag === 'PASS' && det.text != null ? '검출력 확인됨' : '3-E 검출력 시험을 돌려 stages.figma.c_detector=PASS 와 리포트를 남긴다');
+}
+/* ---- CR-12 인용 문자열 ↔ text_inventory ---- */
+{
+  const au = input('audit'); let inv = null, truncated = false;
+  if (au.text != null) { try { const j = JSON.parse(au.text); inv = (j.text_inventory || []).flatMap((f) => f.texts || []); truncated = !!j.text_inventory_truncated; } catch (e) { inv = null; } }
+  const quotes = []; for (const sc of screens) for (const c of arr(sc.checks)) { if (!/^fail$/i.test(String(c.verdict || ''))) continue; const ev = String(c.evidence || ''); const re = /「([^」]{2,40})」|'([^'\n]{2,40})'|"([^"\n]{2,40})"|‘([^’\n]{2,40})’/g; let m; while ((m = re.exec(ev))) { const q = (m[1] || m[2] || m[3] || m[4] || '').trim(); if (/[가-힣A-Za-z]/.test(q)) quotes.push({ tag: `${sc.id}/${c.id}`, q }); } }
+  if (!quotes.length) add('CR-12', true, 'fail evidence 에 인용 문자열 없음 — N/A', '인용 0건');
+  else if (inv == null) add('CR-12', !au.explicit, `인용 ${quotes.length}건인데 audit text_inventory 없음 — ${au.explicit ? 'FAIL(지정 파일 없음)' : 'N/A(입력 없음)'}`, au.path);
+  else if (truncated) add('CR-12', true, `text_inventory 가 잘려(truncated) 대조 불가 — N/A (인용 ${quotes.length}건)`, '번들 --text-per-frame 을 올려 다시 생성하면 판정 가능');
+  else { const bad = quotes.filter(({ q }) => !inv.some((t) => t.includes(q) || q.includes(t) && t.length >= 4)); add('CR-12', bad.length === 0, `인용 ${quotes.length}건 중 화면 텍스트에 없는 것 ${bad.length}`, bad.slice(0, 5).map((b) => `${b.tag}:「${b.q}」`).join(', ') || '전건 화면 텍스트와 일치'); }
 }
 
 /* ---- 리포트 ---- */

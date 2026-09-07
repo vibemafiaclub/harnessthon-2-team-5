@@ -35,7 +35,8 @@
       "done_at": "2026-09-07T11:00:00Z",
       "exit_check": "design/verify/exit_stage3.md",
       "c_rounds": 1,
-      "c_fail_reasons": []
+      "c_fail_reasons": [],
+      "c_detector": "PASS"
     }
   },
   "human_gates": {

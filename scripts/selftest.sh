@@ -157,7 +157,13 @@ expect_rc "없는 파일 → 종료 2" 2 $CRF --refs "$TMP/nope.md"
 echo "## 4. check-c-report"
 CCR="node scripts/check-c-report.js"; FG="$FX/figma_good"
 expect_pass "골든(figma_good/verify/c_report.json)" "$TMP/ccr_good.md" $CCR --report "$FG/verify/c_report.json" --brief "$FG/brief.md" --state "$S" --shots "$FG/verify/shots/index.md" --out "$TMP/ccr_good.md"
-expect_fail_exact "결함(c_report_bad.json): positive false 무예외·score 2 무근거" "CR-5 CR-6" "$TMP/ccr_bad.md" $CCR --report "$FX/c_report_bad.json" --brief "$FG/brief.md" --state "$S" --shots "$FG/verify/shots/index.md" --out "$TMP/ccr_bad.md"
+expect_fail_exact "결함(c_report_bad.json): positive false 무예외·score 2 무근거" "CR-5 CR-6" "$TMP/ccr_bad.md" $CCR --report "$FX/c_report_bad.json" --brief "$FG/brief.md" --state "$S" --shots "$FG/verify/shots/index.md" --detector "$FG/verify/c_detector_test.md" --out "$TMP/ccr_bad.md"
+# CR-11: c_detector 없는 state → full 에서 FAIL
+node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));delete d.stages.figma.c_detector;fs.writeFileSync(process.argv[2],JSON.stringify(d));' "$S" "$TMP/state_nodet.json"
+expect_fail_exact "CR-11 검출력 시험 미실행(full)" "CR-11" "$TMP/ccr_m11.md" $CCR --report "$FG/verify/c_report.json" --brief "$FG/brief.md" --state "$TMP/state_nodet.json" --shots "$FG/verify/shots/index.md" --out "$TMP/ccr_m11.md"
+# CR-12: fail evidence 가 화면에 없는 문자열을 인용 → 오독으로 FAIL (text_inventory 는 audit_screens.json)
+node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));const c=d.screens[0].checks.find(c=>c.id==="C-2");c.verdict="fail";c.diagnosis="local";c.elements=["title"];c.evidence="제목에 오타 「서배」 가 보임";fs.writeFileSync(process.argv[2],JSON.stringify(d));' "$FG/verify/c_report.json" "$TMP/c_report_m12.json"
+expect_fail_exact "CR-12 인용 문자열이 화면 텍스트에 없음(오독)" "CR-12" "$TMP/ccr_m12.md" $CCR --report "$TMP/c_report_m12.json" --brief "$FG/brief.md" --state "$S" --shots "$FG/verify/shots/index.md" --detector "$FG/verify/c_detector_test.md" --audit "$FG/verify/audit_screens.json" --out "$TMP/ccr_m12.md"
 # D-42: PNG 가 있으면 mtime 이 정본 — index 시각을 미래로 적어도 CR-3 이 위조로 잡는다 / sha 불일치도 잡는다
 rm -rf "$TMP/shots_forged"; mkdir -p "$TMP/shots_forged"; printf 'PNG' > "$TMP/shots_forged/01_normal.png"; touch -t 202609070100 "$TMP/shots_forged/01_normal.png"
 printf '| 파일 | 노드 id | 캡처 시각(ISO) | lastModified(ISO) | sha |\n|---|---|---|---|---|\n| 01_normal.png | 10:1 | 2026-09-07T10:00:00Z | 2026-09-07T09:30:00Z | deadbeef0000 |\n| 01_empty.png | 10:2 | 2026-09-07T10:00:00Z | 2026-09-07T09:30:00Z | c |\n| 01_long.png | 10:3 | 2026-09-07T10:00:00Z | 2026-09-07T09:30:00Z | d |\n| 02_normal.png | 11:1 | 2026-09-07T10:00:00Z | 2026-09-07T09:30:00Z | e |\n| 02_empty.png | 11:2 | 2026-09-07T10:00:00Z | 2026-09-07T09:30:00Z | f |\n| 02_long.png | 11:3 | 2026-09-07T10:00:00Z | 2026-09-07T09:30:00Z | g |\n| 02_error.png | 11:4 | 2026-09-07T10:00:00Z | 2026-09-07T09:30:00Z | h |\n' > "$TMP/shots_forged/index.md"

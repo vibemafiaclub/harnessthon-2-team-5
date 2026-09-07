@@ -28,6 +28,7 @@
  *        c: tokens.json Variables 대상 leaf 수 == figma_nodes.variables 수(typography·elevation·icon 은 스타일이라 제외, typography.scale 수는 text_styles 와 대조) /
  *        d: 번들 text_inventory 가 있으면 초안 텍스트 집합 일치율 ≥90% (없으면 N/A)
  *   F-10 `check-c-report.js` 종료 코드 0 (리포트는 --out 과 같은 폴더의 exit_stage3_c.md)
+ *   F-12 final_review.md 에 '## 대신 정한 것' 절: 행 수 ≥ state.human_gates.delegations[] 수(전 단계 합본 — 0단계 모르겠음·Q12·추천 수락·예산 60%·2단계 ai_pick 등), 행 텍스트 금지어 0 — 사용자가 마지막에 '하네스가 묻지 않고 정한 것' 전부를 한 번에 본다(U-6)
  *   F-11 C 판정 처리 원장(D-40) — c_report.json 의 verdict fail 전건(local 포함)마다 `--c-routing`(기본 design/verify/c_routing.md) 표에
  *        `| <화면 id> | <C-id> | <분류> | <처리: 수정|처리 안 함> | <근거> |` 행이 있고, 처리가 '수정' 이면 근거에 재캡처 파일명(.png) 또는 커밋 해시(7자 이상),
  *        '처리 안 함' 이면 근거(사유) ≥8자. fail 0건이면 원장 없이 PASS. 정본 스키마(screens[])가 아니면 FAIL(D-41 — 조용히 PASS 하지 않는다). 리포트를 받아 보고만 하는 것은 라우팅이 아니다.
@@ -205,6 +206,15 @@ for (const s of review.shots) { const m = []; if (pngs && !pngs.includes(s.file)
 if (pngs) for (const f of pngs) if (!review.shots.some((s) => s.file === f)) bad6.push(`${f}:확인 행 없음`);
 const frOk = str(frFile) && path.basename(frFile) === path.basename(P('review'));
 add('F-6', reviewTxt != null && pngs != null && review.shots.length === pngs.length && pngs.length > 0 && bad6.length === 0 && frOk, `final_review 스크린샷 행 ${review.shots.length} (PNG ${pngs ? pngs.length : '-'}), 결함 행 ${bad6.length}, state final_ack.final_review.file ${frOk ? '기록됨' : '없음/불일치'}`, bad6.slice(0, 6).join('; ') + (bad6.length > 6 ? ` 외 ${bad6.length - 6}` : '') || `행 전건 파일·노드 id·본 것·PASS, file=${frFile}`);
+
+/* ---- F-12 대신 정한 것 합본 (U-6) ---- */
+{
+  const dele = arr(HG.delegations); const FW = (() => { try { return require('./lib/forbidden-words'); } catch (e) { return null; } })();
+  const secIdx = (reviewTxt || '').search(/^##\s*대신 정한 것/m); let rows = [];
+  if (secIdx >= 0) { const body = reviewTxt.slice(secIdx).split('\n').slice(1); for (const line of body) { if (/^##\s/.test(line)) break; const m = line.match(/^\s*(?:\|\s*)?(?:\d+[.)]|[-*])?\s*(.+?)\s*\|?\s*$/); if (/^\s*\|?\s*-{2,}/.test(line) || /^\s*\|\s*(#|번호|항목)/.test(line)) continue; if (m && m[1].trim() && /[가-힣A-Za-z]/.test(m[1])) rows.push(m[1].replace(/\|/g, ' ').trim()); } }
+  const fw = FW ? rows.flatMap((r) => FW.scanText(r).map((h) => `「${h.word}」`)) : [];
+  add('F-12', secIdx >= 0 && rows.length >= dele.length && fw.length === 0, `'대신 정한 것' 절 ${secIdx >= 0 ? '있음' : '없음'} · 행 ${rows.length} (delegations ${dele.length}) · 금지어 ${fw.length}`, secIdx < 0 ? 'final_review.md 에 "## 대신 정한 것" 절을 두고 delegations[] 항목마다 쉬운 말 한 줄' : (fw.join(', ') || rows.slice(0, 3).join(' / ')));
+}
 
 /* ---- F-7 final_ack ---- */
 const bad7 = []; if (FA.approved !== true) bad7.push('approved≠true'); if (!str(FA.quote)) bad7.push('quote 없음'); if (!str(FA.level_ack)) bad7.push('level_ack(3축 채점 고지 답) 없음');
