@@ -24,7 +24,7 @@
  *   CR-7  tasks[] 전 화면·전 역할: 불가 0, 헤맴 ≤1(리포트 전체), task 마다 role, brief §2b T-n 전부 추적, §2 역할 열의 역할마다 추적 ≥1
  *   CR-8  top_info.match===true 전 화면 (declared·blind_first 비어 있지 않음)
  *   CR-9  diagnosis repeat(또는 repeat:true) 이면 state.stages.figma.c_fail_reasons 에 같은 화면·같은 검사 id
- *   CR-11 [full] C 검출력 시험(3-E): state.stages.figma.c_detector === 'PASS' + 리포트(--detector, 기본 verify/c_detector_test.md) 존재 — 판정자가 심은 슬롭을 잡았다는 증거 없이 실제 화면 판정을 채택하지 않는다(V-3). fast 는 N/A
+ *   CR-11 C 검출력 시험(3-E, full·fast 공통): state.stages.figma.c_detector === 'PASS' + 리포트(--detector, 기본 리포트 폴더/c_detector_test.md) 존재 — 판정자가 심은 슬롭을 잡았다는 증거 없이 실제 화면 판정을 채택하지 않는다(V-3)
  *   CR-12 fail 의 evidence 에 따옴표(「」·'' ·"")로 인용한 화면 문자열이 --audit(audit_screens.json) text_inventory 에 실제로 있어야 한다 — 판정자 오독(없는 오타 '서배') 차단. 인용이 없거나 inventory 가 잘렸으면 N/A
  *   CR-10 화면마다 SLOP-SWEEP 항목(checks[] id "SLOP-SWEEP" 의 evidence/elements 또는 screen.slop_sweep) 존재
  *
@@ -223,10 +223,9 @@ if (!parseErr) {
 
 /* ---- CR-11 검출력 시험 (full) ---- */
 {
-  const mode = state && state.mode ? state.mode : 'full'; const det = input('detector');
+  const det = input('detector');
   const flag = state && state.stages && state.stages.figma ? state.stages.figma.c_detector : undefined;
-  if (mode === 'fast') add('CR-11', true, 'fast — C 검출력 시험 생략(§6 가정 로그에 기록)', 'N/A');
-  else add('CR-11', flag === 'PASS' && det.text != null, `c_detector ${flag == null ? '없음' : flag} · 리포트 ${det.text != null ? '있음' : '없음'} (${det.path})`, flag === 'PASS' && det.text != null ? '검출력 확인됨' : '3-E 검출력 시험을 돌려 stages.figma.c_detector=PASS 와 리포트를 남긴다');
+  add('CR-11', flag === 'PASS' && det.text != null, `c_detector ${flag == null ? '없음' : flag} · 리포트 ${det.text != null ? '있음' : '없음'} (${det.path})`, flag === 'PASS' && det.text != null ? '검출력 확인됨' : '3-E 검출력 시험을 돌려 stages.figma.c_detector=PASS 와 리포트를 남긴다');
 }
 /* ---- CR-12 인용 문자열 ↔ text_inventory ---- */
 {
