@@ -8,7 +8,7 @@
   - frame        필수. 모든 자극(타일·대비쌍·흐름)을 감싸는 폰 프레임(390×844: 상태바 44 / 상단 바 56 / 본문 / 하단 버튼 52 / 탭바 56 / 홈 34)의 공통 값.
                  {app_title, cta, tabs:[…] | false, active_tab}. 타일·쌍·장면은 title·cta(false 면 없음)·tabs(false 면 없음)·chrome({bg,surface,ink,accent} — 색 축에서만, 본문과 같은 값) 으로 덮어쓸 수 있다.
   - questions[]  필수: id·text·effect("이걸 정하면 ○○가 달라집니다" 한 줄, ≥6자)·options[]({value, scene ≥8자})·free:true·unknown:true·skeleton("Q1"…, interview_prompts §6 정본)·payload(§6 payload 열 — 같은 payload 두 질문이면 FAIL, 재검증은 verifies:<원 id>)
-      kind: question(기본) | pushback(계획 반박(PRD) — options 정확히 3개 + recommended + why) | pattern(레퍼런스 UX 패턴 — options ≥2, 서비스명 숨김)
+      kind: question(기본) | pushback(계획 반박(PRD) — options 정확히 3개 + recommended + why) | pattern(레퍼런스 UX 패턴 — options ≥2, 서비스명 숨김, **options[].html 필수**: 그 패턴으로 그린 대표 화면 본문 조각 — 폰 프레임 안에 그림으로 보인다, P-17)
       recommended·why: 결정형 질문(§1-10 — pushback·pattern·Q2 1등 정보·Q10 빈 상태 등)은 어느 kind 든 recommended(options.value 중 하나)·why 를 싣는다. 페이지가 배지로 보이고 '추천대로' 버튼이 미응답 질문을 그 값으로 채운다(accepted_recommended:true).
   - tiles[]      id·axis·variant·html(대표 화면의 본문 조각: 제목 + 목록 행 3개 + 상태 칩) — 한 타일은 축 하나만 바꾼다(다른 속성은 같은 축의 타일끼리 동일). 싫다·애매를 누르면 영역 칩(①제목줄 ②본문 ③아래 버튼 ④색 ⑤글자)이 열린다 → marks[].
   - pairs[]      axis·left·right, 선택 always:true — 갤러리 결과와 무관하게 항상 노출하는 재검증 쌍(진술형 질문이 없는 축)
@@ -41,6 +41,8 @@
   .effect b{font-weight:600}
   .hint{font-size:13.5px;color:var(--ink-2);margin:-4px 0 10px}
   .opts{display:grid;gap:8px;margin-bottom:10px}
+  .opts.optgrid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  .optph{margin-top:8px;pointer-events:none}
   button.opt{text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer;min-height:44px}
   button.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
   button.opt.recd{border-color:var(--human)}
@@ -147,9 +149,12 @@
       "free": true, "unknown": true },
     { "id": "Q-04", "kind": "pattern", "skeleton": "Q4'", "payload": "pattern", "text": "여러 사람의 되는 날을 맞출 때, 다른 서비스들은 보통 이렇게 보여 줍니다. 저는 ‘되는 날만 모아서’ 쪽이 이 앱에 맞다고 봅니다 — 잠깐 열어 볼 때 답이 바로 보여서요. 그래도 실제로 쓸 때 다른 쪽이 편할까요?",
       "effect": "날짜를 맞추는 화면의 모양이 통째로 달라집니다.", "options": [
-        { "value": "표로 한눈에", "scene": "날짜가 가로, 사람이 세로로 놓인 표에서 되는 날이 겹치는 칸이 색으로 보여요" },
-        { "value": "되는 날만 모아서", "scene": "다들 되는 날만 골라 위에 모아 주고, 안 되는 날은 접혀 있어요" },
-        { "value": "투표처럼", "scene": "후보 날짜 몇 개를 두고 각자 고르면, 가장 많이 고른 날이 맨 위로 올라와요" } ],
+        { "value": "표로 한눈에", "scene": "날짜가 가로, 사람이 세로로 놓인 표에서 되는 날이 겹치는 칸이 색으로 보여요", "title": "되는 날 맞추기", "cta": false,
+          "html": "<div style='padding:16px'><b style='font-size:20px'>대학동기 모임</b><table style='width:100%;margin-top:14px;border-collapse:collapse;font-size:13px;text-align:center'><tr><td></td><td>9/19</td><td>9/20</td><td>9/21</td></tr><tr><td style='text-align:left'>민준</td><td style='background:#DCEFEA'>○</td><td style='background:#DCEFEA'>○</td><td>—</td></tr><tr><td style='text-align:left'>서연</td><td>—</td><td style='background:#DCEFEA'>○</td><td style='background:#DCEFEA'>○</td></tr><tr><td style='text-align:left'>지훈</td><td style='background:#DCEFEA'>○</td><td style='background:#DCEFEA'>○</td><td>—</td></tr><tr><td></td><td></td><td style='background:#0F6E63;color:#fff;font-weight:700'>3명</td><td></td></tr></table></div>" },
+        { "value": "되는 날만 모아서", "scene": "다들 되는 날만 골라 위에 모아 주고, 안 되는 날은 접혀 있어요", "title": "되는 날 맞추기", "cta": false,
+          "html": "<div style='padding:16px'><b style='font-size:20px'>대학동기 모임</b><div style='margin-top:14px;padding:14px;background:#DCEFEA;border-radius:12px;font-weight:700'>다 되는 날 · 9/20(토) 점심</div><div style='margin-top:8px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>2명 되는 날 · 9/19(금), 9/21(일)</div><div style='margin-top:8px;padding:10px 14px;color:#6B7280;font-size:13px'>안 되는 날 3개 접힘 ▾</div></div>" },
+        { "value": "투표처럼", "scene": "후보 날짜 몇 개를 두고 각자 고르면, 가장 많이 고른 날이 맨 위로 올라와요", "title": "되는 날 맞추기", "cta": false,
+          "html": "<div style='padding:16px'><b style='font-size:20px'>대학동기 모임</b><div style='margin-top:14px;padding:14px;background:#fff;border:2px solid #0F6E63;border-radius:12px'>9/20(토) 점심 <span style='float:right;font-weight:700'>3표</span></div><div style='margin-top:8px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>9/19(금) 저녁 <span style='float:right'>2표</span></div><div style='margin-top:8px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>9/21(일) 점심 <span style='float:right'>1표</span></div></div>" } ],
       "recommended": "되는 날만 모아서", "why": "이동 중에 한 손으로 잠깐 볼 때는 겹치는 날만 바로 보이는 게 빠르기 때문입니다.",
       "free": true, "unknown": true },
     { "id": "Q-11", "kind": "pushback", "skeleton": "Q11", "payload": "pushback", "text": "지금 계획에는 답장 마감일만 정해져 있고, 마감이 지나도록 답이 없는 사람을 어떻게 할지는 없어요. 실제로는 답이 늦는 사람이 꼭 생깁니다. 저는 마감이 지나면 아직 답 없는 사람을 맨 위에 크게 보이고 그 사람들에게만 다시 보내는 쪽(A)이 맞다고 봅니다 — 날짜를 정하려면 결국 그 사람들 답이 필요하기 때문입니다. 그래도 다른 쪽이 나은 경우가 있을까요?",
@@ -321,10 +326,12 @@
         const rec = q.recommended && o.value === q.recommended;
         const b = document.createElement('button'); b.className = 'opt' + (a.value === o.value ? ' sel' : '') + (rec && !a.value ? ' recd' : '');
         b.innerHTML = '<b>' + esc(o.value) + '</b>' + (rec ? '<span class="rec">하네스 추천</span>' : '') + (rec && a.accepted_recommended && a.value === o.value ? '<span class="acc">추천대로</span>' : '') + '<br><span style="color:var(--ink-2);font-size:14px">' + esc(o.scene) + '</span>'
-          + (rec && q.why ? '<br><span style="color:var(--ink-2);font-size:13px">추천 이유: ' + esc(q.why) + '</span>' : '');
+          + (rec && q.why ? '<br><span style="color:var(--ink-2);font-size:13px">추천 이유: ' + esc(q.why) + '</span>' : '')
+          + (o.html ? '<div class="stim scaled optph">' + phone(Object.assign({}, o, { html: o.html })) + '</div>' : '');
         b.onclick = () => { a.value = o.value; a.unknown = false; a.accepted_recommended = false; save(qrec(q, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b);
       });
       if (q.unknown) { const b = document.createElement('button'); b.className = 'opt unk' + (a.unknown ? ' sel' : ''); b.textContent = '모르겠음 — 기본값으로 진행해도 돼요'; b.onclick = () => { a.unknown = true; a.value = ''; a.accepted_recommended = false; save(qrec(q, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b); }
+      if (q.options.some((o) => o && o.html)) opts.classList.add('optgrid');
       card.appendChild(opts);
       if (q.free) { const ta = document.createElement('textarea'); ta.placeholder = q.options.length ? '덧붙일 말이 있으면 자유롭게 (선택)' : '떠오르는 대로 한두 줄'; ta.value = a.free || ''; ta.onchange = () => { a.free = ta.value; save(qrec(q, a), card.querySelector('.saved')); }; card.appendChild(ta); }
       const row = document.createElement('div'); row.className = 'row'; row.innerHTML = '<span class="saved">' + (a.ts ? '저장됨' : '') + '</span>'; card.appendChild(row);

@@ -32,6 +32,7 @@
  *   P-13 페이지 skeleton 집합 ⊆ prompts §6 정본 세트(fast/full)
  *   P-14 파일 크기 ≤ agent_gallery_html_kb_max
  *   P-15 frame 존재(app_title·cta 문자열) · questions 전건 effect("이걸 정하면 ○○가 달라집니다" 한 줄) ≥6자 (team-3 비교 후보 3)
+ *   P-17 kind:pattern 의 options 전건 html(≥40자, 자리표시자 0) — 패턴은 글이 아니라 폰 프레임 그림으로 보인다(U-3)
  *   P-16 flows[].steps: 마지막을 뺀 전 장면에 press(≥2자) + 강조할 곳(html 에 data-press 또는 press == 그 장면의 cta) · states[] 항목마다 label·html ("따라가 보기" 투어, 후보 5)
  */
 const fs = require('fs'); const path = require('path'); const cp = require('child_process');
@@ -231,7 +232,7 @@ if (!D) {
   const segs = [['title', D.title], ['intro', D.intro], ['banner', D.banner]];
   const FR = (D.frame && typeof D.frame === 'object') ? D.frame : {};
   segs.push(['frame.app_title', FR.app_title]); segs.push(['frame.cta', FR.cta]); (Array.isArray(FR.tabs) ? FR.tabs : []).forEach((t, i) => segs.push([`frame.tabs[${i}]`, t]));
-  Q.forEach((q) => { segs.push([`${q.id}.text`, q.text]); if (q.effect) segs.push([`${q.id}.effect`, q.effect]); if (q.why) segs.push([`${q.id}.why`, q.why]); (q.options || []).forEach((o, i) => { segs.push([`${q.id}.options[${i}].value`, o && o.value]); segs.push([`${q.id}.options[${i}].scene`, o && o.scene]); }); });
+  Q.forEach((q) => { segs.push([`${q.id}.text`, q.text]); if (q.effect) segs.push([`${q.id}.effect`, q.effect]); if (q.why) segs.push([`${q.id}.why`, q.why]); (q.options || []).forEach((o, i) => { segs.push([`${q.id}.options[${i}].value`, o && o.value]); segs.push([`${q.id}.options[${i}].scene`, o && o.scene]); if (o && o.html) segs.push([`${q.id}.options[${i}].html`, FW.stripTags(o.html)]); }); });
   const chromeSegs = (id, o) => { if (!o) return; if (typeof o.title === 'string') segs.push([`${id}.title`, o.title]); if (typeof o.cta === 'string') segs.push([`${id}.cta`, o.cta]); (Array.isArray(o.tabs) ? o.tabs : []).forEach((t, i) => segs.push([`${id}.tabs[${i}]`, t])); };
   T.forEach((t) => { segs.push([`${t.id}.html`, FW.stripTags(t.html || '')]); chromeSegs(t.id, t); });
   P.forEach((p, i) => ['left', 'right'].forEach((s) => { if (p[s]) { const pid = p[s].id || 'W-' + (i + 1) + '-' + s; segs.push([`${pid}.html`, FW.stripTags(p[s].html || '')]); chromeSegs(pid, p[s]); } }));
@@ -349,7 +350,9 @@ if (!D) {
     FL.forEach((f) => { const steps = Array.isArray(f.steps) ? f.steps : []; steps.forEach((s, i) => { const sid = `${f.id}.steps[${i}]`; if (!s) { p16.push(`${sid} 없음`); return; }
       if (i < steps.length - 1) { if (chars(s.press) < 2) p16.push(`${sid} press 없음(마지막 장면만 생략 가능)`); else if (!/data-press/.test(String(s.html || '')) && s.press !== s.cta) p16.push(`${sid} 강조할 곳 없음 — html 에 data-press 를 두거나 press 를 그 장면의 cta 와 같게`); }
       (Array.isArray(s.states) ? s.states : []).forEach((st, j) => { if (!st || chars(st.label) < 1 || !String(st.html || '').trim()) p16.push(`${sid}.states[${j}] label·html 필요`); }); }); });
-    add('P-16', p16.length === 0, `투어 형식 위반 ${p16.length}건 (흐름 ${FL.length})`, short(p16) || (FL.length ? `전 장면 press·강조 위치 있음` : '흐름 없음'));
+    { const p17 = []; Q.filter((q) => q.kind === 'pattern').forEach((q) => (q.options || []).forEach((o, i) => { const h = String((o && o.html) || ''); if (h.trim().length < 40) p17.push(`${q.id}.options[${i}] html ${h.trim().length}자 < 40`); else if (PLACEHOLDER.test(FW.stripTags(h))) p17.push(`${q.id}.options[${i}] 자리표시자`); }));
+    add('P-17', p17.length === 0, `패턴 선택지 그림 위반 ${p17.length}건 (pattern 질문 ${Q.filter((q) => q.kind === 'pattern').length})`, short(p17) || '패턴 선택지 전건 html 있음'); }
+  add('P-16', p16.length === 0, `투어 형식 위반 ${p16.length}건 (흐름 ${FL.length})`, short(p16) || (FL.length ? `전 장면 press·강조 위치 있음` : '흐름 없음'));
   }
 }
 

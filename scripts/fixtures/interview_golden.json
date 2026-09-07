@@ -79,11 +79,15 @@
    "options": [
     {
      "value": "등록 버튼 하나",
-     "scene": "빈 화면에 '첫 반려동물 등록' 버튼 하나만 크게 있어요"
+     "scene": "빈 화면에 '첫 반려동물 등록' 버튼 하나만 크게 있어요",
+     "html": "<div style='padding:40px 16px;text-align:center'><b style='font-size:20px'>아직 등록한 반려동물이 없어요</b><div style='margin-top:16px;padding:14px;background:#2F6BFF;color:#fff;border-radius:12px;font-weight:600'>첫 반려동물 등록</div></div>",
+     "cta": false
     },
     {
      "value": "예시 약이 미리",
-     "scene": "예시 약 세 개가 미리 들어 있고 지우면서 시작해요"
+     "scene": "예시 약 세 개가 미리 들어 있고 지우면서 시작해요",
+     "html": "<div style='padding:16px'><b style='font-size:20px'>오늘 약</b><div style='margin-top:14px;padding:14px;background:#fff;border:1px dashed #9CA3AF;border-radius:12px;color:#6B7280'>예시 · 심장약 아침 1알 (지우기 ×)</div><div style='margin-top:8px;padding:14px;background:#fff;border:1px dashed #9CA3AF;border-radius:12px;color:#6B7280'>예시 · 관절약 저녁 1알 (지우기 ×)</div></div>",
+     "cta": false
     }
    ],
    "free": true,
@@ -99,11 +103,15 @@
    "options": [
     {
      "value": "이미 먹임 잠금",
-     "scene": "먹인 약은 회색으로 잠기고 다시 누르면 '오늘 이미 먹였어요'가 떠요"
+     "scene": "먹인 약은 회색으로 잠기고 다시 누르면 '오늘 이미 먹였어요'가 떠요",
+     "html": "<div style='padding:16px'><b style='font-size:20px'>이미 먹임 잠금</b><div style='margin-top:14px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>먹인 약은 회색으로 잠기고 다시 누르면 '오늘 이미 먹였어요'가 떠요</div></div>",
+     "cta": false
     },
     {
      "value": "횟수 표시",
-     "scene": "약 옆에 '오늘 1/2회'처럼 남은 횟수가 숫자로 보여요"
+     "scene": "약 옆에 '오늘 1/2회'처럼 남은 횟수가 숫자로 보여요",
+     "html": "<div style='padding:16px'><b style='font-size:20px'>횟수 표시</b><div style='margin-top:14px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>약 옆에 '오늘 1/2회'처럼 남은 횟수가 숫자로 보여요</div></div>",
+     "cta": false
     }
    ],
    "free": true,
@@ -119,11 +127,15 @@
    "options": [
     {
      "value": "맨 위에 모아서",
-     "scene": "놓친 약이 홈 맨 위에 빨간 칸으로 모여 있어요"
+     "scene": "놓친 약이 홈 맨 위에 빨간 칸으로 모여 있어요",
+     "html": "<div style='padding:16px'><b style='font-size:20px'>맨 위에 모아서</b><div style='margin-top:14px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>놓친 약이 홈 맨 위에 빨간 칸으로 모여 있어요</div></div>",
+     "cta": false
     },
     {
      "value": "알림 목록에서",
-     "scene": "홈은 그대로 두고 알림 목록에 들어가면 놓친 약이 보여요"
+     "scene": "홈은 그대로 두고 알림 목록에 들어가면 놓친 약이 보여요",
+     "html": "<div style='padding:16px'><b style='font-size:20px'>알림 목록에서</b><div style='margin-top:14px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>홈은 그대로 두고 알림 목록에 들어가면 놓친 약이 보여요</div></div>",
+     "cta": false
     }
    ],
    "free": true,

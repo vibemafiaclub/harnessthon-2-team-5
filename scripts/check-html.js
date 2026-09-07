@@ -32,6 +32,8 @@
  *   H-16 C-5/C-8 grep: gradient 배경 WARN(hue 2종 이상 FAIL) · backdrop-filter FAIL · aria-hidden 밖 이모지 FAIL
  *        · color:#000|#000000|black FAIL · box-shadow 1종인데 card 류 ≥3 WARN · repeat(3 WARN                      (V-3)
  *   H-17 tokens.css --typography-scale-heading-1-size / --typography-scale-body-size ≥ 1.5                         (C-7 제목/본문 배율)
+ *   H-18 [--brief] §2b 핵심 과업 기대 경로(A → B → C, §2 번호 또는 화면명): 경로의 화면마다 파일 존재, 연속 쌍(A→B)마다 A 의 normal 섹션에
+ *        data-next="<B 번호>" 요소 존재(2-C — 이동 요소에 다음 화면 번호). 화면으로 못 푸는 조각은 WARN 으로 나열                    (U-1 핵심 UX 완결)
  * L-6 라벨 폭 예산·L-8 높이 초과량은 렌더가 필요하므로 여기서 계산하지 않는다(judge + 브라우저).
  * --state 는 mode 표기용(상한을 쓰는 항목이 생기면 caps/caps_fast 를 여기서 읽는다).
  */
@@ -266,6 +268,24 @@ if (A.brief) {
     const extra = Array.from(screenNums).filter(([n]) => !rows.some((r) => r.n === n)).map(([, f]) => f);
     const st = (noFile.length || idMissing.length || noName.length) ? 'FAIL' : ((extra.length || !ids.size) ? 'WARN' : 'PASS');
     add('H-11', '(brief §2)', st, `§2 ${rows.length}행 / screen 파일 ${screens.length}개 / 매핑 번호(F·P) ${ids.size}개${noFile.length ? '; 파일 없는 행: ' + noFile.map((r) => `#${r.n} ${r.name}`.trim()).join(', ') : ''}${noName.length ? '; 화면명 없는 행: #' + noName.map((r) => r.n).join(',#') : ''}${idMissing.length ? '; 화면 없는 번호: ' + idMissing.join(', ') : ''}${extra.length ? '; §2 밖 파일: ' + extra.join(', ') : ''}${!ids.size ? '; 매핑 열에 F·P 번호 0개(check-brief B-3 확인)' : ''}`, `§2 매핑 열 /F\\d+|P-\\d+/ → ${Array.from(ids.keys()).join(' ') || '없음'}; 행→파일 screen_<nn>_*`);
+  }
+  /* H-18 §2b 핵심 과업 경로 완결 */
+  if (!sections['2b']) add('H-18', '(brief §2b)', 'FAIL', '§2b 핵심 과업 표 없음', A.brief);
+  else {
+    const tb = table(sec('2b')); const iPath = col(tb.header, /경로/, 3), iTask = col(tb.header, /^#$|과업/, 0);
+    const t2b = table(sec('2')); const nameOf = new Map(); t2b.rows.forEach((c) => { const n = parseInt((c[col(t2b.header, /^#$/, 0)] || '').replace(/\D/g, ''), 10); if (n) nameOf.set(n, (c[1] || '').trim()); });
+    const resolve = (seg) => { const t = seg.trim().replace(/^[#§]/, ''); const m = t.match(/^(?:#|X-)?(\d{1,2})\b/); if (m) return Number(m[1]); for (const [n, nm] of nameOf) { const base = nm.replace(/\(.*?\)/g, '').trim(); if (base && (t === nm || t === base || t.startsWith(base) || base.startsWith(t))) return n; } return null; };
+    const fails = [], warns = []; let pairs = 0, okPairs = 0;
+    if (!tb.rows.length) fails.push('§2b 에 과업 행 없음');
+    for (const c of tb.rows) {
+      const tid = (c[iTask] || '').trim() || '?'; const segs = String(c[iPath] || '').split(/→|->|>/).map((x) => x.trim()).filter(Boolean);
+      if (segs.length < 2) { fails.push(`${tid}: 기대 경로에 화면 2개 이상 필요`); continue; }
+      const nums = segs.map(resolve); segs.forEach((sg, k) => { if (nums[k] == null) warns.push(`${tid}: '${sg}' 는 §2 화면이 아님(행동 라벨이면 화면명으로 바꿔 적는다)`); });
+      const chain = nums.filter((n) => n != null);
+      chain.forEach((n) => { if (!screenNums.has(n)) fails.push(`${tid}: 화면 #${n} 파일 없음`); });
+      for (let k = 0; k + 1 < chain.length; k++) { const a = chain[k], b = chain[k + 1]; if (a === b) continue; pairs++; const f = screenNums.get(a); if (!f) continue; let src = ''; try { src = read(f); } catch (e) { src = ''; } const nn = String(b).padStart(2, '0'); const re = new RegExp('data-next\\s*=\\s*"(' + nn + '|' + b + ')"'); if (re.test(src)) okPairs++; else fails.push(`${tid}: #${a} → #${b} 이동 요소 없음(data-next="${nn}")`); }
+    }
+    add('H-18', '(brief §2b)', fails.length ? 'FAIL' : (warns.length ? 'WARN' : 'PASS'), `과업 ${tb.rows.length}건, 화면 쌍 ${pairs} 중 이동 요소 확인 ${okPairs}${fails.length ? '; ' + fails.slice(0, 6).join('; ') : ''}${warns.length ? '; ' + warns.slice(0, 4).join('; ') : ''}`, A.brief);
   }
   /* H-12 */
   if (!sections['2c']) add('H-12', '(brief §2c)', 'FAIL', '§2c 사용자 여정·필수 플로우 커버리지 표 없음', A.brief);

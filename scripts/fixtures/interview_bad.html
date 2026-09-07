@@ -8,7 +8,7 @@
   - frame        필수. 모든 자극(타일·대비쌍·흐름)을 감싸는 폰 프레임(390×844: 상태바 44 / 상단 바 56 / 본문 / 하단 버튼 52 / 탭바 56 / 홈 34)의 공통 값.
                  {app_title, cta, tabs:[…] | false, active_tab}. 타일·쌍·장면은 title·cta(false 면 없음)·tabs(false 면 없음)·chrome({bg,surface,ink,accent} — 색 축에서만, 본문과 같은 값) 으로 덮어쓸 수 있다.
   - questions[]  필수: id·text·effect("이걸 정하면 ○○가 달라집니다" 한 줄, ≥6자)·options[]({value, scene ≥8자})·free:true·unknown:true·skeleton("Q1"…, interview_prompts §6 정본)·payload(§6 payload 열 — 같은 payload 두 질문이면 FAIL, 재검증은 verifies:<원 id>)
-      kind: question(기본) | pushback(계획 반박(PRD) — options 정확히 3개 + recommended + why) | pattern(레퍼런스 UX 패턴 — options ≥2, 서비스명 숨김)
+      kind: question(기본) | pushback(계획 반박(PRD) — options 정확히 3개 + recommended + why) | pattern(레퍼런스 UX 패턴 — options ≥2, 서비스명 숨김, **options[].html 필수**: 그 패턴으로 그린 대표 화면 본문 조각 — 폰 프레임 안에 그림으로 보인다, P-17)
       recommended·why: 결정형 질문(§1-10 — pushback·pattern·Q2 1등 정보·Q10 빈 상태 등)은 어느 kind 든 recommended(options.value 중 하나)·why 를 싣는다. 페이지가 배지로 보이고 '추천대로' 버튼이 미응답 질문을 그 값으로 채운다(accepted_recommended:true).
   - tiles[]      id·axis·variant·html(대표 화면의 본문 조각: 제목 + 목록 행 3개 + 상태 칩) — 한 타일은 축 하나만 바꾼다(다른 속성은 같은 축의 타일끼리 동일). 싫다·애매를 누르면 영역 칩(①제목줄 ②본문 ③아래 버튼 ④색 ⑤글자)이 열린다 → marks[].
   - pairs[]      axis·left·right, 선택 always:true — 갤러리 결과와 무관하게 항상 노출하는 재검증 쌍(진술형 질문이 없는 축)
@@ -41,6 +41,8 @@
   .effect b{font-weight:600}
   .hint{font-size:13.5px;color:var(--ink-2);margin:-4px 0 10px}
   .opts{display:grid;gap:8px;margin-bottom:10px}
+  .opts.optgrid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  .optph{margin-top:8px;pointer-events:none}
   button.opt{text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer;min-height:44px}
   button.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
   button.opt.recd{border-color:var(--human)}
@@ -198,11 +200,15 @@
    "options": [
     {
      "value": "등록 버튼 하나",
-     "scene": "빈 화면에 '첫 반려동물 등록' 버튼 하나만 크게 있어요"
+     "scene": "빈 화면에 '첫 반려동물 등록' 버튼 하나만 크게 있어요",
+     "html": "<div style='padding:40px 16px;text-align:center'><b style='font-size:20px'>아직 등록한 반려동물이 없어요</b><div style='margin-top:16px;padding:14px;background:#2F6BFF;color:#fff;border-radius:12px;font-weight:600'>첫 반려동물 등록</div></div>",
+     "cta": false
     },
     {
      "value": "예시 약이 미리",
-     "scene": "예시 약 세 개가 미리 들어 있고 지우면서 시작해요"
+     "scene": "예시 약 세 개가 미리 들어 있고 지우면서 시작해요",
+     "html": "<div style='padding:16px'><b style='font-size:20px'>오늘 약</b><div style='margin-top:14px;padding:14px;background:#fff;border:1px dashed #9CA3AF;border-radius:12px;color:#6B7280'>예시 · 심장약 아침 1알 (지우기 ×)</div><div style='margin-top:8px;padding:14px;background:#fff;border:1px dashed #9CA3AF;border-radius:12px;color:#6B7280'>예시 · 관절약 저녁 1알 (지우기 ×)</div></div>",
+     "cta": false
     }
    ],
    "free": true,
@@ -218,11 +224,15 @@
    "options": [
     {
      "value": "이미 먹임 잠금",
-     "scene": "먹인 약은 회색으로 잠기고 다시 누르면 '오늘 이미 먹였어요'가 떠요"
+     "scene": "먹인 약은 회색으로 잠기고 다시 누르면 '오늘 이미 먹였어요'가 떠요",
+     "html": "<div style='padding:16px'><b style='font-size:20px'>이미 먹임 잠금</b><div style='margin-top:14px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>먹인 약은 회색으로 잠기고 다시 누르면 '오늘 이미 먹였어요'가 떠요</div></div>",
+     "cta": false
     },
     {
      "value": "횟수 표시",
-     "scene": "약 옆에 '오늘 1/2회'처럼 남은 횟수가 숫자로 보여요"
+     "scene": "약 옆에 '오늘 1/2회'처럼 남은 횟수가 숫자로 보여요",
+     "html": "<div style='padding:16px'><b style='font-size:20px'>횟수 표시</b><div style='margin-top:14px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>약 옆에 '오늘 1/2회'처럼 남은 횟수가 숫자로 보여요</div></div>",
+     "cta": false
     }
    ],
    "free": true,
@@ -238,11 +248,15 @@
    "options": [
     {
      "value": "맨 위에 모아서",
-     "scene": "놓친 약이 홈 맨 위에 빨간 칸으로 모여 있어요"
+     "scene": "놓친 약이 홈 맨 위에 빨간 칸으로 모여 있어요",
+     "html": "<div style='padding:16px'><b style='font-size:20px'>맨 위에 모아서</b><div style='margin-top:14px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>놓친 약이 홈 맨 위에 빨간 칸으로 모여 있어요</div></div>",
+     "cta": false
     },
     {
      "value": "알림 목록에서",
-     "scene": "홈은 그대로 두고 알림 목록에 들어가면 놓친 약이 보여요"
+     "scene": "홈은 그대로 두고 알림 목록에 들어가면 놓친 약이 보여요",
+     "html": "<div style='padding:16px'><b style='font-size:20px'>알림 목록에서</b><div style='margin-top:14px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>홈은 그대로 두고 알림 목록에 들어가면 놓친 약이 보여요</div></div>",
+     "cta": false
     }
    ],
    "free": true,
@@ -594,10 +608,12 @@
         const rec = q.recommended && o.value === q.recommended;
         const b = document.createElement('button'); b.className = 'opt' + (a.value === o.value ? ' sel' : '') + (rec && !a.value ? ' recd' : '');
         b.innerHTML = '<b>' + esc(o.value) + '</b>' + (rec ? '<span class="rec">하네스 추천</span>' : '') + (rec && a.accepted_recommended && a.value === o.value ? '<span class="acc">추천대로</span>' : '') + '<br><span style="color:var(--ink-2);font-size:14px">' + esc(o.scene) + '</span>'
-          + (rec && q.why ? '<br><span style="color:var(--ink-2);font-size:13px">추천 이유: ' + esc(q.why) + '</span>' : '');
+          + (rec && q.why ? '<br><span style="color:var(--ink-2);font-size:13px">추천 이유: ' + esc(q.why) + '</span>' : '')
+          + (o.html ? '<div class="stim scaled optph">' + phone(Object.assign({}, o, { html: o.html })) + '</div>' : '');
         b.onclick = () => { a.value = o.value; a.unknown = false; a.accepted_recommended = false; save(qrec(q, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b);
       });
       if (q.unknown) { const b = document.createElement('button'); b.className = 'opt unk' + (a.unknown ? ' sel' : ''); b.textContent = '모르겠음 — 기본값으로 진행해도 돼요'; b.onclick = () => { a.unknown = true; a.value = ''; a.accepted_recommended = false; save(qrec(q, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b); }
+      if (q.options.some((o) => o && o.html)) opts.classList.add('optgrid');
       card.appendChild(opts);
       if (q.free) { const ta = document.createElement('textarea'); ta.placeholder = q.options.length ? '덧붙일 말이 있으면 자유롭게 (선택)' : '떠오르는 대로 한두 줄'; ta.value = a.free || ''; ta.onchange = () => { a.free = ta.value; save(qrec(q, a), card.querySelector('.saved')); }; card.appendChild(ta); }
       const row = document.createElement('div'); row.className = 'row'; row.innerHTML = '<span class="saved">' + (a.ts ? '저장됨' : '') + '</span>'; card.appendChild(row);
