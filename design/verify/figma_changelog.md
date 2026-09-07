@@ -232,3 +232,48 @@ C안이 여전히 잡는 것(전부 진짜 위반): `chip` ×45, `duo-fg` ×24, 
 
 규칙의 본질은 "첫 글자가 대문자인가"(자동 생성·소문자 코드형 이름 배제)이지
 모든 세그먼트가 아니다. 남은 319건은 이 파일의 실제 상태이며 소급하지 않는다(warning).
+
+## 2026-09-07 — A검사 최종치 (검증 2 자산)
+
+네이밍 규칙 분리(semantic/auto) + C안 정규식 반영. **이 값이 검증 2 자산의 A검사 최종치다.**
+
+```
+passed_machine: false
+blocker  24 = primary-action-visible
+warning 267 = layer-naming-semantic
+bytes 14763, violations_truncated_cap 10, over_budget 없음
+```
+
+| 규칙 | 위반 | applicable |
+|---|---|---|
+| `primary-action-visible` | **24** | 24 |
+| `layer-naming-semantic` | **267** | 429 |
+| `layer-naming-auto` | 0 | 1172 |
+| `touch-target-min-inferred` | 0 | 43 |
+| `frame-spec` | 0 | 24 |
+| `type-style-reuse` | 0 | 498 |
+| `no-primitive-binding` | 0 | 1172 |
+| `content-not-cut` | 0 | 1132 |
+| `text-not-clipped` | 0 | 498 |
+| `no-zero-size-node` | 0 | 1172 |
+| `text-size-min` | 0 | 498 |
+| `no-reference-color-copy` | 0 | 1172 |
+| `color-palette-allowlist` | 0 | 1172 |
+| `spacing-grid` | 0 | 506 |
+| `radius-scale` | 0 | 1172 |
+| `icon-foreign-fill` | 0 | 1172 |
+
+`not_applicable`: `touch-target-min`, `variant-state-coverage`
+`requires_human_review`: `contrast-text-aa`, `contrast-nontext-aa`, `image-fill-valid`
+
+**applicable 정합 확인**: `layer-naming-semantic` 이 429(컨테이너)로 잡혔다.
+분리 전에는 1172(전 노드)였다. 규칙 분리가 의도대로 동작한다.
+내 전수 조사(533/319)와 차이는 인스턴스 내부 노드 제외 때문으로 보이며,
+위반/적용 비율(267/429 = 62%)은 조사치(319/533 = 60%)와 일치한다.
+
+**남는 두 건은 전부 명명 규약 문제이고 다음 런(02 픽스처) 대상이다.**
+- `primary-action-visible` 24: `Action/Primary` 규약이 파일 생성 이후 도입됨
+- `layer-naming-semantic` 267: `add-btn`·`chip`·`contact-row` 등 소문자 코드형 이름
+
+두 규칙 다 3-B·3-C 가 처음부터 규약대로 이름을 지으면 자연히 0 이 된다.
+검증 2 자산에 소급하지 않기로 합의했다(figma_nodes.json 매핑과 이름 기반 규칙이 얽힘).
