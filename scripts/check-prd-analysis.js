@@ -10,7 +10,7 @@
  *   Z-5  §6 반박: 행 수 ≤ agent_prd_pushback_max, 행마다 추천(A|B)·이유·물을 쉬운 말 채움, 물을 쉬운 말에 금지어·취향형·열린 결정(추천 문장 없이) 0, 유형 '누락' ≥1 또는 '누락 없음 — 사유'
  *   Z-6  §9 필수 플로우 (a)~(g) 7행, 행마다 화면 # 또는 '해당 없음 — 사유', (g) 계정 진입 행에 ①/②/③ 판단
  *   Z-7  §8 핵심 과업 3행(시작 화면·기대 경로 채움)
- *   Z-8  상한: 전체 줄 ≤ agent_prd_analysis_lines_max · §5 미확정 항목 ≤ agent_prd_open_questions_max · 시나리오(S-n) ≤ agent_scenarios_max
+ *   Z-8  상한: 전체 줄 ≤ agent_prd_analysis_lines_max · §5 미확정 ≤ agent_prd_open_questions_max · 시나리오(S-n) ≤ agent_scenarios_max · §1 흐름 후보 표 ≤ agent_flow_candidates_max · §7 [HYPOTHESIS] 감성 키워드 ≤ agent_emotion_keywords_max
  */
 'use strict';
 const fs = require('fs'); const path = require('path');
@@ -55,7 +55,9 @@ const col = (h, re) => h.findIndex((x) => re.test(x));
   else { const iS = col(t.header, /시작/), iP = col(t.header, /경로/); const bad = t.rows.filter((r) => !(r[iS] || '').trim() || !(r[iP] || '').trim()).map((r) => r[0]); add('Z-7', t.rows.length === 3 && bad.length === 0, `핵심 과업 ${t.rows.length}행(==3), 시작·경로 공백 ${bad.length}`, bad.join(', ') || t.rows.map((r) => r[0]).join(', ')); } }
 /* Z-8 */
 { const lines = txt.split('\n').length, lmax = cap('agent_prd_analysis_lines_max', 120); const s5 = sec(5) || ''; const open = s5.split('\n').filter((l) => /^\s*(-|\d+\.|\|)/.test(l) && !/^\s*\|\s*-/.test(l) && !/^\s*\|\s*#/.test(l)).length; const omax = cap('agent_prd_open_questions_max', 8); const sc = new Set((txt.match(/\bS-\d+\b/g) || [])).size, smax = cap('agent_scenarios_max', 3);
-  add('Z-8', lines <= lmax && open <= omax && sc <= smax, `줄 ${lines}≤${lmax} · 미확정 ${open}≤${omax} · 시나리오 ${sc}≤${smax}`, prdPath); }
+  const flows = tables(sec(1)).filter((x) => col(x.header, /화면/) >= 0 && col(x.header, /진입/) >= 0).length, fmax = cap('agent_flow_candidates_max', 2);
+  const emo = ((sec(7) || '').match(/\[HYPOTHESIS\][^\n]*/g) || []).reduce((n, l) => n + l.replace('[HYPOTHESIS]', '').split(/[·,、]/).map((x) => x.trim()).filter(Boolean).length, 0), emax = cap('agent_emotion_keywords_max', 5);
+  add('Z-8', lines <= lmax && open <= omax && sc <= smax && flows <= fmax && emo <= emax, `줄 ${lines}≤${lmax} · 미확정 ${open}≤${omax} · 시나리오 ${sc}≤${smax} · 흐름 후보 ${flows}≤${fmax} · 감성 키워드 ${emo}≤${emax}`, prdPath); }
 const passed = checks.every((c) => c.status === 'PASS');
 const L = [`# 0-A 종료조건 검사 (scripts/check-prd-analysis.js, ${new Date().toISOString()})`, '', `- prd: ${prdPath} · state: ${A.state || '-'} (${state ? state.mode || 'full' : 'state 없음'})`, `- 결과: **${passed ? 'PASS' : 'FAIL'}** (${checks.filter((c) => c.status === 'PASS').length}/${checks.length})`, '', '| 항목 | 결과 | 내용 | 근거 |', '|---|---|---|---|'];
 for (const c of checks) L.push(`| ${c.id} | ${c.status} | ${c.detail} | ${String(c.evidence).replace(/\|/g, '/').slice(0, 160)} |`);

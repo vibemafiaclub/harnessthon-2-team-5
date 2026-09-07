@@ -5,7 +5,7 @@
   db 가 없으면(미발행·오프라인) localStorage 에 저장하고 "답변 내보내기" 로 JSON 을 복사해 채팅에 붙이게 한다.
 
   harness-data 스키마 (check-interview-page.js 가 검사한다):
-  - frame        필수. 모든 자극(타일·대비쌍·흐름)을 감싸는 폰 프레임(390×844: 상태바 44 / 상단 바 56 / 본문 / 하단 버튼 52 / 탭바 56 / 홈 34)의 공통 값.
+  - frame        필수. 모든 자극(타일·대비쌍·흐름)을 감싸는 폰 프레임(390×844: 상태바 44 / 상단 바 56 / 본문 / 하단 버튼 52 / 탭바 56 / 홈 34 — 인터뷰 자극용 중립 프레임; 2단계 초안 프레임(탭바 49 + 홈 34 = 83)과는 별개 규격)의 공통 값.
                  {app_title, cta, tabs:[…] | false, active_tab}. 타일·쌍·장면은 title·cta(false 면 없음)·tabs(false 면 없음)·chrome({bg,surface,ink,accent} — 색 축에서만, 본문과 같은 값) 으로 덮어쓸 수 있다.
   - questions[]  필수: id·text·effect("이걸 정하면 ○○가 달라집니다" 한 줄, ≥6자)·options[]({value, scene ≥8자})·free:true·unknown:true·skeleton("Q1"…, interview_prompts §6 정본)·payload(§6 payload 열 — 같은 payload 두 질문이면 FAIL, 재검증은 verifies:<원 id>)
       kind: question(기본) | pushback(계획 반박(PRD) — options 정확히 3개 + recommended + why) | pattern(레퍼런스 UX 패턴 — options ≥2, 서비스명 숨김, **options[].html 필수**: 그 패턴으로 그린 대표 화면 본문 조각 — 폰 프레임 안에 그림으로 보인다, P-17)

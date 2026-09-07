@@ -236,8 +236,8 @@ worker(Haiku)의 판단으로 세게 하면 섹션 경계(§2 vs §2b)·조사 �
 - [ ] **B-23** 되묻기 `F-n` 총 ≤3, 같은 원 질문 ≤2
 - [ ] **B-24** 사람 호출 `H-nn` 각 블록에 "결정할 것·선택지·추천 이유·안 정하면" 4라벨, kind ∈ 11종(정본 check-brief KINDS), 건수 ≤`human_calls_max`
 - [ ] **B-25** 답변 활용률 — raw 의 `A-nn` ID 가 brief §2/§3/§4/§5/§6/§9/§10 어디든 등장하는 비율 ≥2/3; `[UNCLEAR]` 수 / 본질문 수 <1/2
-- [ ] **B-27** 추천 수락 정합 — raw `A-nn [ACCEPTED]` 수 == §6 '추천 수락' 행 수 == state delegations kind accepted 수
 - [ ] **B-26** §11 "누가 쓰는가"·"사용자 수준(익숙함·연령·기기)" 줄 공백 0
+- [ ] **B-27** 추천 수락 정합 — raw `A-nn [ACCEPTED]` 수 == §6 '추천 수락' 행 수 == state delegations kind accepted 수
 - [ ] 위 모든 상한 초과는 하한 미달과 같은 FAIL 로 보고한다
 
 ## 이 스킬이 하지 않는 것
