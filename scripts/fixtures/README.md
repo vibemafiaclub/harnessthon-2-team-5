@@ -18,6 +18,7 @@
 | `gallery_index_golden.json` | `skipped: []`(골든은 필수 payload 8종을 다 싣는다) | check-interview-page | |
 | `figma_good/` | 3단계 픽스처 한 벌 — brief(화면 2·역할 R-1/R-2)·figma.md·figma_nodes.json·tokens.json·drafts·verify(a/c_report, c_report.json, final_review, audit_*.json, shots/index.md). PNG 는 selftest 가 임시 폴더에 만든다 | check-figma·check-c-report | 전건 PASS |
 | `c_report_bad.json` | `figma_good/verify/c_report.json` 에서 02 화면 `unique_element:false`(예외 승인 없음)·`score.ui:2`(fail 항목 없음) | check-c-report | CR-5·CR-6 만 FAIL |
+| `mutate-interview-page.js` | 골든 JSON 에 결함 하나(effect·press 삭제)를 심어 템플릿 골격에 주입 | selftest P-15·P-16 변이 | 심은 항목만 FAIL |
 | `forbidden_doc12.txt` | 문서·내부 용어 12개 각 1회 | forbidden-words CLI | 종료 1(12건, 단어별 1회) |
 | `forbidden_14.txt` / `forbidden_clean.txt` | 디자인 금지어 14개 각 1회 / 0건 | forbidden-words CLI | 종료 1(14건, 단어별 1회) / 종료 0 |
 | `decisions_empty.md` / `decisions_golden.md` | `templates/decisions.md` 사본 / 축 1·후보 2·선택 b·승인 2화면 | check-decisions | FAIL(D-1~D-4) / PASS |

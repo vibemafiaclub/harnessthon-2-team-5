@@ -19,8 +19,8 @@
  *   P-2  JSON 유효 · questions ≤ human_interview_questions_max · [0]=Q1 · [1]=Q5 · tiles ≤ human_gallery_tiles_max
  *        · pairs ≤ human_worldcup_rounds_max(기본 6) · flows[].steps ≤ agent_flow_steps_max
  *   P-3  questions(+flows) 전건 unknown===true && free===true · options 전건 value 있음·scene ≥8자
- *        · kind:pushback 은 options 정확히 3 + recommended(options.value 중 하나) + why · kind:pattern 은 options ≥2 (recommended 가 있으면 options.value 중 하나 + why)
- *   P-4  사용자 노출 텍스트(title·intro·banner·text·why·value·scene·tile/pair/flow html 텍스트 노드) 금지어(디자인 14 + 문서 용어 12) 0 + text·scene 에 TASTE_PATTERN 0
+ *        · kind:pushback 은 options 정확히 3 + recommended + why · kind:pattern 은 options ≥2 · 어느 kind 든 recommended 가 있으면 options.value 중 하나 + why (결정형 추천 선명시)
+ *   P-4  사용자 노출 텍스트(title·intro·banner·frame·text·effect·why·value·scene·tile/pair/flow html·title·cta·press·then·states 텍스트 노드) 금지어(디자인 14 + 문서 용어 12) 0 + text·scene 에 TASTE_PATTERN 0
  *   P-5  축 차이: 타이포=font-family · 형태=border-radius · 밀도=행 수 · 색온도=hue · 채도=saturation · 강조=font-weight|font-size|색 이 변형 간 다름
  *   P-6  축 격리: 같은 축 변형의 style 선언 집합에서 P-5 축 속성을 제거한 나머지가 동일
  *   P-7  타일 여는 태그 수 ≤ agent_gallery_tile_elements_max (<br> 제외)
@@ -31,6 +31,8 @@
  *   P-12 kind:pattern 수 == references.md 과업 수(fast ≤2, full ≤agent_reference_patterns_max) 또는 references.md 에 '레퍼런스 없음'
  *   P-13 페이지 skeleton 집합 ⊆ prompts §6 정본 세트(fast/full)
  *   P-14 파일 크기 ≤ agent_gallery_html_kb_max
+ *   P-15 frame 존재(app_title·cta 문자열) · questions 전건 effect("이걸 정하면 ○○가 달라집니다" 한 줄) ≥6자 (team-3 비교 후보 3)
+ *   P-16 flows[].steps: 마지막을 뺀 전 장면에 press(≥2자) + 강조할 곳(html 에 data-press 또는 press == 그 장면의 cta) · states[] 항목마다 label·html ("따라가 보기" 투어, 후보 5)
  */
 const fs = require('fs'); const path = require('path'); const cp = require('child_process');
 const FW = require('./lib/forbidden-words');
@@ -218,7 +220,7 @@ if (!D) {
     const id = q.id || '(id 없음)'; const opts = Array.isArray(q.options) ? q.options : [];
     if (q.unknown !== true) p3.push(`${id} unknown≠true`); if (q.free !== true) p3.push(`${id} free≠true`);
     opts.forEach((o, i) => { if (!o || !String(o.value || '').trim()) p3.push(`${id}.options[${i}] value 없음`); if (!o || chars(o.scene) < 8) p3.push(`${id}.options[${i}] scene ${chars(o && o.scene)}자 < 8`); });
-    if (q.kind === 'pattern' && q.recommended != null) { if (!opts.some((o) => o && o.value === q.recommended)) p3.push(`${id} pattern recommended(${q.recommended}) 가 options.value 에 없음`); if (!String(q.why || '').trim()) p3.push(`${id} pattern 추천이 있는데 why 없음`); }
+    if (q.kind !== 'pushback' && q.recommended != null) { if (!opts.some((o) => o && o.value === q.recommended)) p3.push(`${id} recommended(${q.recommended}) 가 options.value 에 없음`); if (!String(q.why || '').trim()) p3.push(`${id} 추천이 있는데 why 없음`); }
     if (q.kind === 'pushback') { if (opts.length !== 3) p3.push(`${id} pushback options ${opts.length} ≠ 3`); if (!opts.some((o) => o && o.value === q.recommended)) p3.push(`${id} recommended(${q.recommended == null ? '없음' : q.recommended}) 가 options.value 에 없음`); if (!String(q.why || '').trim()) p3.push(`${id} why 없음`); }
     if (q.kind === 'pattern' && opts.length < 2) p3.push(`${id} pattern options ${opts.length} < 2`);
   });
@@ -227,10 +229,13 @@ if (!D) {
 
   /* P-4 금지어·취향형 */
   const segs = [['title', D.title], ['intro', D.intro], ['banner', D.banner]];
-  Q.forEach((q) => { segs.push([`${q.id}.text`, q.text]); if (q.why) segs.push([`${q.id}.why`, q.why]); (q.options || []).forEach((o, i) => { segs.push([`${q.id}.options[${i}].value`, o && o.value]); segs.push([`${q.id}.options[${i}].scene`, o && o.scene]); }); });
-  T.forEach((t) => segs.push([`${t.id}.html`, FW.stripTags(t.html || '')]));
-  P.forEach((p, i) => ['left', 'right'].forEach((s) => { if (p[s]) segs.push([`${p[s].id || 'W-' + (i + 1) + '-' + s}.html`, FW.stripTags(p[s].html || '')]); }));
-  FL.forEach((f) => { segs.push([`${f.id}.question`, f.question]); segs.push([`${f.id}.narrative`, f.narrative]); (f.steps || []).forEach((s, i) => { segs.push([`${f.id}.steps[${i}].label`, s && s.label]); segs.push([`${f.id}.steps[${i}].html`, FW.stripTags((s && s.html) || '')]); }); });
+  const FR = (D.frame && typeof D.frame === 'object') ? D.frame : {};
+  segs.push(['frame.app_title', FR.app_title]); segs.push(['frame.cta', FR.cta]); (Array.isArray(FR.tabs) ? FR.tabs : []).forEach((t, i) => segs.push([`frame.tabs[${i}]`, t]));
+  Q.forEach((q) => { segs.push([`${q.id}.text`, q.text]); if (q.effect) segs.push([`${q.id}.effect`, q.effect]); if (q.why) segs.push([`${q.id}.why`, q.why]); (q.options || []).forEach((o, i) => { segs.push([`${q.id}.options[${i}].value`, o && o.value]); segs.push([`${q.id}.options[${i}].scene`, o && o.scene]); }); });
+  const chromeSegs = (id, o) => { if (!o) return; if (typeof o.title === 'string') segs.push([`${id}.title`, o.title]); if (typeof o.cta === 'string') segs.push([`${id}.cta`, o.cta]); (Array.isArray(o.tabs) ? o.tabs : []).forEach((t, i) => segs.push([`${id}.tabs[${i}]`, t])); };
+  T.forEach((t) => { segs.push([`${t.id}.html`, FW.stripTags(t.html || '')]); chromeSegs(t.id, t); });
+  P.forEach((p, i) => ['left', 'right'].forEach((s) => { if (p[s]) { const pid = p[s].id || 'W-' + (i + 1) + '-' + s; segs.push([`${pid}.html`, FW.stripTags(p[s].html || '')]); chromeSegs(pid, p[s]); } }));
+  FL.forEach((f) => { segs.push([`${f.id}.question`, f.question]); segs.push([`${f.id}.narrative`, f.narrative]); (f.steps || []).forEach((s, i) => { const sid = `${f.id}.steps[${i}]`; segs.push([`${sid}.label`, s && s.label]); segs.push([`${sid}.html`, FW.stripTags((s && s.html) || '')]); if (s) { ['press', 'then', 'now'].forEach((k) => { if (s[k]) segs.push([`${sid}.${k}`, s[k]]); }); chromeSegs(sid, s); (Array.isArray(s.states) ? s.states : []).forEach((st, j) => { segs.push([`${sid}.states[${j}].label`, st && st.label]); segs.push([`${sid}.states[${j}].html`, FW.stripTags((st && st.html) || '')]); }); } }); });
   const p4 = [];
   for (const [where, text] of segs) for (const h of FW.scanText(text)) p4.push(`${where}:「${h.word}」`);
   const taste = [];
@@ -268,7 +273,7 @@ if (!D) {
   if (prd != null) { const t1 = tables((sectionsOf(prd)['1'] || []).join('\n'))[0]; if (t1) nouns = new Set(t1.rows.flatMap((r) => String(r[0] || '').split(/[^가-힣A-Za-z0-9]+/)).filter((w) => w.length >= 2)); }
   const p8 = [];
   T.forEach((t) => { const txt = FW.stripTags(t.html || ''); if (PLACEHOLDER.test(txt)) p8.push(`${t.id} 자리표시자`); if (nouns && ![...nouns].some((w) => txt.includes(w))) p8.push(`${t.id} PRD 화면 명사 없음`); });
-  FL.forEach((f) => (f.steps || []).forEach((s, i) => { if (PLACEHOLDER.test(FW.stripTags((s && s.html) || '') + ' ' + ((s && s.label) || ''))) p8.push(`${f.id}.steps[${i}] 자리표시자`); }));
+  FL.forEach((f) => (f.steps || []).forEach((s, i) => { if (PLACEHOLDER.test(FW.stripTags((s && s.html) || '') + ' ' + ((s && s.label) || ''))) p8.push(`${f.id}.steps[${i}] 자리표시자`); (s && Array.isArray(s.states) ? s.states : []).forEach((st, j) => { if (PLACEHOLDER.test(FW.stripTags((st && st.html) || '') + ' ' + ((st && st.label) || ''))) p8.push(`${f.id}.steps[${i}].states[${j}] 자리표시자`); }); }));
   add('P-8', p8.length === 0, `자리표시자·도메인 명사 위반 ${p8.length}건` + (nouns ? ` (명사 ${nouns.size}개 from ${A.prd} §1)` : ` (${A.prd} §1 화면표 없음 — 명사 검사 N/A)`), short(p8) || (nouns ? `타일 ${T.length}장 전부 PRD 명사 포함, 자리표시자 0` : '자리표시자 0'));
 
   /* P-9 대비 */
@@ -331,6 +336,21 @@ if (!D) {
   const allowed = mode === 'fast' ? fastSet : fullSet;
   const p13 = Q.map((q) => [q.id, skel(q)]).filter(([, s]) => !allowed.has(s));
   add('P-13', allowed.size > 0 && p13.length === 0, `§6 ${mode} 세트 밖 skeleton ${p13.length}건` + (allowed.size ? '' : ' (정본 세트를 읽지 못함)'), p13.map(([id, s]) => `${id}:${s || '없음'}`).join(', ') || `페이지 {${Q.map(skel).join(',')}} ⊆ §6 {${[...allowed].join(',')}}`);
+  /* P-15 frame + effect 한 줄 (team-3 비교 후보 3: "이걸 정하면 ○○가 달라집니다") */
+  {
+    const p15 = []; const FR15 = (D.frame && typeof D.frame === 'object') ? D.frame : null;
+    if (!FR15) p15.push('frame 없음'); else { if (!String(FR15.app_title || '').trim()) p15.push('frame.app_title 없음'); if (FR15.cta !== false && !String(FR15.cta || '').trim()) p15.push('frame.cta 없음(없으면 false)'); }
+    Q.forEach((q) => { if (chars(q.effect) < 6) p15.push(`${q.id} effect ${chars(q.effect)}자 < 6`); });
+    add('P-15', p15.length === 0, `frame·effect 위반 ${p15.length}건 (질문 ${Q.length})`, short(p15) || `frame(${FR15 ? FR15.app_title : '-'}) 있음, 질문 전건 effect ≥6자`);
+  }
+  /* P-16 따라가 보기 투어: 마지막을 뺀 전 장면에 press + 강조할 곳, states 형식 */
+  {
+    const p16 = [];
+    FL.forEach((f) => { const steps = Array.isArray(f.steps) ? f.steps : []; steps.forEach((s, i) => { const sid = `${f.id}.steps[${i}]`; if (!s) { p16.push(`${sid} 없음`); return; }
+      if (i < steps.length - 1) { if (chars(s.press) < 2) p16.push(`${sid} press 없음(마지막 장면만 생략 가능)`); else if (!/data-press/.test(String(s.html || '')) && s.press !== s.cta) p16.push(`${sid} 강조할 곳 없음 — html 에 data-press 를 두거나 press 를 그 장면의 cta 와 같게`); }
+      (Array.isArray(s.states) ? s.states : []).forEach((st, j) => { if (!st || chars(st.label) < 1 || !String(st.html || '').trim()) p16.push(`${sid}.states[${j}] label·html 필요`); }); }); });
+    add('P-16', p16.length === 0, `투어 형식 위반 ${p16.length}건 (흐름 ${FL.length})`, short(p16) || (FL.length ? `전 장면 press·강조 위치 있음` : '흐름 없음'));
+  }
 }
 
 /* P-14 파일 크기 */

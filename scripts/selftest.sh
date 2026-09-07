@@ -138,6 +138,10 @@ expect_pass "골든(interview_golden.html)" "$TMP/cip_golden.md" $CIP --page "$F
 grep -qE '^\| P-1 \| FAIL' "$TMP/cip_golden.md" 2>/dev/null && echo "      힌트: 템플릿 골격이 바뀌었다 — node scripts/fixtures/build-interview-fixtures.js 로 interview_golden/bad.html 재생성"
 expect_fail_exact "결함(interview_bad.html): unknown 누락·금지어 1건·타일 두 속성" "P-3 P-4 P-6" "$TMP/cip_bad.md" $CIP --page "$FX/interview_bad.html" "${CIPARGS[@]}" --out "$TMP/cip_bad.md"
 expect_fail_subset "템플릿 샘플 데이터 그대로는 통과 불가(P-11 필수 payload)" "P-11" "$TMP/cip_tpl.md" $CIP --page templates/interview_page.html "${CIPARGS[@]}" --out "$TMP/cip_tpl.md"
+# P-15·P-16 (team-3 비교 반영): effect 한 줄 삭제 → P-15 만, 투어 장면의 press 삭제 → P-16 만 FAIL. 골든 JSON 을 바꿔 템플릿 골격에 다시 주입한다
+mutpage() { node scripts/fixtures/mutate-interview-page.js "$FX/interview_golden.json" "$1" "$2"; }
+mutpage "$TMP/cip_m15.html" effect; expect_fail_exact "P-15 effect 삭제" "P-15" "$TMP/cip_m15.md" $CIP --page "$TMP/cip_m15.html" "${CIPARGS[@]}" --out "$TMP/cip_m15.md"
+mutpage "$TMP/cip_m16.html" press;  expect_fail_exact "P-16 투어 press 삭제" "P-16" "$TMP/cip_m16.md" $CIP --page "$TMP/cip_m16.html" "${CIPARGS[@]}" --out "$TMP/cip_m16.md"
 expect_rc "없는 페이지 → 종료 2" 2 $CIP --page "$TMP/nope.html"
 
 echo "## 4. check-c-report"

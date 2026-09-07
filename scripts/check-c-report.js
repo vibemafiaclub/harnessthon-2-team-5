@@ -89,7 +89,7 @@ function parseIndex(txt) {
       const modified = (modIdx >= 0 && (cells[modIdx] || '').match(ISO) || [])[0] || (ts.length > 1 ? ts[1] : null);
       const shaCell = cells.find((c) => /^[0-9a-f]{8,64}$/i.test(c)) || null;
       rows.set(file, { captured, modified, sha: shaCell ? shaCell.toLowerCase() : null });
-    } else if (/\.png/i.test(line)) {
+    } else if (/\.png/i.test(line) && !header) { /* 표 헤더가 이미 있으면 표 밖 줄(주석·예시 URL)은 무시한다 */
       const file = (line.match(/[\w.\-\/]+\.png/i) || [''])[0].split('/').pop(); const ts = line.match(ISO) || [];
       rows.set(file, { captured: ts[0] || null, modified: ts.length > 1 ? ts[1] : null });
     } else { const m = line.match(/lastModified\s*[:=]\s*(\S+)/i); if (m && !globalMod) globalMod = m[1]; }

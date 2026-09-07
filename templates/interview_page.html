@@ -5,14 +5,17 @@
   db 가 없으면(미발행·오프라인) localStorage 에 저장하고 "답변 내보내기" 로 JSON 을 복사해 채팅에 붙이게 한다.
 
   harness-data 스키마 (check-interview-page.js 가 검사한다):
-  - questions[]  필수: id·text·options[]({value, scene ≥8자})·free:true·unknown:true·skeleton("Q1"…, interview_prompts §6 정본)·payload(§6 payload 열 — 같은 payload 두 질문이면 FAIL)
-      kind: question(기본) | pushback(계획 반박(PRD) — options 정확히 3개 + recommended(options.value 중 하나) + why, 결정형이라 추천을 먼저 보인다)
-            | pattern(레퍼런스 UX 패턴 — options ≥2, 장면 = 실제 서비스가 같은 과업을 푸는 방식, 서비스명 숨김)
-  - tiles[]      id·axis·variant·html — 한 타일은 축 하나만 바꾼다(다른 속성은 같은 축의 타일끼리 동일)
+  - frame        필수. 모든 자극(타일·대비쌍·흐름)을 감싸는 폰 프레임(390×844: 상태바 44 / 상단 바 56 / 본문 / 하단 버튼 52 / 탭바 56 / 홈 34)의 공통 값.
+                 {app_title, cta, tabs:[…] | false, active_tab}. 타일·쌍·장면은 title·cta(false 면 없음)·tabs(false 면 없음)·chrome({bg,surface,ink,accent} — 색 축에서만, 본문과 같은 값) 으로 덮어쓸 수 있다.
+  - questions[]  필수: id·text·effect("이걸 정하면 ○○가 달라집니다" 한 줄, ≥6자)·options[]({value, scene ≥8자})·free:true·unknown:true·skeleton("Q1"…, interview_prompts §6 정본)·payload(§6 payload 열 — 같은 payload 두 질문이면 FAIL, 재검증은 verifies:<원 id>)
+      kind: question(기본) | pushback(계획 반박(PRD) — options 정확히 3개 + recommended + why) | pattern(레퍼런스 UX 패턴 — options ≥2, 서비스명 숨김)
+      recommended·why: 결정형 질문(§1-10 — pushback·pattern·Q2 1등 정보·Q10 빈 상태 등)은 어느 kind 든 recommended(options.value 중 하나)·why 를 싣는다. 페이지가 배지로 보이고 '추천대로' 버튼이 미응답 질문을 그 값으로 채운다(accepted_recommended:true).
+  - tiles[]      id·axis·variant·html(대표 화면의 본문 조각: 제목 + 목록 행 3개 + 상태 칩) — 한 타일은 축 하나만 바꾼다(다른 속성은 같은 축의 타일끼리 동일). 싫다·애매를 누르면 영역 칩(①제목줄 ②본문 ③아래 버튼 ④색 ⑤글자)이 열린다 → marks[].
   - pairs[]      axis·left·right, 선택 always:true — 갤러리 결과와 무관하게 항상 노출하는 재검증 쌍(진술형 질문이 없는 축)
-  - flows[]      선택. {id:"FL-1", question, narrative, steps:[{label, html}], free:true, unknown:true} — 시나리오 아래 실제 화면 조각을 순서대로. steps ≤ agent_flow_steps_max, html 에 자리표시자 0
-  고정 힌트 2문장(intro 아래 / 갤러리 배너 앞)은 마크업에 있으므로 intro·banner 에 되풀이하지 않는다.
-  회수 레코드: question/pushback/pattern → {id, kind, skeleton, payload, recommended, question, value, unknown, free} / tile → verdict·reason / pair → choice·chosen_id / flow → step_id(Sn|ok)·step_label·free.
+  - flows[]      선택. {id:"FL-1", question, narrative, steps:[{label, html, press, then, states:[{label, html}]}], free:true, unknown:true} — "따라가 보기" 투어: 한 번에 장면 하나, 누를 버튼 하나(press — html 안 data-press 요소 또는 같은 문구의 하단 버튼이 강조된다), 누르면 어떻게 되는지(then), 이 화면의 다른 모습(states, 선택). steps ≤ agent_flow_steps_max, 마지막 장면을 뺀 전 장면에 press 필수, html 에 자리표시자 0
+  고정 힌트 문장(intro 아래 / 갤러리 배너 앞 / 투어 안내)은 마크업에 있으므로 intro·banner 에 되풀이하지 않는다.
+  회수 레코드: question/pushback/pattern → {id, kind, skeleton, payload, recommended, verifies, question, value, unknown, free, accepted_recommended}
+              / tile → verdict·reason·marks[]·mark_labels[] / pair → choice·chosen_id·reason / flow → step_id(Sn|ok)·step_label·free / meta-status → answered·total·done·summary{answered[], accepted[], assumed[]}.
 -->
 <title>디자인 인터뷰</title>
 <style>
@@ -33,43 +36,84 @@
   .status{font-size:12.5px;color:var(--ink-2);margin-top:6px;display:flex;justify-content:space-between;gap:12px}
   .status .err{color:var(--bad)}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin:0 0 14px}
-  .q{font-size:17px;font-weight:600;margin:0 0 10px}
+  .q{font-size:17px;font-weight:600;margin:0 0 6px}
+  .effect{font-size:13.5px;color:var(--accent);margin:0 0 10px}
+  .effect b{font-weight:600}
   .hint{font-size:13.5px;color:var(--ink-2);margin:-4px 0 10px}
   .opts{display:grid;gap:8px;margin-bottom:10px}
   button.opt{text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer;min-height:44px}
   button.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+  button.opt.recd{border-color:var(--human)}
   button.opt.unk{color:var(--ink-2);border-style:dashed}
   button.opt.unk.sel{border-color:var(--human);background:var(--human-soft);color:var(--ink)}
   .rec{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--human-soft);color:var(--human);font-size:12px;font-weight:600;vertical-align:middle}
+  .acc{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;vertical-align:middle}
   textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;background:var(--surface);color:var(--ink)}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
   .saved{font-size:12.5px;color:var(--good)}.saved.err{color:var(--bad)}
   .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
   .tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}
   .tile .id{font-weight:600;font-size:13px;margin-bottom:6px}
-  .tile .stim{border:1px solid var(--line);border-radius:6px;overflow:hidden;min-height:120px;background:#fff;color:#111}
+  .stim{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;color:#111}
   .verd{display:flex;gap:6px;margin:8px 0 6px}
   .verd button{flex:1;min-height:40px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}
   .verd button.sel{border-color:var(--accent);background:var(--accent-soft)}
+  .where{font-size:13px;color:var(--ink-2);margin:4px 0 4px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+  .chips button{padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:13px;cursor:pointer;min-height:32px}
+  .chips button.sel{border-color:var(--bad);background:var(--bad-soft)}
   .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   @media (max-width:520px){.pair{grid-template-columns:1fr}}
-  .pair .stim{border:1px solid var(--line);border-radius:6px;overflow:hidden;min-height:140px;background:#fff;color:#111;cursor:pointer}
+  .pair .stim{cursor:pointer}
   .pair .stim.sel{outline:3px solid var(--accent)}
   .narr{margin:0 0 10px}
-  .flow{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px}
-  .flow .fstep{flex:0 0 200px;cursor:pointer}
-  .fstep .lab{font-size:13px;color:var(--ink-2);margin-bottom:4px}
-  .fstep .stim{border:1px solid var(--line);border-radius:6px;overflow:hidden;min-height:140px;background:#fff;color:#111}
-  .fstep.sel .stim{outline:3px solid var(--accent)}
-  .fstep .mark{display:none;font-size:12.5px;color:var(--accent);font-weight:600;margin-top:4px}.fstep.sel .mark{display:block}
+  .tour{display:grid;grid-template-columns:minmax(200px,300px) 1fr;gap:14px;align-items:start}
+  @media (max-width:640px){.tour{grid-template-columns:1fr}}
+  .tour .stim{cursor:pointer}
+  .tour .stim.sel{outline:3px solid var(--bad)}
+  .panel h4{margin:0 0 2px;font-size:12.5px;color:var(--ink-2);font-weight:600;letter-spacing:.02em}
+  .panel p{margin:0 0 10px}
+  .seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .seg button{padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:13px;cursor:pointer;min-height:32px}
+  .seg button.sel{border-color:var(--accent);background:var(--accent-soft)}
+  .pager{display:flex;align-items:center;gap:8px;margin:8px 0}
+  .pager button{min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}
+  .pager button[disabled]{opacity:.4;cursor:default}
+  .pager .pos{font-size:13px;color:var(--ink-2)}
+  .dots{display:flex;gap:4px}.dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--accent)}.dots i.diff{background:var(--bad)}
   .banner{background:var(--human-soft);border-left:3px solid var(--human);padding:8px 12px;border-radius:0 6px 6px 0;margin:0 0 14px;font-size:14px}
   .nav{display:flex;justify-content:space-between;gap:10px;margin-top:18px}
   .btn{padding:12px 18px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;font:inherit;cursor:pointer;min-height:44px}
   .btn.ghost{background:transparent;color:var(--accent)}
+  .btn.human{background:var(--human-soft);color:var(--human);border-color:var(--human)}
   .btn[disabled]{opacity:.5;cursor:default}
   .fallback{display:none;margin-top:14px}.fallback.show{display:block}
-  .done{text-align:center;padding:30px 0}
+  .done{text-align:center;padding:20px 0 10px}
+  .sum{text-align:left}
+  .sum h3{font-size:15px;margin:0 0 6px}
+  .sum ul{margin:0 0 12px;padding-left:18px;font-size:14px}
+  .sum li{margin:2px 0}
   [hidden]{display:none!important}
+
+  /* ---- 폰 프레임: 상태바 44 / 상단 바 56 / 본문 / 하단 버튼 52(+16) / 탭바 56 / 홈 34 = 390×844. 취향과 무관한 부분은 중립색. ---- */
+  .phone{width:390px;height:844px;display:flex;flex-direction:column;background:var(--ph-bg,#F7F8FA);color:var(--ph-ink,#1F2937);font:15px/1.4 -apple-system,"Apple SD Gothic Neo","Pretendard",system-ui,sans-serif;transform-origin:0 0;position:relative;overflow:hidden}
+  .ph-status{height:44px;flex:0 0 44px;display:flex;justify-content:space-between;align-items:flex-end;padding:0 22px 6px;font-size:13px;font-weight:600}
+  .ph-top{height:56px;flex:0 0 56px;display:flex;align-items:center;gap:8px;padding:0 16px;background:var(--ph-surface,#fff);border-bottom:1px solid rgba(0,0,0,.08);font-weight:600;font-size:17px;position:relative}
+  .ph-top .back{width:18px;opacity:.7}
+  .ph-body{flex:1 1 auto;overflow:hidden;position:relative}
+  .ph-cta{flex:0 0 52px;height:52px;margin:8px 20px;border-radius:12px;background:var(--ph-accent,#2F6BFF);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;position:relative}
+  .ph-tabs{flex:0 0 56px;height:56px;display:flex;background:var(--ph-surface,#fff);border-top:1px solid rgba(0,0,0,.08)}
+  .ph-tabs span{flex:1;text-align:center;font-size:11px;padding-top:9px;opacity:.55}.ph-tabs span.on{opacity:1;color:var(--ph-accent,#2F6BFF);font-weight:600}
+  .ph-tabs span::before{content:"";display:block;width:22px;height:22px;margin:0 auto 3px;border-radius:6px;background:currentColor;opacity:.25}
+  .ph-home{flex:0 0 34px;height:34px;display:flex;align-items:center;justify-content:center}.ph-home i{width:134px;height:5px;border-radius:3px;background:currentColor;opacity:.8}
+  .badge{position:absolute;width:24px;height:24px;border-radius:50%;background:rgba(17,24,39,.85);color:#fff;font-size:13px;font-weight:700;display:none;align-items:center;justify-content:center;z-index:3;left:8px;top:8px}
+  .ph-top .badge{top:16px}.ph-cta .badge{top:14px}
+  .marking .badge{display:flex}
+  .press-on [data-press]{outline:3px solid #2F6BFF;outline-offset:2px;box-shadow:0 0 0 6px rgba(47,107,255,.25);animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(47,107,255,.25)}50%{box-shadow:0 0 0 10px rgba(47,107,255,.08)}}
+  @media (prefers-reduced-motion: reduce){.press-on [data-press]{animation:none}}
+  .press-tip{position:absolute;right:8px;top:8px;z-index:4;background:#2F6BFF;color:#fff;font-size:12px;font-weight:600;padding:4px 8px;border-radius:6px;display:none}
+  .press-on .press-tip{display:block}
 </style>
 
 <script id="harness-data" type="application/json">
@@ -77,28 +121,39 @@
   "title": "청첩장모임 스케줄러 · 디자인 인터뷰",
   "intro": "청첩장 모임 날짜를 잡는 앱을 만들기 전에, 실제로 쓸 때를 떠올려 몇 가지만 여쭙습니다. 10분이면 됩니다.",
   "banner": "글자 내용(뜻)이 아니라 보이는 느낌만 평가해 주세요.",
+  "frame": { "app_title": "청첩장 모임", "cta": "모임 만들기", "tabs": ["홈", "지인", "내 정보"], "active_tab": 0 },
   "questions": [
-    { "id": "Q-01", "skeleton": "Q1", "payload": "mood_axis", "text": "이 앱을 주로 언제, 어디서, 어떤 기분으로 열게 될까요?", "options": [
+    { "id": "Q-01", "skeleton": "Q1", "payload": "mood_axis", "text": "이 앱을 주로 언제, 어디서, 어떤 기분으로 열게 될까요?",
+      "effect": "첫 화면에서 글자 크기와 한 화면에 보이는 양이 달라집니다.", "options": [
         { "value": "이동 중 잠깐", "scene": "지하철이나 길에서 한 손으로 잠깐 열어 확인하고 닫아요. 빨리 끝내고 싶은 기분이에요" },
         { "value": "앉아서 오래", "scene": "저녁에 앉아서 여러 사람 일정을 한참 들여다보며 정리해요. 차분히 챙기는 기분이에요" } ],
       "free": true, "unknown": true },
-    { "id": "Q-05", "skeleton": "Q5", "payload": "state_priority", "text": "여기서 뭔가 빠뜨리거나 잘못되면 뭐가 제일 곤란할까요?", "options": [
+    { "id": "Q-05", "skeleton": "Q5", "payload": "state_priority", "text": "여기서 뭔가 빠뜨리거나 잘못되면 뭐가 제일 곤란할까요?",
+      "effect": "어떤 상황을 화면 맨 위에 크게 띄울지가 달라집니다.", "options": [
         { "value": "날짜를 잘못 잡음", "scene": "다들 된다고 한 날이 아닌 날로 잡혀서, 몇 명이 못 오게 돼요" },
         { "value": "답 없는 사람을 놓침", "scene": "아직 답을 안 한 사람을 잊고 있다가, 마감이 지나서야 알아차려요" } ],
       "free": true, "unknown": true },
+    { "id": "Q-02", "skeleton": "Q2", "payload": "top_info", "text": "앱을 열자마자 딱 하나만 보인다면요. 저는 ‘아직 답 없는 사람 수’가 먼저 보여야 한다고 봅니다 — 그게 지금 할 일을 정해 주니까요. 그래도 더 급한 게 있을까요?",
+      "effect": "첫 화면 맨 위에 무엇이 가장 크게 놓이는지가 달라집니다.", "options": [
+        { "value": "답 없는 사람 수", "scene": "‘아직 답 없는 사람 3명’이 맨 위에 크게 보이고, 그 아래 모임 목록이 있어요" },
+        { "value": "가장 가까운 모임 날짜", "scene": "‘9/20(토) 대학동기’가 맨 위에 크게 보이고, 그 아래 답 현황이 작게 있어요" } ],
+      "recommended": "답 없는 사람 수", "why": "날짜를 정하려면 답 없는 사람을 챙기는 것이 지금 할 일이기 때문입니다.",
+      "free": true, "unknown": true },
     { "id": "Q-05b", "skeleton": "Q5", "payload": "state_priority", "verifies": "Q-05",
       "text": "한 번만 더 여쭐게요. 마감이 지났는데 두 사람이 아직 답이 없어요. 이때 화면이 맨 먼저 보여 줘야 하는 건 뭘까요?",
-      "options": [
+      "effect": "앞 질문의 답을 실제 장면으로 한 번 더 확인합니다. 둘이 다르면 이쪽을 따릅니다.", "options": [
         { "value": "답 없는 두 사람", "scene": "‘아직 답 없는 사람 2명’이 맨 위에 크게 보이고, 그 사람들에게 다시 보내는 버튼이 바로 있어요" },
         { "value": "지금까지 모인 날짜", "scene": "답한 사람들 기준으로 겹치는 날이 맨 위에 보이고, 답 없는 사람은 아래에 작게 있어요" } ],
       "free": true, "unknown": true },
-    { "id": "Q-04", "kind": "pattern", "skeleton": "Q4'", "payload": "pattern", "text": "여러 사람의 되는 날을 맞출 때, 다른 서비스들은 보통 이렇게 보여 줍니다. 저는 ‘되는 날만 모아서’ 쪽이 이 앱에 맞다고 봅니다 — 잠깐 열어 볼 때 답이 바로 보여서요. 그래도 실제로 쓸 때 다른 쪽이 편할까요?", "options": [
+    { "id": "Q-04", "kind": "pattern", "skeleton": "Q4'", "payload": "pattern", "text": "여러 사람의 되는 날을 맞출 때, 다른 서비스들은 보통 이렇게 보여 줍니다. 저는 ‘되는 날만 모아서’ 쪽이 이 앱에 맞다고 봅니다 — 잠깐 열어 볼 때 답이 바로 보여서요. 그래도 실제로 쓸 때 다른 쪽이 편할까요?",
+      "effect": "날짜를 맞추는 화면의 모양이 통째로 달라집니다.", "options": [
         { "value": "표로 한눈에", "scene": "날짜가 가로, 사람이 세로로 놓인 표에서 되는 날이 겹치는 칸이 색으로 보여요" },
         { "value": "되는 날만 모아서", "scene": "다들 되는 날만 골라 위에 모아 주고, 안 되는 날은 접혀 있어요" },
         { "value": "투표처럼", "scene": "후보 날짜 몇 개를 두고 각자 고르면, 가장 많이 고른 날이 맨 위로 올라와요" } ],
       "recommended": "되는 날만 모아서", "why": "이동 중에 한 손으로 잠깐 볼 때는 겹치는 날만 바로 보이는 게 빠르기 때문입니다.",
       "free": true, "unknown": true },
-    { "id": "Q-11", "kind": "pushback", "skeleton": "Q11", "payload": "pushback", "text": "지금 계획에는 답장 마감일만 정해져 있고, 마감이 지나도록 답이 없는 사람을 어떻게 할지는 없어요. 실제로는 답이 늦는 사람이 꼭 생깁니다. 저는 마감이 지나면 아직 답 없는 사람을 맨 위에 크게 보이고 그 사람들에게만 다시 보내는 쪽(A)이 맞다고 봅니다 — 날짜를 정하려면 결국 그 사람들 답이 필요하기 때문입니다. 그래도 다른 쪽이 나은 경우가 있을까요?", "options": [
+    { "id": "Q-11", "kind": "pushback", "skeleton": "Q11", "payload": "pushback", "text": "지금 계획에는 답장 마감일만 정해져 있고, 마감이 지나도록 답이 없는 사람을 어떻게 할지는 없어요. 실제로는 답이 늦는 사람이 꼭 생깁니다. 저는 마감이 지나면 아직 답 없는 사람을 맨 위에 크게 보이고 그 사람들에게만 다시 보내는 쪽(A)이 맞다고 봅니다 — 날짜를 정하려면 결국 그 사람들 답이 필요하기 때문입니다. 그래도 다른 쪽이 나은 경우가 있을까요?",
+      "effect": "마감이 지난 뒤의 화면과 버튼이 달라집니다.", "options": [
         { "value": "A", "scene": "마감이 지나면 '아직 답 없는 사람 3명'이 맨 위에 크게 보이고, 그 사람들에게만 다시 보낼 수 있어요" },
         { "value": "B", "scene": "마감이 지나면 답한 사람만으로 날짜를 정하고, 못 답한 사람은 나중에 따로 알려요" },
         { "value": "계획대로", "scene": "지금 계획대로 마감일만 두고 따로 챙기지는 않아요" } ],
@@ -106,24 +161,35 @@
       "free": true, "unknown": true }
   ],
   "flows": [
-    { "id": "FL-1", "question": "초대받은 사람이 링크를 열어서 답하기까지입니다. 실제와 다른 화면이 있나요?",
+    { "id": "FL-1", "question": "초대받은 사람이 링크를 열어서 답하기까지입니다. 실제와 다른 장면이 있나요?",
       "narrative": "친구가 보낸 링크를 폰에서 열면 모임 이름과 날짜 후보가 보이고, 되는 날을 누른 뒤 이름만 적으면 끝납니다.",
       "steps": [
-        { "label": "링크를 열면", "html": "<div style='padding:12px;font:13px sans-serif'><b>대학동기 모임</b><div style='margin-top:6px;color:#555'>9월 셋째 주 중 하루</div><div style='margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:8px'>되는 날 고르기</div></div>" },
-        { "label": "되는 날 누르기", "html": "<div style='padding:12px;font:13px sans-serif'><div style='padding:8px;border:1px solid #ddd;border-radius:8px;margin-bottom:6px'>9/19(금) 저녁</div><div style='padding:8px;border:2px solid #0F6E63;border-radius:8px;margin-bottom:6px'>9/20(토) 점심 · 선택함</div><div style='padding:8px;border:1px solid #ddd;border-radius:8px'>9/21(일) 점심</div></div>" },
-        { "label": "이름 적고 보내기", "html": "<div style='padding:12px;font:13px sans-serif'><div style='padding:8px;border:1px solid #ddd;border-radius:8px'>이서연</div><div style='margin-top:10px;padding:10px;border-radius:8px;background:#0F6E63;color:#fff;text-align:center'>보내기</div></div>" } ],
+        { "label": "링크를 열면", "title": "대학동기 모임", "tabs": false, "cta": "되는 날 고르기", "press": "되는 날 고르기",
+          "then": "날짜 후보 목록으로 넘어가요.",
+          "html": "<div style='padding:16px'><b style='font-size:20px'>대학동기 모임</b><div style='margin-top:6px;color:#6B7280'>9월 셋째 주 중 하루 · 김민준이 보냄</div><div style='margin-top:16px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>되는 날을 골라 주세요. 1분이면 끝나요.</div></div>",
+          "states": [ { "label": "마감 지남", "html": "<div style='padding:16px'><b style='font-size:20px'>대학동기 모임</b><div style='margin-top:6px;color:#DC2626'>답장 마감이 지났어요</div><div style='margin-top:16px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>지금 답해도 반영돼요.</div></div>" } ] },
+        { "label": "되는 날 누르기", "title": "되는 날 고르기", "tabs": false, "cta": "다음", "press": "9/20(토) 점심",
+          "then": "고른 날에 표시가 남고 ‘다음’이 켜져요.",
+          "html": "<div style='padding:16px'><div style='padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px;margin-bottom:8px'>9/19(금) 저녁</div><div data-press style='padding:14px;background:#fff;border:2px solid #2F6BFF;border-radius:12px;margin-bottom:8px'>9/20(토) 점심 · 선택함</div><div style='padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>9/21(일) 점심</div></div>",
+          "states": [ { "label": "하나도 안 고름", "html": "<div style='padding:16px'><div style='padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px;margin-bottom:8px'>9/19(금) 저녁</div><div style='padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px;margin-bottom:8px'>9/20(토) 점심</div><div style='padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>9/21(일) 점심</div><div style='margin-top:10px;color:#6B7280;font-size:13px'>되는 날을 하나 이상 골라 주세요</div></div>" } ] },
+        { "label": "이름 적고 보내기", "title": "이름", "tabs": false, "cta": "보내기", "press": "보내기",
+          "then": "‘답이 전달됐어요’ 화면이 뜨고 끝나요.",
+          "html": "<div style='padding:16px'><div style='color:#6B7280;font-size:13px;margin-bottom:6px'>이름</div><div style='padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>이서연</div><div style='margin-top:12px;color:#6B7280;font-size:13px'>고른 날: 9/20(토) 점심</div></div>" },
+        { "label": "다 됐어요", "title": "대학동기 모임", "tabs": false, "cta": false,
+          "html": "<div style='padding:40px 16px;text-align:center'><div style='font-size:40px'>✓</div><b style='font-size:20px'>답이 전달됐어요</b><div style='margin-top:6px;color:#6B7280'>날짜가 정해지면 다시 알려 드릴게요</div></div>" } ],
       "free": true, "unknown": true }
   ],
   "tiles": [
-    { "id": "G-01", "axis": "밀도", "variant": "낮음", "html": "<div style='padding:12px;font:13px sans-serif'><b>이번 주 모임</b><div style='margin-top:14px;padding:6px 0;border-top:1px solid #ddd'>9/20(토) 대학동기 · 4명</div><div style='margin-top:14px;padding:6px 0;border-top:1px solid #ddd'>9/21(일) 동네친구 · 5명</div></div>" },
-    { "id": "G-02", "axis": "밀도", "variant": "높음", "html": "<div style='padding:12px;font:13px sans-serif'><b>이번 주 모임</b><div style='margin-top:4px;padding:6px 0;border-top:1px solid #ddd'>9/20(토) 대학동기 · 4명</div><div style='margin-top:4px;padding:6px 0;border-top:1px solid #ddd'>9/20(토) 직장동료 · 3명</div><div style='margin-top:4px;padding:6px 0;border-top:1px solid #ddd'>9/21(일) 동네친구 · 5명</div></div>" }
+    { "id": "G-01", "axis": "밀도", "variant": "낮음", "html": "<div style='padding:16px'><b style='font-size:20px'>이번 주 모임</b><div style='margin-top:18px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>9/20(토) 대학동기 · 4명<div style='margin-top:6px;font-size:13px;color:#8A5A12'>답 기다리는 중 2명</div></div><div style='margin-top:14px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>9/21(일) 동네친구 · 5명<div style='margin-top:6px;font-size:13px;color:#2C6E52'>날짜 확정</div></div></div>" },
+    { "id": "G-02", "axis": "밀도", "variant": "높음", "html": "<div style='padding:16px'><b style='font-size:20px'>이번 주 모임</b><div style='margin-top:8px;padding:10px 14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>9/20(토) 대학동기 · 4명 <span style='font-size:13px;color:#8A5A12'>답 기다리는 중 2명</span></div><div style='margin-top:6px;padding:10px 14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>9/20(토) 직장동료 · 3명 <span style='font-size:13px;color:#8A5A12'>답 기다리는 중 1명</span></div><div style='margin-top:6px;padding:10px 14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px'>9/21(일) 동네친구 · 5명 <span style='font-size:13px;color:#2C6E52'>날짜 확정</span></div></div>" }
   ],
   "pairs": [
-    { "axis": "색온도", "left": { "id": "W-1-L", "variant": "따뜻함", "html": "<div style='background:#FBF6EF;padding:16px;font:13px sans-serif;color:#3A2E22'>안녕하세요, 김민준·이서연입니다</div>" },
-                       "right": { "id": "W-1-R", "variant": "차가움", "html": "<div style='background:#F2F6F8;padding:16px;font:13px sans-serif;color:#1E2A33'>안녕하세요, 김민준·이서연입니다</div>" } },
+    { "axis": "색온도",
+      "left":  { "id": "W-1-L", "variant": "따뜻함", "chrome": { "bg": "#FBF6EF", "surface": "#FFFDF9", "ink": "#3A2E22", "accent": "#B7791F" }, "html": "<div style='padding:16px;color:#3A2E22'><b style='font-size:20px'>안녕하세요, 김민준·이서연입니다</b><div style='margin-top:14px;padding:14px;background:#FFFDF9;border:1px solid #EADFCF;border-radius:12px'>9/20(토) 대학동기 · 답 기다리는 중 2명</div></div>" },
+      "right": { "id": "W-1-R", "variant": "차가움", "chrome": { "bg": "#F2F6F8", "surface": "#FFFFFF", "ink": "#1E2A33", "accent": "#2B6CB0" }, "html": "<div style='padding:16px;color:#1E2A33'><b style='font-size:20px'>안녕하세요, 김민준·이서연입니다</b><div style='margin-top:14px;padding:14px;background:#FFFFFF;border:1px solid #D5DEE5;border-radius:12px'>9/20(토) 대학동기 · 답 기다리는 중 2명</div></div>" } },
     { "axis": "형태", "always": true,
-      "left": { "id": "W-2-L", "variant": "둥근 카드", "html": "<div style='padding:12px;font:13px sans-serif;color:#1C2228'><div style='padding:12px;border:1px solid #ddd;border-radius:14px'>9/20(토) 대학동기 · 4명</div></div>" },
-      "right": { "id": "W-2-R", "variant": "각진 카드", "html": "<div style='padding:12px;font:13px sans-serif;color:#1C2228'><div style='padding:12px;border:1px solid #ddd;border-radius:0'>9/20(토) 대학동기 · 4명</div></div>" } }
+      "left":  { "id": "W-2-L", "variant": "둥근 카드", "html": "<div style='padding:16px'><b style='font-size:20px'>이번 주 모임</b><div style='margin-top:14px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,.06)'>9/20(토) 대학동기 · 4명</div></div>" },
+      "right": { "id": "W-2-R", "variant": "각진 카드", "html": "<div style='padding:16px'><b style='font-size:20px'>이번 주 모임</b><div style='margin-top:14px;padding:14px;background:#fff;border:1px solid #E5E7EB;border-radius:2px'>9/20(토) 대학동기 · 4명</div></div>" } }
   ]
 }
 </script>
@@ -136,12 +202,11 @@
   </div>
   <h1 id="title"></h1>
   <p class="sub" id="intro"></p>
-  <p class="hint">디자인 용어를 몰라도 됩니다. 모르면 '모르겠음'을 누르세요. 답하기 싫은 항목은 건너뛰어도 됩니다.</p>
-
-  <section id="step0"></section>
-  <section id="step1" hidden><p class="hint">전부 하지 않아도 됩니다. 눈에 띄는 것부터 눌러 주세요.</p><div class="banner" id="banner"></div><div class="tiles" id="tiles"></div></section>
+  <p class="hint">디자인 용어를 몰라도 됩니다. 모르면 '모르겠음'을 누르세요. 답하기 싫은 항목은 건너뛰어도 됩니다. 추천이 표시된 질문은 그대로 두셔도 됩니다.</p>
+  <section id="step0"><div class="row" id="recrow" hidden><button class="btn human" id="recall">아직 안 고른 질문은 추천대로 할게요</button><span class="hint" id="recinfo"></span></div><div id="qs"></div></section>
+  <section id="step1" hidden><p class="hint">전부 하지 않아도 됩니다. 눈에 띄는 것부터 눌러 주세요. 싫거나 애매하면 어디가 그런지 번호만 눌러 주세요.</p><div class="banner" id="banner"></div><div class="tiles" id="tiles"></div></section>
   <section id="step2" hidden><p class="hint">앞에서 갈리지 않았거나 한 번 더 확인할 것만 다시 묻습니다. 왼쪽/오른쪽 중 더 편한 쪽을 누르세요. 둘 다 아니어도 됩니다.</p><div id="pairs"></div></section>
-  <section id="step3" hidden><div class="done"><h2>다 했습니다</h2><p>이 화면을 닫고 채팅으로 돌아가 "다 했어요"라고 말해 주세요.</p><p class="hint" id="doneinfo"></p></div></section>
+  <section id="step3" hidden><div class="done"><h2>다 했습니다</h2><p>이 화면을 닫고 채팅으로 돌아가 "다 했어요"라고 말해 주세요.</p><p class="hint" id="doneinfo"></p></div><div class="card sum" id="summary"></div></section>
 
   <div class="nav"><button class="btn ghost" id="prev">이전</button><button class="btn" id="next">다음</button></div>
 
@@ -154,10 +219,12 @@
 <script>
 (function () {
   const DATA = JSON.parse(document.getElementById('harness-data').textContent);
-  DATA.flows = DATA.flows || [];
+  DATA.flows = DATA.flows || []; DATA.frame = DATA.frame || {};
   const $ = (id) => document.getElementById(id);
-  const state = { answers: {}, step: 0, db: null, dbErr: null };
+  const state = { answers: {}, step: 0, db: null, dbErr: null, scene: {}, sceneState: {} };
   const LS_KEY = 'harness-interview-answers';
+  const AREAS = [[1, '제목줄'], [2, '본문·목록'], [3, '아래 버튼'], [4, '색'], [5, '글자']];
+  const CIRC = ['', '①', '②', '③', '④', '⑤'];
 
   /* ---------- 저장: db 우선, 없으면 localStorage. 읽기 실패와 연결 실패를 구분한다 ---------- */
   async function initDb() {
@@ -206,77 +273,134 @@
     });
   }
 
+  /* ---------- 폰 프레임: 자극 본문(html)을 390×844 폰 안에 넣고, 컨테이너 폭에 맞춰 축소한다 ---------- */
+  function phone(spec) {
+    const F = DATA.frame; const title = spec.title != null ? spec.title : (F.app_title || '');
+    const cta = spec.cta === false ? null : (spec.cta != null ? spec.cta : F.cta);
+    const tabs = spec.tabs === false ? null : (Array.isArray(spec.tabs) ? spec.tabs : (Array.isArray(F.tabs) ? F.tabs : null));
+    const active = spec.active_tab != null ? spec.active_tab : (F.active_tab || 0);
+    const c = spec.chrome || {}; const vars = (c.bg ? '--ph-bg:' + c.bg + ';' : '') + (c.surface ? '--ph-surface:' + c.surface + ';' : '') + (c.ink ? '--ph-ink:' + c.ink + ';' : '') + (c.accent ? '--ph-accent:' + c.accent + ';' : '');
+    const ctaPress = !!(cta && spec.press && spec.press === cta);
+    return '<div class="phone" style="' + vars + '">'
+      + '<div class="ph-status"><span>9:41</span><span>●●● ▮</span></div>'
+      + '<div class="ph-top"><span class="badge">1</span><span class="back">' + (spec.back === false ? '' : '‹') + '</span><span>' + esc(title) + '</span></div>'
+      + '<div class="ph-body"><span class="badge">2</span>' + (spec.html || '') + '<span class="press-tip">' + (ctaPress ? '아래 버튼을 눌러요 ↓' : '여기를 눌러요') + '</span></div>'
+      + (cta ? '<div class="ph-cta"' + (ctaPress ? ' data-press' : '') + '><span class="badge">3</span>' + esc(cta) + '</div>' : '')
+      + (tabs ? '<div class="ph-tabs">' + tabs.map((t, i) => '<span class="' + (i === active ? 'on' : '') + '">' + esc(t) + '</span>').join('') + '</div>' : '')
+      + '<div class="ph-home"><i></i></div></div>';
+  }
+  function fitPhones(root) {
+    (root || document).querySelectorAll('.stim.scaled').forEach((el) => {
+      const ph = el.querySelector('.phone'); if (!ph) return;
+      const k = Math.min(1, (el.clientWidth || 390) / 390); ph.style.transform = 'scale(' + k + ')'; el.style.height = Math.round(844 * k) + 'px';
+    });
+  }
+  window.addEventListener('resize', () => fitPhones());
+
   /* ---------- 렌더 ---------- */
   function render() {
     $('title').textContent = DATA.title; $('intro').textContent = DATA.intro; $('banner').textContent = DATA.banner;
     renderQuestions(); renderTiles(); renderPairs(); showStep(state.step); updateProgress();
   }
   // 회수 레코드에 질문 → 페이로드 → 소비처 매핑 필드(skeleton·payload·recommended)를 항상 싣는다.
-  function qrec(q, a) { return Object.assign({ id: q.id, kind: q.kind || 'question', skeleton: q.skeleton || '', payload: q.payload || '', verifies: q.verifies || '', recommended: q.recommended || '', question: q.text, free: a.free || '' }, a); }
+  function qrec(q, a) { return Object.assign({ id: q.id, kind: q.kind || 'question', skeleton: q.skeleton || '', payload: q.payload || '', verifies: q.verifies || '', recommended: q.recommended || '', question: q.text, free: a.free || '', accepted_recommended: !!a.accepted_recommended }, a); }
+  function unansweredRecommended() { return DATA.questions.filter((q) => q.recommended && !(state.answers[q.id] && (state.answers[q.id].value || state.answers[q.id].unknown))); }
   function renderQuestions() {
-    const root = $('step0'); root.innerHTML = '';
+    const root = $('qs'); root.innerHTML = '';
+    const pend = unansweredRecommended(); $('recrow').hidden = pend.length === 0; $('recinfo').textContent = pend.length ? '추천이 있는 질문 ' + pend.length + '개가 남았어요' : '';
     DATA.questions.forEach((q) => {
       const a = state.answers[q.id] || {};
       const card = document.createElement('div'); card.className = 'card';
       const hint = q.kind === 'pushback' ? '저희 추천은 표시해 두었습니다 — 실제로 쓸 때를 떠올려 다르게 보이면 골라 주세요.'
         : q.kind === 'pattern' ? '다른 서비스들이 같은 일을 푸는 방식입니다(서비스 이름은 가렸습니다).' + (q.recommended ? ' 저희 추천은 표시해 두었습니다 — ' : ' ') + '실제로 쓸 때를 떠올려 골라 주세요.'
-        : q.verifies ? '앞에서 고르신 것을 다른 장면으로 한 번 더 확인하는 질문이에요. 편하게 다시 골라 주세요.' : '';
-      card.innerHTML = '<p class="q">' + esc(q.text) + '</p>' + (hint ? '<p class="hint">' + hint + '</p>' : '');
+        : q.verifies ? '앞에서 고르신 것을 다른 장면으로 한 번 더 확인하는 질문이에요. 편하게 다시 골라 주세요.'
+        : q.recommended ? '저희 추천은 표시해 두었습니다 — 다르게 보이면 골라 주세요.' : '';
+      card.innerHTML = '<p class="q">' + esc(q.text) + '</p>' + (q.effect ? '<p class="effect"><b>이걸 정하면:</b> ' + esc(q.effect) + '</p>' : '') + (hint ? '<p class="hint">' + hint + '</p>' : '');
       const opts = document.createElement('div'); opts.className = 'opts';
       q.options.forEach((o) => {
-        const b = document.createElement('button'); b.className = 'opt' + (a.value === o.value ? ' sel' : '');
-        const rec = (q.kind === 'pushback' || q.kind === 'pattern') && q.recommended && o.value === q.recommended;
-        b.innerHTML = '<b>' + esc(o.value) + '</b>' + (rec ? '<span class="rec">하네스 추천</span>' : '') + '<br><span style="color:var(--ink-2);font-size:14px">' + esc(o.scene) + '</span>'
+        const rec = q.recommended && o.value === q.recommended;
+        const b = document.createElement('button'); b.className = 'opt' + (a.value === o.value ? ' sel' : '') + (rec && !a.value ? ' recd' : '');
+        b.innerHTML = '<b>' + esc(o.value) + '</b>' + (rec ? '<span class="rec">하네스 추천</span>' : '') + (rec && a.accepted_recommended && a.value === o.value ? '<span class="acc">추천대로</span>' : '') + '<br><span style="color:var(--ink-2);font-size:14px">' + esc(o.scene) + '</span>'
           + (rec && q.why ? '<br><span style="color:var(--ink-2);font-size:13px">추천 이유: ' + esc(q.why) + '</span>' : '');
-        b.onclick = () => { a.value = o.value; a.unknown = false; save(qrec(q, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b);
+        b.onclick = () => { a.value = o.value; a.unknown = false; a.accepted_recommended = false; save(qrec(q, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b);
       });
-      if (q.unknown) { const b = document.createElement('button'); b.className = 'opt unk' + (a.unknown ? ' sel' : ''); b.textContent = '모르겠음 — 기본값으로 진행해도 돼요'; b.onclick = () => { a.unknown = true; a.value = ''; save(qrec(q, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b); }
+      if (q.unknown) { const b = document.createElement('button'); b.className = 'opt unk' + (a.unknown ? ' sel' : ''); b.textContent = '모르겠음 — 기본값으로 진행해도 돼요'; b.onclick = () => { a.unknown = true; a.value = ''; a.accepted_recommended = false; save(qrec(q, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b); }
       card.appendChild(opts);
       if (q.free) { const ta = document.createElement('textarea'); ta.placeholder = q.options.length ? '덧붙일 말이 있으면 자유롭게 (선택)' : '떠오르는 대로 한두 줄'; ta.value = a.free || ''; ta.onchange = () => { a.free = ta.value; save(qrec(q, a), card.querySelector('.saved')); }; card.appendChild(ta); }
       const row = document.createElement('div'); row.className = 'row'; row.innerHTML = '<span class="saved">' + (a.ts ? '저장됨' : '') + '</span>'; card.appendChild(row);
       root.appendChild(card);
     });
-    renderFlows();
+    renderFlows(); fitPhones(root);
   }
-  /* ---------- 흐름(flows[]): 시나리오 아래 실제 화면 조각을 순서대로. 조각 클릭 = '여기가 달라요' ---------- */
+  $('recall').onclick = async () => { for (const q of unansweredRecommended()) { const a = state.answers[q.id] || {}; a.value = q.recommended; a.unknown = false; a.accepted_recommended = true; await save(qrec(q, a), null); } renderQuestions(); };
+
+  /* ---------- 흐름(flows[]): "따라가 보기" 투어 — 한 번에 장면 하나, 누를 버튼 하나, 누르면 어떻게 되는지 ---------- */
   function frec(f, a) { return Object.assign({ id: f.id, kind: 'flow', question: f.question, step_id: a.step_id || '', step_label: a.step_label || '', free: a.free || '' }, a); }
   function renderFlows() {
-    const root = $('step0');
+    const root = $('qs');
     DATA.flows.forEach((f) => {
-      const a = state.answers[f.id] || {};
+      const a = state.answers[f.id] || {}; const steps = f.steps || []; const n = steps.length;
+      const i = Math.min(state.scene[f.id] || 0, Math.max(0, n - 1)); const s = steps[i] || {}; const sid = 'S' + (i + 1);
+      const stKey = f.id + '/' + sid; const stIdx = state.sceneState[stKey] || 0; const stHtml = stIdx > 0 && s.states && s.states[stIdx - 1] ? s.states[stIdx - 1].html : s.html;
       const card = document.createElement('div'); card.className = 'card';
-      card.innerHTML = '<p class="q">' + esc(f.question) + '</p><p class="narr">' + esc(f.narrative || '') + '</p><p class="hint">실제와 다른 화면이 있으면 그 화면을 누르세요. 다 맞으면 아래 \'이 흐름이 맞아요\'를 누르세요.</p>';
-      const flow = document.createElement('div'); flow.className = 'flow';
-      (f.steps || []).forEach((s, i) => {
-        const sid = 'S' + (i + 1);
-        const d = document.createElement('div'); d.className = 'fstep' + (a.step_id === sid ? ' sel' : '');
-        d.innerHTML = '<div class="lab">' + esc(s.label) + '</div><div class="stim">' + s.html + '</div><div class="mark">여기가 달라요</div>';
-        d.onclick = () => { a.step_id = sid; a.step_label = s.label; a.unknown = false; save(frec(f, a), card.querySelector('.saved')); renderQuestions(); };
-        flow.appendChild(d);
-      });
-      card.appendChild(flow);
+      card.innerHTML = '<p class="q">' + esc(f.question) + '</p><p class="narr">' + esc(f.narrative || '') + '</p><p class="hint">장면을 하나씩 넘기며 따라가 보세요. 파란 테두리가 누를 곳입니다(화면을 누르면 다음 장면). 실제와 다른 장면이 있으면 그 장면에서 \'여기가 달라요\'를 누르세요.</p>';
+      const tour = document.createElement('div'); tour.className = 'tour';
+      const stim = document.createElement('div'); stim.className = 'stim scaled' + (a.step_id === sid ? ' sel' : '') + (s.press && stIdx === 0 ? ' press-on' : '');
+      stim.innerHTML = phone(Object.assign({}, s, { html: stHtml }));
+      stim.onclick = () => { if (i < n - 1) { state.scene[f.id] = i + 1; state.sceneState[stKey] = 0; renderQuestions(); } };
+      tour.appendChild(stim);
+      const panel = document.createElement('div'); panel.className = 'panel';
+      let ph = '<h4>장면 ' + (i + 1) + ' / ' + n + ' · ' + esc(s.label || '') + '</h4><p>' + esc(s.now || f.narrative || '') + '</p>';
+      if (s.press) ph += '<h4>누를 것</h4><p>' + esc(s.press) + (s.then ? ' → ' + esc(s.then) : '') + '</p>';
+      else if (s.then) ph += '<h4>그러면</h4><p>' + esc(s.then) + '</p>';
+      panel.innerHTML = ph;
+      if (s.states && s.states.length) {
+        const lab = document.createElement('h4'); lab.textContent = '이 화면의 다른 모습'; panel.appendChild(lab);
+        const seg = document.createElement('div'); seg.className = 'seg';
+        [['기본', 0]].concat(s.states.map((st, k) => [st.label, k + 1])).forEach(([label, k]) => { const b = document.createElement('button'); b.textContent = label; if (k === stIdx) b.className = 'sel'; b.onclick = () => { state.sceneState[stKey] = k; renderQuestions(); }; seg.appendChild(b); });
+        panel.appendChild(seg);
+      }
+      const pager = document.createElement('div'); pager.className = 'pager';
+      const prev = document.createElement('button'); prev.textContent = '‹ 이전'; prev.disabled = i === 0; prev.onclick = () => { state.scene[f.id] = i - 1; renderQuestions(); };
+      const next = document.createElement('button'); next.textContent = '다음 ›'; next.disabled = i >= n - 1; next.onclick = () => { state.scene[f.id] = i + 1; renderQuestions(); };
+      const dots = document.createElement('div'); dots.className = 'dots'; steps.forEach((_, k) => { const d = document.createElement('i'); if (k === i) d.className = 'on'; if (a.step_id === 'S' + (k + 1)) d.className += ' diff'; dots.appendChild(d); });
+      const pos = document.createElement('span'); pos.className = 'pos'; pos.textContent = (i + 1) + ' / ' + n;
+      pager.appendChild(prev); pager.appendChild(dots); pager.appendChild(pos); pager.appendChild(next); panel.appendChild(pager);
       const opts = document.createElement('div'); opts.className = 'opts';
+      const diff = document.createElement('button'); diff.className = 'opt' + (a.step_id === sid ? ' sel' : ''); diff.textContent = a.step_id === sid ? '이 장면이 달라요 (표시됨)' : '여기가 달라요'; diff.onclick = () => { a.step_id = sid; a.step_label = s.label || ''; a.unknown = false; save(frec(f, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(diff);
       const ok = document.createElement('button'); ok.className = 'opt' + (a.step_id === 'ok' ? ' sel' : ''); ok.textContent = '이 흐름이 맞아요'; ok.onclick = () => { a.step_id = 'ok'; a.step_label = ''; a.unknown = false; save(frec(f, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(ok);
       if (f.unknown) { const b = document.createElement('button'); b.className = 'opt unk' + (a.unknown ? ' sel' : ''); b.textContent = '모르겠음 — 기본값으로 진행해도 돼요'; b.onclick = () => { a.unknown = true; a.step_id = ''; a.step_label = ''; save(frec(f, a), card.querySelector('.saved')); renderQuestions(); }; opts.appendChild(b); }
-      card.appendChild(opts);
-      if (f.free) { const ta = document.createElement('textarea'); ta.placeholder = '어디가 어떻게 다른지 한 줄 (선택)'; ta.value = a.free || ''; ta.onchange = () => { a.free = ta.value; save(frec(f, a), card.querySelector('.saved')); }; card.appendChild(ta); }
-      const row = document.createElement('div'); row.className = 'row'; row.innerHTML = '<span class="saved">' + (a.ts ? '저장됨' : '') + '</span>'; card.appendChild(row);
+      panel.appendChild(opts);
+      if (f.free) { const ta = document.createElement('textarea'); ta.placeholder = '어디가 어떻게 다른지 한 줄 (선택)'; ta.value = a.free || ''; ta.onchange = () => { a.free = ta.value; save(frec(f, a), card.querySelector('.saved')); }; panel.appendChild(ta); }
+      const row = document.createElement('div'); row.className = 'row'; row.innerHTML = '<span class="saved">' + (a.ts ? '저장됨' : '') + '</span>'; panel.appendChild(row);
+      tour.appendChild(panel); card.appendChild(tour);
       root.appendChild(card);
     });
   }
+
+  /* ---------- 갤러리 타일: 폰 프레임 안의 대표 화면. 싫다·애매 → 영역 칩(①~⑤)으로 어디가 그런지 가리킨다 ---------- */
+  function trec(t, a) { return Object.assign({ id: t.id, kind: 'tile', axis_hidden: true, marks: a.marks || [], mark_labels: (a.marks || []).map((n) => CIRC[n] + (AREAS[n - 1] ? AREAS[n - 1][1] : '')) }, a); }
   function renderTiles() {
     const root = $('tiles'); root.innerHTML = '';
     DATA.tiles.forEach((t) => {
-      const a = state.answers[t.id] || {};
+      const a = state.answers[t.id] || {}; a.marks = a.marks || [];
+      const marking = a.verdict === '싫다' || a.verdict === '애매';
       const el = document.createElement('div'); el.className = 'tile';
-      el.innerHTML = '<div class="id">' + esc(t.id) + '</div><div class="stim">' + t.html + '</div>';
+      el.innerHTML = '<div class="id">' + esc(t.id) + '</div><div class="stim scaled' + (marking ? ' marking' : '') + '">' + phone(t) + '</div>';
       const v = document.createElement('div'); v.className = 'verd';
-      ['좋다', '싫다', '애매'].forEach((k) => { const b = document.createElement('button'); b.textContent = k; if (a.verdict === k) b.className = 'sel'; b.onclick = () => { a.verdict = k; save(Object.assign({ id: t.id, kind: 'tile', axis_hidden: true }, a), el.querySelector('.saved')); renderTiles(); renderPairs(); updateProgress(); }; v.appendChild(b); });
+      ['좋다', '싫다', '애매'].forEach((k) => { const b = document.createElement('button'); b.textContent = k; if (a.verdict === k) b.className = 'sel'; b.onclick = () => { a.verdict = k; save(trec(t, a), el.querySelector('.saved')); renderTiles(); renderPairs(); updateProgress(); }; v.appendChild(b); });
       el.appendChild(v);
-      const ta = document.createElement('textarea'); ta.style.minHeight = '40px'; ta.placeholder = '왜요? (한 줄, 선택)'; ta.value = a.reason || ''; ta.onchange = () => { a.reason = ta.value; save(Object.assign({ id: t.id, kind: 'tile' }, a), el.querySelector('.saved')); }; el.appendChild(ta);
+      if (marking) {
+        const w = document.createElement('div'); w.className = 'where'; w.textContent = '어디가 그런가요? (여러 개 가능)'; el.appendChild(w);
+        const chips = document.createElement('div'); chips.className = 'chips';
+        AREAS.forEach(([n, label]) => { const b = document.createElement('button'); b.textContent = CIRC[n] + ' ' + label; if (a.marks.includes(n)) b.className = 'sel'; b.onclick = () => { a.marks = a.marks.includes(n) ? a.marks.filter((x) => x !== n) : a.marks.concat(n).sort(); save(trec(t, a), el.querySelector('.saved')); renderTiles(); }; chips.appendChild(b); });
+        el.appendChild(chips);
+      }
+      const ta = document.createElement('textarea'); ta.style.minHeight = '40px'; ta.placeholder = '왜요? (한 줄, 선택)'; ta.value = a.reason || ''; ta.onchange = () => { a.reason = ta.value; save(trec(t, a), el.querySelector('.saved')); }; el.appendChild(ta);
       const row = document.createElement('div'); row.className = 'row'; row.innerHTML = '<span class="saved">' + (a.ts ? '저장됨' : '') + '</span>'; el.appendChild(row);
       root.appendChild(el);
     });
+    fitPhones(root);
   }
   function renderPairs() {
     const root = $('pairs'); root.innerHTML = '';
@@ -285,23 +409,42 @@
     list.forEach((p) => {
       // W-n 은 DATA.pairs 안의 자리 번호 — 노출되는 쌍이 바뀌어도 같은 쌍은 같은 번호를 갖는다.
       const id = 'W-' + (DATA.pairs.indexOf(p) + 1); const a = state.answers[id] || {};
+      const base = { id, kind: 'pair', axis_hidden: true, always: !!p.always, left_id: p.left.id, right_id: p.right.id };
       const card = document.createElement('div'); card.className = 'card';
       card.innerHTML = '<p class="q">어느 쪽이 더 편한가요?</p>';
       const pair = document.createElement('div'); pair.className = 'pair';
-      [['left', p.left], ['right', p.right]].forEach(([side, s]) => { const d = document.createElement('div'); d.className = 'stim' + (a.choice === side ? ' sel' : ''); d.innerHTML = s.html; d.onclick = () => { a.choice = side; a.chosen_id = s.id; save(Object.assign({ id, kind: 'pair', axis_hidden: true, always: !!p.always, left_id: p.left.id, right_id: p.right.id }, a), card.querySelector('.saved')); renderPairs(); }; pair.appendChild(d); });
+      [['left', p.left], ['right', p.right]].forEach(([side, s]) => { const d = document.createElement('div'); d.className = 'stim scaled' + (a.choice === side ? ' sel' : ''); d.innerHTML = phone(s); d.onclick = () => { a.choice = side; a.chosen_id = s.id; save(Object.assign({}, base, a), card.querySelector('.saved')); renderPairs(); }; pair.appendChild(d); });
       card.appendChild(pair);
-      const none = document.createElement('button'); none.className = 'opt unk' + (a.choice === 'none' ? ' sel' : ''); none.textContent = '둘 다 아님'; none.style.marginTop = '8px'; none.onclick = () => { a.choice = 'none'; a.chosen_id = ''; save(Object.assign({ id, kind: 'pair', axis_hidden: true, always: !!p.always, left_id: p.left.id, right_id: p.right.id }, a), card.querySelector('.saved')); renderPairs(); }; card.appendChild(none);
-      const ta = document.createElement('textarea'); ta.style.minHeight = '40px'; ta.placeholder = '왜요? (한 줄, 선택)'; ta.value = a.reason || ''; ta.onchange = () => { a.reason = ta.value; save(Object.assign({ id, kind: 'pair', axis_hidden: true, always: !!p.always, left_id: p.left.id, right_id: p.right.id }, a), card.querySelector('.saved')); }; card.appendChild(ta);
+      const none = document.createElement('button'); none.className = 'opt unk' + (a.choice === 'none' ? ' sel' : ''); none.textContent = '둘 다 아님'; none.style.marginTop = '8px'; none.onclick = () => { a.choice = 'none'; a.chosen_id = ''; save(Object.assign({}, base, a), card.querySelector('.saved')); renderPairs(); }; card.appendChild(none);
+      const ta = document.createElement('textarea'); ta.style.minHeight = '40px'; ta.placeholder = '왜요? (한 줄, 선택)'; ta.value = a.reason || ''; ta.onchange = () => { a.reason = ta.value; save(Object.assign({}, base, a), card.querySelector('.saved')); }; card.appendChild(ta);
       const row = document.createElement('div'); row.className = 'row'; row.innerHTML = '<span class="saved">' + (a.ts ? '저장됨' : '') + '</span>'; card.appendChild(row);
       root.appendChild(card);
     });
+    fitPhones(root);
+  }
+
+  /* ---------- 마무리: 직접 답한 것 / 추천대로 둔 것 / 제가 대신 정할 것 — 세 묶음으로 보여 준다(0-H 다이제스트와 같은 구분) ---------- */
+  function summary() {
+    const answered = [], accepted = [], assumed = [];
+    DATA.questions.forEach((q) => { const a = state.answers[q.id]; const t = q.text.length > 40 ? q.text.slice(0, 40) + '…' : q.text;
+      if (a && a.value && a.accepted_recommended) accepted.push(t + ' → ' + a.value); else if (a && a.value) answered.push(t + ' → ' + a.value); else assumed.push(t + (a && a.unknown ? ' (모르겠음)' : ' (안 고름)')); });
+    DATA.flows.forEach((f) => { const a = state.answers[f.id]; if (a && a.step_id === 'ok') answered.push('흐름: 맞아요'); else if (a && a.step_id) answered.push('흐름: ' + a.step_label + ' 장면이 달라요'); else assumed.push('흐름 확인' + (a && a.unknown ? ' (모르겠음)' : ' (안 봄)')); });
+    const tv = { '좋다': 0, '싫다': 0, '애매': 0 }; let tm = 0, tn = 0; DATA.tiles.forEach((t) => { const a = state.answers[t.id]; if (a && a.verdict) { tv[a.verdict]++; tm += (a.marks || []).length; } else tn++; });
+    if (DATA.tiles.length) { answered.push('화면 고르기: 좋다 ' + tv['좋다'] + ' · 싫다 ' + tv['싫다'] + ' · 애매 ' + tv['애매'] + (tm ? ' · 어디가 그런지 ' + tm + '곳' : '')); if (tn) assumed.push('화면 고르기 ' + tn + '장은 안 봄'); }
+    undecidedPairs().forEach((p) => { const id = 'W-' + (DATA.pairs.indexOf(p) + 1); const a = state.answers[id]; if (a && a.choice && a.choice !== 'none') answered.push('둘 중 하나: ' + (a.choice === 'left' ? p.left.variant : p.right.variant)); else assumed.push('둘 중 하나' + (a && a.choice === 'none' ? ' (둘 다 아님)' : ' (안 고름)')); });
+    return { answered, accepted, assumed };
+  }
+  function renderSummary() {
+    const s = summary(); const li = (arr) => arr.length ? '<ul>' + arr.map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '<ul><li>없음</li></ul>';
+    $('summary').innerHTML = '<h3>직접 답한 것 (' + s.answered.length + ')</h3>' + li(s.answered) + '<h3>추천대로 둔 것 (' + s.accepted.length + ')</h3>' + li(s.accepted) + '<h3>제가 대신 정할 것 (' + s.assumed.length + ')</h3>' + li(s.assumed) + '<p class="hint">고치고 싶은 것이 있으면 \'이전\'으로 돌아가 바꾸세요. 대신 정한 것은 만들어서 보여 드린 뒤 다시 여쭙니다.</p>';
+    return s;
   }
   function showStep(n) {
     state.step = n; [0, 1, 2, 3].forEach((i) => { $('step' + i).hidden = i !== n; const s = $('s' + i); s.className = i === n ? 'on' : (i < n ? 'done' : ''); });
     $('prev').disabled = n === 0; $('next').textContent = n === 2 ? '완료' : '다음'; $('next').hidden = n === 3;
     if (n === 2) renderPairs();
-    if (n === 3) { const rec = { id: 'meta-status', kind: 'meta', done: true, answered: answeredCount(), total: items() }; save(rec, null); $('doneinfo').textContent = '답한 항목 ' + rec.answered + ' / ' + rec.total; }
-    window.scrollTo(0, 0);
+    if (n === 3) { const s = renderSummary(); const rec = { id: 'meta-status', kind: 'meta', done: true, answered: answeredCount(), total: items(), summary: s }; save(rec, null); $('doneinfo').textContent = '답한 항목 ' + rec.answered + ' / ' + rec.total; }
+    window.scrollTo(0, 0); fitPhones();
   }
   $('prev').onclick = () => showStep(Math.max(0, state.step - 1));
   $('next').onclick = () => showStep(Math.min(3, state.step + 1));

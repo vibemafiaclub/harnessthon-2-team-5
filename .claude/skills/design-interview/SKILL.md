@@ -86,7 +86,9 @@ argument-hint: "<PRD 경로> [--budget 40m]"
 
 maker 는 골격을 **`design/stimuli/interview.html` 로 복사한 뒤 그 사본의 `<script id="harness-data">` JSON 만 채운다.** `templates/interview_page.html` 은 **쓰기 대상으로 열지 않는다**(브리프에 이 문장을 넣는다). 마크업·스크립트는 고치지 않는다(D-6 함정 처리·진행률·폴백·고정 힌트·추천 배지가 거기 있다). 채울 것:
 - `questions[]`: `interview_prompts.md` §6 뼈대에서 PRD 로 문구를 바꾼 것. **세트와 순서는 §6 정본(full/fast)을 따른다 — 이 문서는 세트를 복제하지 않는다(§6 참조).** **PRD 가 이미 답한 질문은 넣지 않는다**(확인만 필요한 것은 `options` 에 "맞아요/아니에요"; 뺀 뼈대는 `gallery_index.json.skipped[]` 에 `{skeleton, payload, reason: "PRD 가 답함: <원문>"}` 으로 남긴다 — check-interview-page P-11). **Q1·Q5 를 맨 앞에.** 선택지는 라벨이 아니라 **장면**(`scene`)으로, 2~3개 — 자유서술 전용 질문은 만들지 않는다(Q5 도 장면 2개). **questions[] 전건 `skeleton`("Q5"…)·`payload`(mood_axis | state_priority | top_info | constraint | audience | ia | pattern | pushback | delegation …) 필수**, 자유서술 `free: true`, "모르겠음" `unknown: true` 는 항상 — `unknown`·`free`·`scene` 누락은 check-interview-page P-3 FAIL. 금지어 26개(scripts/lib/forbidden-words.js 정본, 디자인 14 + 문서 용어 12)와 취향형 패턴("어떤 느낌이 좋으세요" 류)이 문구에 들어가면 안 된다(P-4). PRD 반박은 `kind: "pushback"` — `options` 정확히 3개(A / B / PRD대로, 각각 장면), `recommended`(options.value 중 하나)·`why` 필수(0-A §6 의 추천·이유 그대로; 페이지가 "하네스 추천" 배지로 보인다 — 결정형이므로 선공개). 레퍼런스 패턴은 `kind: "pattern"` — `design/references.md` 의 과업(유저스토리 동사)마다 1개, fast ≤2(`agent_reference_patterns_max`), `options` ≥2 이고 장면 = 레퍼런스의 처리 방식(진입·1등 정보·상태·빈 상태)을 우리 도메인 말로 옮긴 것, **서비스명은 쓰지 않는다**(pattern 은 취향형 — `recommended` 없이, 선택 기록 후 0-F 가 §9 채택 열에 반영).
-- `tiles[]`: 같은 화면 조각(PRD 도메인의 목록 행 3개 + 제목 + 버튼 + 상태 칩)을 축 하나씩만 바꾼 타일. `axis`·`variant` 는 페이지가 **숨긴다**(월드컵 자동 필터에만 쓴다). 대비 4.5:1 미만 조합 금지. 인라인 스타일만(외부 리소스 없음). **축마다 "무엇을 바꾸는가" 가 정해져 있고 변형 사이에 그 속성이 실제로 달라야 하며, 그 밖의 속성은 같아야 한다**(D-32 실측: 타이포 축이 굵기·자간만 바꾸고 서체 계열은 안 바꿔 방향이 안 나옴; 두 속성이 같이 바뀐 타일의 반응은 어느 축에도 귀속할 수 없다 — P-5·P-6):
+- `frame`(필수, team-3 비교 반영 ①): 모든 자극은 페이지가 **390×844 폰 프레임**(상태바 44 / 상단 바 56 / 본문 / 하단 버튼 52 / 탭바 56 / 홈 34, 중립색)에 넣어 보인다 — 회색 박스 조각이 아니라 실제 앱처럼 보여야 비전공자가 읽는다. maker 는 `frame: {app_title, cta, tabs[] | false, active_tab}` 만 채우고(P-15), 타일·쌍·장면 단위로 `title`·`cta:false`·`tabs:false` 로 덮어쓸 수 있다. **색 축(색온도·채도·색 진하기)에서만** `chrome: {bg, surface, ink, accent}` 를 본문과 같은 값으로 함께 바꾼다 — 다른 축은 chrome 을 건드리지 않는다(축 격리).
+- `questions[]` 공통 필드(후보 ③·④): 질문마다 `effect` 한 줄 — "이걸 정하면 ○○가 달라집니다"(≥6자, P-15). 왜 묻는지 모르면 대충 답한다. **결정형 질문(§1-10: Q2 1등 정보 · Q10 빈 상태 · Q11 반박 · Q4' 패턴 등 하네스가 의견을 가진 것)은 어느 kind 든 `recommended`(options.value 중 하나)·`why` 를 싣는다**(P-3) — 페이지가 배지로 보이고 '아직 안 고른 질문은 추천대로' 버튼이 미응답 질문을 그 값으로 채운다(`accepted_recommended: true`, 회수에서 '추천 수락' 으로 분류 — 직접 답한 것과 섞지 않는다). 취향형(Q1·Q5·Q3 계열·갤러리·대비쌍)에는 recommended 를 싣지 않는다(앵커링).
+- `tiles[]`: 대표 화면(1등 정보가 있는 첫 화면)의 **본문 조각**(제목 + 목록 행 3개 + 상태 칩; 상단 바·하단 버튼·탭바는 프레임이 그린다)을 축 하나씩만 바꾼 타일. 요소 수 ≤ `agent_gallery_tile_elements_max`(10/8). 사용자가 싫다·애매를 누르면 페이지가 영역 칩 ①제목줄 ②본문·목록 ③아래 버튼 ④색 ⑤글자 를 열고 프레임에 같은 번호 배지를 띄운다(후보 ②: 위치를 말로 설명할 어휘가 없는 사람이 번호로 가리킨다) → `marks[]`. `axis`·`variant` 는 페이지가 **숨긴다**(월드컵 자동 필터에만 쓴다). 대비 4.5:1 미만 조합 금지. 인라인 스타일만(외부 리소스 없음). **축마다 "무엇을 바꾸는가" 가 정해져 있고 변형 사이에 그 속성이 실제로 달라야 하며, 그 밖의 속성은 같아야 한다**(D-32 실측: 타이포 축이 굵기·자간만 바꾸고 서체 계열은 안 바꿔 방향이 안 나옴; 두 속성이 같이 바뀐 타일의 반응은 어느 축에도 귀속할 수 없다 — P-5·P-6):
 
   | 축 | 변형 사이에 반드시 달라야 하는 것 |
   |---|---|
@@ -97,6 +99,7 @@ maker 는 골격을 **`design/stimuli/interview.html` 로 복사한 뒤 그 사�
   | 강조 방식 | 1등 정보를 색으로 vs 크기로 vs 위치로 |
   | 색 채도 | 강조색 채도 (회색조에 가까움 ↔ 선명) |
 - `pairs[]`: 축마다 대비쌍 1개("옅은 것과 진한 것을 나란히"). **진술형 질문이 없는 축(정본: interview_prompts §7 — fast 는 밀도·형태·타이포·강조·채도, full 은 타이포·채도 + 건너뛴 축)은 `always: true`** — 갤러리 결과와 무관하게 항상 노출하는 재검증 쌍(같은 축을 타일과 대비쌍 두 형식으로 본다). 나머지 축은 페이지가 갤러리 답으로 갈린 경우 자동으로 감춘다.
+- `flows[]`(후보 ⑤, "따라가 보기" 투어): 시나리오 1 을 장면(step) 단위로. 페이지는 **한 번에 장면 하나**를 폰 프레임에 보이고, 오른쪽에 `장면 n/N · label` / 지금 상황(`now` 또는 narrative) / `누를 것: press → then` / 이 화면의 다른 모습(`states[]` 세그먼트: 마감 지남·하나도 안 고름 등) / 여기가 달라요 · 이 흐름이 맞아요 를 둔다. 장면마다 `press`(누를 버튼 문구 — 본문 html 의 `data-press` 요소 또는 그 장면의 `cta` 와 같은 문구가 파란 테두리로 강조된다) · `then`(누르면 어떻게 되는지) · 선택 `states[{label, html}]`. 마지막 장면(결과 화면)만 press 생략(P-16). 화면 조각을 가로로 늘어놓지 않는다 — 초보자에게 그것도 전문 표기법이다.
 - `banner`: "글자 내용이 아니라 보이는 느낌만". 고정 힌트 문장 2개(intro 아래 "디자인 용어를 몰라도 됩니다…", 갤러리 배너 앞 "전부 하지 않아도 됩니다…")는 골격 마크업에 박혀 있으므로 maker 가 다시 쓰지 않는다.
 
 **생성물 검증(`design-worker`, 발행 전 — 스크립트가 센다, worker 는 실행만)**:
@@ -122,16 +125,16 @@ node scripts/check-interview-page.js --page design/stimuli/interview.html --temp
 
 | 레코드 | raw 형식 |
 |---|---|
-| `kind: question` | `Q-nn [<skeleton>/<payload>]: <question>` / `A-nn: <value> — "<free>"` (`unknown` 이면 `A-nn: [UNCLEAR]`, 미답이면 `A-nn: [UNANSWERED]`) |
+| `kind: question` | `Q-nn [<skeleton>/<payload>]: <question>` / `A-nn: <value> — "<free>"` (`unknown` 이면 `A-nn: [UNCLEAR]`, 미답이면 `A-nn: [UNANSWERED]`, `accepted_recommended` 면 `A-nn [ACCEPTED]: <value>` — 추천 수락은 직접 답과 구분해 §6 가정 로그 '추천 수락' 행 + `delegations[]` `{kind: "accepted"}` 에도 남긴다) |
 | `kind: pushback` | `Q-nn [<skeleton>/pushback]: <text>` / `A-nn [PRD-PUSHBACK]: <A|B|계획대로> (추천 <recommended>) — "<free>"` |
 | `kind: pattern` | `Q-nn [<skeleton>/pattern]: <text>` / `A-nn [PATTERN]: <value> — "<free>"` |
-| `kind: tile` | `R-<id>: <verdict> — "<reason>"` (`reason` 없으면 `[NO_REASON]`) |
+| `kind: tile` | `R-<id>: <verdict> [marks: ②본문·목록, ④색] — "<reason>"` (`marks` 도 `reason` 도 없으면 `[NO_REASON]`; marks 만 있으면 방향 증거 — 0-G 에서 `tile` 증거의 '가리킨 영역' 으로 쓴다) |
 | `kind: pair` | `W-n: <left|right|none> (chosen <id>) — "<reason>"` (`always` 쌍인지는 `gallery_index.json` 으로 구분) |
 | 되묻기(0-E) | `F-n: <원문> (Q-nn)` / `A-F-n: <답>` |
 | 고지(0-H) | `N-<축>: 고지 — "말씀은 A, 고르신 건 B → B" / <답>` |
 | 사람 호출 | `H-nn [<stage>/<kind>]` 다음 4줄 골격 `결정할 것: / 선택지: ① ② (하네스 추천: ①) / 추천 이유: / 안 정하면:`, 사용자의 답 원문은 같은 블록 바로 아래 `답: <원문>` — kind 는 check-brief B-24 허용 집합 10종: interview_page · followup(0-H 한 화면) · constraint · token_choice · axis_choice · draft_approval · taste_gap · cap_exceeded · repeat_brief · final_ack. 되묻기 `F-n` 과 반응 `R-`·`W-` 는 H- 원장에 넣지 않는다(각각 B-23·B-20 이 센다) |
 
-`meta-status` 의 `answered/total` 을 `state.stages.interview.answered` 에 기록한다(check-brief B-22 가 raw 의 A-/R-/W- 합계와 대조). `gallery_index.json` 으로 타일·쌍의 축·변형을 붙인다(0-G 감사 입력의 "자극의 객관적 속성"). 회수 문서 수와 `ts` 분포가 사용자 세션 시간대와 맞는지 확인한다.
+`meta-status.summary` 의 세 묶음(직접 답한 것 / 추천대로 둔 것 / 대신 정할 것)은 0-H (a) 다이제스트의 초안이다 — 페이지가 이미 사용자에게 보였으므로 0-H 는 같은 묶음 이름을 쓴다. `meta-status` 의 `answered/total` 을 `state.stages.interview.answered` 에 기록한다(check-brief B-22 가 raw 의 A-/R-/W- 합계와 대조). `gallery_index.json` 으로 타일·쌍의 축·변형을 붙인다(0-G 감사 입력의 "자극의 객관적 속성"). 회수 문서 수와 `ts` 분포가 사용자 세션 시간대와 맞는지 확인한다.
 
 ### 0-E. 되묻기 (메인 세션, 채팅, ≤3턴)
 
@@ -180,7 +183,7 @@ node scripts/check-interview-page.js --page design/stimuli/interview.html --temp
 
 사람 개입 지점 #2(되묻기·규칙표 ack) 안의 한 화면이다 — 추가 호출이 아니며 `H-nn [interview/followup]` 4줄로 기록한다(kind 는 check-brief B-24 허용 집합의 `followup`; F- 상한과는 별도). 한 화면에 세 블록을 **이 순서로** 보인다:
 
-- **(a) "제가 대신 정한 것 N개"** — §6 가정 행과 `state.human_gates.delegations[]`(모르겠음→기본값 · Q12 위임 · 시간상한 · 예산 60%) 를 합쳐 번호를 붙이고 **쉬운 말 한 줄씩**("3. 답이 늦는 분은 목록 맨 아래에 회색으로 두기로 했어요"). 0개면 "대신 정한 것은 없습니다" 한 줄.
+- **(a) "직접 답하신 것 N개 / 추천대로 두신 것 N개 / 제가 대신 정한 것 N개"** (페이지 마무리 화면과 같은 세 묶음, 후보 ③) — 앞 둘은 한 줄씩 짧게, 셋째는 §6 가정 행과 `state.human_gates.delegations[]`(모르겠음→기본값 · Q12 위임 · 시간상한 · 예산 60%) 를 합쳐 번호를 붙이고 **쉬운 말 한 줄씩**("3. 답이 늦는 분은 목록 맨 아래에 회색으로 두기로 했어요"). 0개면 "대신 정한 것은 없습니다" 한 줄.
 - **(b) 말씀하신 것과 고르신 것이 다른 축만** — `축 | 말씀하신 것 | 고르신 것 | 저희가 잡은 것`(§3 에서 진술≠반응인 축, `[CONSTRAINT]` 축은 0-E 에서 이미 물었으므로 결과만). 없으면 "말씀과 고르신 것이 다른 부분은 없었습니다" 한 줄.
 - **(c) RULE 전량표** — `RULE-ID | plain | source_quote 1줄 | confidence`. statement 대신 `plain` 열을 쓴다(디자인 용어가 든 statement 를 괄호 병기하는 방식은 폐기 — plain 이 없는 규칙은 B-19 FAIL). fast 는 confirmed 만.
 
