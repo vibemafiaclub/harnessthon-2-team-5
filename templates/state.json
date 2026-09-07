@@ -86,7 +86,7 @@
     }
   },
   "caps": {
-    "_note": "사람 개입 상한(human_*)과 에이전트 산출 상한(agent_*)을 분리한다. 오케스트레이터가 fast 모드면 caps_fast 로 덮어쓴다. 서브 브리프에는 해당 상한을 숫자 문장으로 넣는다. 레퍼런스는 패턴만, 값은 사용자 반응. human_interview_questions_max 는 페이지 항목 수 기준(세트 정본은 interview_prompts.md §6). human_worldcup_rounds_max = always 쌍(fast 5축: 밀도·형태·타이포·강조·채도 / full 은 진술 질문을 건너뛴 축) + 미결 ≤2 = 최대 7. human_calls_max = 사람 개입 지점 5곳 + 예외 2. agent_references_* 는 design/references.md 의 REF 행 수·줄 수, agent_reference_patterns_max 는 인터뷰 페이지 kind:pattern 질문 수, agent_flow_steps_max 는 flows[] 한 흐름의 화면 조각 수. agent_brief_lines_max 는 §2c·§2d·§9·plain 신설분을 반영해 올렸다.",
+    "_note": "사람 개입 상한(human_*)과 에이전트 산출 상한(agent_*)을 분리한다. 오케스트레이터가 fast 모드면 caps_fast 로 덮어쓴다. 서브 브리프에는 해당 상한을 숫자 문장으로 넣는다. 레퍼런스는 패턴만, 값은 사용자 반응. human_interview_questions_max 는 페이지 항목 수 기준(세트 정본은 interview_prompts.md §6). human_worldcup_rounds_max = always 쌍(fast 5축: 밀도·형태·타이포·강조·채도 / full 은 진술 질문을 건너뛴 축) + 미결 ≤2 = 최대 7. human_calls_max = 고정 호출 6(interview_page·followup·token_choice·axis_choice·draft_approval·final_ack) + UNCLEAR 재발행 1 + 예외 2 = 9. agent_references_* 는 design/references.md 의 REF 행 수·줄 수, agent_reference_patterns_max 는 인터뷰 페이지 kind:pattern 질문 수, agent_flow_steps_max 는 flows[] 한 흐름의 화면 조각 수. agent_brief_lines_max 는 §2c·§2d·§9·plain 신설분을 반영해 올렸다.",
     "human_interview_questions_max": 12,
     "human_gallery_tiles_max": 24,
     "human_worldcup_rounds_max": 7,

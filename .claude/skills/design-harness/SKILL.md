@@ -58,7 +58,7 @@ fast 에서 잘린 항목은 전부 brief §6 가정 로그에 "시간 예산으
 |---|---|---|---|
 | 0 인터뷰 | `design-interview` | 인터뷰 페이지 답변 · 갤러리/월드컵 반응 · 되묻기 · 규칙표 ack(0-H 한 화면) | 발행 전 `node scripts/check-interview-page.js` → `design/verify/exit_interview_page.md`, 종료 시 `node scripts/check-brief.js` → `design/verify/exit_stage0.md` |
 | 1 토큰·가이드 | `design-tokens` | 토큰 세트 선택 | `node scripts/check-tokens.js --tokens design/tokens.json --state design/state.json --design design/design.md --brief design/brief.md --wcag design/verify/wcag_tokens.md --compare design/stimuli/design_guide_compare.html --sets design/stimuli/token_sets.json --raw design/interview_raw.md --out design/verify/exit_stage1.md` (K-1~K-12, K-3b, K-8a/b) |
-| 2 HTML 초안 | `design-draft-html` | 축별 선택 · 초안 승인 | `node scripts/check-html.js --brief design/brief.md` (+ `scripts/check-decisions.js`) → `design/verify/exit_stage2.md` |
+| 2 HTML 초안 | `design-draft-html` | 축별 선택 · 초안 승인 | `node scripts/check-html.js … --out design/verify/html_check.md` + `node scripts/check-decisions.js … --out design/verify/exit_stage2.md` |
 | 3 Figma | `design-figma-build` | (취향 공백 질의 시) · 최종 확인 | `node scripts/check-figma.js` + `node scripts/check-c-report.js` → `design/verify/exit_stage3.md`·`exit_stage3_c.md` |
 
 각 단계는 **Skill 도구로 해당 스킬을 로드해** 그 문서를 따른다. 이 문서에 단계 내용을 복제하지 않는다.

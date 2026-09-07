@@ -34,6 +34,7 @@
  *   P-15 frame 존재(app_title·cta 문자열) · questions 전건 effect("이걸 정하면 ○○가 달라집니다" 한 줄) ≥6자 (team-3 비교 후보 3)
  *   P-18 재검증 존재(I-3): verifies 가 붙은 질문 ≥1 이고 그 원 질문의 skeleton 이 Q5(fast) 또는 Q5·Q2(full) — §1-12. 없으면 FAIL
  *   P-19 서비스명 비노출(U-2/U-3): references.md '서비스' 열의 이름이 페이지 노출 텍스트(P-4 조각)에 0건
+ *   P-20 always 대비쌍(I-3 두 번째 각도): 진술형 질문이 없는 축 — fast 는 밀도·형태·타이포·강조·채도 5축, full 은 타이포·채도 2축 — 마다 always:true 쌍 ≥1 (동의어: 밀도|정보량, 형태|모양, 타이포|서체|글자, 강조, 채도|진하기)
  *   P-17 kind:pattern 의 options 전건 html(≥40자, 자리표시자 0) — 패턴은 글이 아니라 폰 프레임 그림으로 보인다(U-3)
  *   P-16 flows[].steps: 마지막을 뺀 전 장면에 press(≥2자) + 강조할 곳(html 에 data-press 또는 press == 그 장면의 cta) · states[] 항목마다 label·html ("따라가 보기" 투어, 후보 5)
  */
@@ -290,7 +291,7 @@ if (!D) {
   add('P-9', p9.length === 0, `대비 <4.5:1 텍스트 ${p9.length}건 (측정 ${measured}, hex 아님 N/A ${skipped})`, short(p9, 4) || (measured ? '전건 ≥4.5:1' : '측정 대상 없음'));
 
   /* P-10·P-13 prompts §6 정본 */
-  const DEFAULT_PAYLOADS = ['mood_axis', 'top_info', 'density_axis', 'borrow_scope', 'state_priority', 'dislike_list', 'expression_axis', 'constraint', 'audience', 'ia', 'edge_state', 'pushback', 'open_item', 'delegation', 'pattern'];
+  const DEFAULT_PAYLOADS = ['mood_axis', 'top_info', 'density_axis', 'form_axis', 'emphasis_axis', 'borrow_scope', 'state_priority', 'dislike_list', 'expression_axis', 'constraint', 'audience', 'ia', 'edge_state', 'pushback', 'open_item', 'delegation', 'pattern']; /* §6 17종과 같게(감사 지적: form_axis·emphasis_axis 누락) */
   const prompts = read(A.prompts); let payloadSet = null, fullSet = new Set(), fastSet = new Set(), promptNote = '';
   if (prompts == null) promptNote = `${A.prompts} 없음 — 기본 집합`;
   else {
@@ -364,6 +365,9 @@ if (!D) {
     const seen = new Set(names); const exposed = segs.map(([w, t]) => [w, String(t || '')]);
     for (const nm of seen) for (const [w, t] of exposed) if (t.includes(nm)) p19.push(`${w}:「${nm}」`);
     add('P-19', p19.length === 0, `references.md 서비스명 ${seen.size}개 중 페이지 노출 ${p19.length}건`, short(p19) || (seen.size ? '노출 0건' : 'references.md 서비스 열 없음/레퍼런스 없음')); }
+  { const SYN = { '밀도': /밀도|정보량/, '형태': /형태|모양/, '타이포': /타이포|서체|글자/, '강조': /강조/, '채도': /채도|진하기/ }; const need20 = mode === 'fast' ? ['밀도', '형태', '타이포', '강조', '채도'] : ['타이포', '채도'];
+    const alwaysAxes = P.filter((p) => p && p.always === true).map((p) => String(p.axis || '')); const miss20 = need20.filter((k) => !alwaysAxes.some((a) => SYN[k].test(a)));
+    add('P-20', miss20.length === 0, `always 쌍 ${alwaysAxes.length}개 (필요 축 ${need20.join('·')})`, miss20.length ? `always 쌍 없는 축: ${miss20.join(', ')}` : `always: ${alwaysAxes.join(', ')}`); }
   { const p17 = []; Q.filter((q) => q.kind === 'pattern').forEach((q) => (q.options || []).forEach((o, i) => { const h = String((o && o.html) || ''); if (h.trim().length < 40) p17.push(`${q.id}.options[${i}] html ${h.trim().length}자 < 40`); else if (PLACEHOLDER.test(FW.stripTags(h))) p17.push(`${q.id}.options[${i}] 자리표시자`); }));
     add('P-17', p17.length === 0, `패턴 선택지 그림 위반 ${p17.length}건 (pattern 질문 ${Q.filter((q) => q.kind === 'pattern').length})`, short(p17) || '패턴 선택지 전건 html 있음'); }
   add('P-16', p16.length === 0, `투어 형식 위반 ${p16.length}건 (흐름 ${FL.length})`, short(p16) || (FL.length ? `전 장면 press·강조 위치 있음` : '흐름 없음'));

@@ -43,7 +43,7 @@
  *   B-21  --page-report(기본 design/verify/exit_interview_page.md) 존재·비어 있지 않음·'| FAIL |' 0
  *   B-22  state.stages.interview.answered 있으면 raw ^A-nn + ^R- + ^W-n 합계와 일치 (없으면 N/A)
  *   B-23  되묻기 ^F-n ≤3, 같은 원 질문(Q-nn) ≤2
- *   B-24  사람 호출 원장 ^H-nn [<stage>/<kind>]: 4라벨(결정할 것·선택지·추천·안 정하면), kind ∈ 허용 집합, 건수 ≤ human_calls_max(7), state.human_gates.calls[] 있으면 건수 1:1
+ *   B-24  사람 호출 원장 ^H-nn [<stage>/<kind>]: 4라벨(결정할 것·선택지·추천·안 정하면), kind ∈ 허용 집합, 건수 ≤ human_calls_max(9), state.human_gates.calls[] 있으면 건수 1:1
  *   B-25  답변 활용률: raw ^A-nn ID 가 brief §2·2b·2c·2d·3·4·5·6·9·10·11 어디든 등장 ≥2/3; [UNCLEAR] 수 / 본질문(^Q-nn) 수 < 1/2
  *   B-26  §11 '누가 쓰는가:'·'사용자 수준(익숙함·연령·기기):' 줄 공백 0
  *   B-27  추천 수락 정합(I-4): raw `A-nn [ACCEPTED]` 수 == §6 '추천 수락' 행 수 == state delegations kind accepted 수 — 추천 수락은 답이 아니라 위임이라 세 곳에 같은 수로 남아야 한다
@@ -372,7 +372,7 @@ for (const b of hBlocks) {
   if (!m) miss.push('[stage/kind] 없음'); else if (!KINDS.includes(m[2].trim())) miss.push('kind ' + m[2].trim() + ' 미허용');
   if (miss.length) hBad.push(`${b.id}(${miss.join(',')})`);
 }
-const hmax = cap('human_calls_max', 7);
+const hmax = cap('human_calls_max', 9);
 /* state.human_gates.calls[] 는 raw H-nn 과 1:1 (templates/state.json 주석). 배열이 있을 때만 대조, 없으면 생략 */
 const calls = (state && state.human_gates && Array.isArray(state.human_gates.calls)) ? state.human_gates.calls : null;
 const callsMismatch = calls != null && calls.length !== hBlocks.length;

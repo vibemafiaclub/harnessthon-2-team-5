@@ -234,7 +234,7 @@ if (!parseErr) {
   if (au.text != null) { try { const j = JSON.parse(au.text); inv = (j.text_inventory || []).flatMap((f) => f.texts || []); truncated = !!j.text_inventory_truncated; } catch (e) { inv = null; } }
   const quotes = []; for (const sc of screens) for (const c of arr(sc.checks)) { if (!/^fail$/i.test(String(c.verdict || ''))) continue; const ev = String(c.evidence || ''); const re = /「([^」]{2,40})」|'([^'\n]{2,40})'|"([^"\n]{2,40})"|‘([^’\n]{2,40})’/g; let m; while ((m = re.exec(ev))) { const q = (m[1] || m[2] || m[3] || m[4] || '').trim(); if (/[가-힣A-Za-z]/.test(q)) quotes.push({ tag: `${sc.id}/${c.id}`, q }); } }
   if (!quotes.length) add('CR-12', true, 'fail evidence 에 인용 문자열 없음 — N/A', '인용 0건');
-  else if (inv == null) add('CR-12', !au.explicit, `인용 ${quotes.length}건인데 audit text_inventory 없음 — ${au.explicit ? 'FAIL(지정 파일 없음)' : 'N/A(입력 없음)'}`, au.path);
+  else if (inv == null) add('CR-12', false, `인용 ${quotes.length}건인데 화면 텍스트 목록 없음 — 오독을 가를 수 없다(FAIL)`, `${DEF.texts}(--texts-only 번들) 또는 ${au.path}`);
   else if (truncated) add('CR-12', false, `text_inventory 가 잘려(truncated) 대조 불가 (인용 ${quotes.length}건)`, `make-figma-audit --texts-only 로 ${DEF.texts} 를 만들어 넘긴다 — 잘린 목록으로는 오독을 못 가른다`);
   else { const bad = quotes.filter(({ q }) => !inv.some((t) => t.includes(q) || q.includes(t) && t.length >= 4)); add('CR-12', bad.length === 0, `인용 ${quotes.length}건 중 화면 텍스트에 없는 것 ${bad.length}`, bad.slice(0, 5).map((b) => `${b.tag}:「${b.q}」`).join(', ') || '전건 화면 텍스트와 일치'); }
 }

@@ -109,7 +109,7 @@ maker 는 골격을 **`design/stimuli/interview.html` 로 복사한 뒤 그 사�
 node scripts/check-interview-page.js --page design/stimuli/interview.html --template-ref HEAD:templates/interview_page.html --index design/stimuli/gallery_index.json --state design/state.json --refs design/references.md --prompts .claude/skills/design-interview/references/interview_prompts.md --prd design/prd_analysis.md --out design/verify/exit_interview_page.md
 ```
 
-종료 코드 0 이 통과다. 기준점은 `git show HEAD:templates/interview_page.html`(워킹트리 템플릿이 아니다 — D-28; P-1). 검사 P-0~P-19 의 사람용 설명은 스크립트 헤더에 있다 — 템플릿 무변조 · 골격 바이트 동일 · 질문 수·Q1/Q5 선두·타일/쌍 수 · unknown/free/scene·pushback recommended/why·pattern options · 금지어·취향형 패턴 · 6축 실제 차이 · 축 격리 · 타일 요소 수 · 자리표시자·PRD 어휘 · 타일 대비 · skeleton/payload · fast 필수 payload · §6 정본 대조 · 파일 크기 · frame·effect 한 줄(P-15) · 투어 press·강조 위치(P-16) · 패턴 선택지 그림(P-17) · 재검증 verifies 존재(P-18) · 레퍼런스 서비스명 비노출(P-19). **FAIL 은 해당 타일·질문만 maker 에 재생성 1회**(전체 재생성 아님 — 브리프에 FAIL 행 원문을 붙인다) 후 재실행. 종전의 worker 수동 grep ①~⑥ 은 이 스크립트로 대체됐다(D-30 과 같은 처방 — 세는 일을 worker 판단에 맡기면 틀린다).
+종료 코드 0 이 통과다. 기준점은 `git show HEAD:templates/interview_page.html`(워킹트리 템플릿이 아니다 — D-28; P-1). 검사 P-0~P-20 의 사람용 설명은 스크립트 헤더에 있다 — 템플릿 무변조 · 골격 바이트 동일 · 질문 수·Q1/Q5 선두·타일/쌍 수 · unknown/free/scene·pushback recommended/why·pattern options · 금지어·취향형 패턴 · 6축 실제 차이 · 축 격리 · 타일 요소 수 · 자리표시자·PRD 어휘 · 타일 대비 · skeleton/payload · fast 필수 payload · §6 정본 대조 · 파일 크기 · frame·effect 한 줄(P-15) · 투어 press·강조 위치(P-16) · 패턴 선택지 그림(P-17) · 재검증 verifies 존재(P-18) · 레퍼런스 서비스명 비노출(P-19) · always 대비쌍 축 커버(P-20). **FAIL 은 해당 타일·질문만 maker 에 재생성 1회**(전체 재생성 아님 — 브리프에 FAIL 행 원문을 붙인다) 후 재실행. 종전의 worker 수동 grep ①~⑥ 은 이 스크립트로 대체됐다(D-30 과 같은 처방 — 세는 일을 worker 판단에 맡기면 틀린다).
 
 **⑦ 자극 미감 QA(`design-judge`, 0-B maker 와 다른 호출, check-interview-page 종료 코드 0 뒤)**: 사용자가 반응할 자극이 조잡하면 역추출된 미감 기준도 조잡해진다(D-6 2회차 런에서 judge 가 실제로 했던 QA 의 복원). 메인이 먼저 `design/stimuli/interview.html` 을 aside-browser 로 열어 갤러리 단계(2단계 "골라 보기")를 `design/verify/shots/interview_tiles.png` 로 저장한다 — 불가 시 스크린샷 없이 진행하고 브리프 첫 줄에 `RENDER: none` 을 적는다(judge 는 리포트 첫 줄에 같은 표기를 옮긴다). 브리프에 넘길 것: **입력 화이트리스트 = `design/verify/shots/interview_tiles.png`(있으면) + `design/stimuli/interview.html`(타일 HTML 원문 — 스크린샷이 없을 때의 대체 근거, 판정 근거는 style 값) + `design/stimuli/gallery_index.json`**. 출력 `design/verify/stimuli_qa.md`, 상한 문장 "≤{agent_report_lines_max}줄". 타일마다 4항 — 정렬(요소의 좌우·상하 맞춤) / 간격 스케일(간격 값이 2~3단계 안에 있는가) / 색 역할 일관성(같은 역할 = 같은 색, 역할 없는 색 0) / 대비(본문·제목 4.5:1) — PASS/FAIL + 근거(스크린샷 위치 또는 style 값). fast 는 축마다 1장, 6장 표본. FAIL 타일은 **그 타일만** maker 1회 되돌림(브리프에 FAIL 행 원문) → check-interview-page 재실행. 점수·판정은 사용자에게 보이지 않는다(보이면 라벨형이 된다).
 
@@ -236,6 +236,7 @@ worker(Haiku)의 판단으로 세게 하면 섹션 경계(§2 vs §2b)·조사 �
 - [ ] **B-23** 되묻기 `F-n` 총 ≤3, 같은 원 질문 ≤2
 - [ ] **B-24** 사람 호출 `H-nn` 각 블록에 "결정할 것·선택지·추천 이유·안 정하면" 4라벨, kind ∈ 11종(정본 check-brief KINDS), 건수 ≤`human_calls_max`
 - [ ] **B-25** 답변 활용률 — raw 의 `A-nn` ID 가 brief §2/§3/§4/§5/§6/§9/§10 어디든 등장하는 비율 ≥2/3; `[UNCLEAR]` 수 / 본질문 수 <1/2
+- [ ] **B-27** 추천 수락 정합 — raw `A-nn [ACCEPTED]` 수 == §6 '추천 수락' 행 수 == state delegations kind accepted 수
 - [ ] **B-26** §11 "누가 쓰는가"·"사용자 수준(익숙함·연령·기기)" 줄 공백 0
 - [ ] 위 모든 상한 초과는 하한 미달과 같은 FAIL 로 보고한다
 

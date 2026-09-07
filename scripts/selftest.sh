@@ -134,6 +134,7 @@ sed -E 's/^H-02 \[interview\/constraint\]$/H-02 [interview\/nonsense]/' "$R" > "
 grep -v '^H-01 \[interview/interview_page\]' "$R" | grep -v '^  결정할 것: 인터뷰 페이지' > "$TMP/m_b24b.md";              mut "B-24 state.calls 2 ≠ raw H- 1" "B-24" "$G" "$TMP/m_b24b.md" "$S" "$PR"
 sed -E 's/^A-05: .*$/A-05: "아침에 먹였는지 기억이 안 나서 한 번 더 먹일 뻔했어요" [UNCLEAR]/; s/^A-01: .*$/A-01: "저녁에 앉아서 약 봉투 세 개를 펼쳐 놓고 뭘 언제 먹였는지 정리해요" [UNCLEAR]/; s/^A-02: .*$/A-02: "오늘 남은 약이 몇 개인지요" [UNCLEAR]/; s/^A-07: .*$/A-07: "저는 가끔, 부모님은 60대인데 폰으로만 봐요" [UNCLEAR]/; s/^A-08: .*$/A-08: "부모님은 그냥 지금 뭘 먹이면 되는지만 알면 돼요" [UNCLEAR]/' "$R" > "$TMP/m_b25.md"; mut "B-25 [UNCLEAR] 5/9" "B-25" "$G" "$TMP/m_b25.md" "$S" "$PR"
 { cat "$R"; printf 'F-2 (Q-05): 하나 더\nA-F-2: "네"\nF-3 (Q-05): 또 하나\nA-F-3: "네"\n'; } > "$TMP/m_b23.md";              mut "B-23 같은 원 질문 되묻기 3회"   "B-23" "$G" "$TMP/m_b23.md" "$S" "$PR"
+sed -E 's/"human_calls_max": 9/"human_calls_max": 1/' "$S" > "$TMP/m_b24c.json";                                                mut "B-24 호출 건수 > human_calls_max"  "B-24" "$G" "$R" "$TMP/m_b24c.json" "$PR"
 sed -E 's/"answered": 20/"answered": 18/' "$S" > "$TMP/m_b22.json";                                                      mut "B-22 answered ≠ raw 합계"       "B-22" "$G" "$R" "$TMP/m_b22.json" "$PR"
 sed -E 's/^\| P-3 \| PASS \|/| P-3 | FAIL |/' "$PR" > "$TMP/m_b21.md";                                                   mut "B-21 페이지 리포트에 FAIL"      "B-21" "$G" "$R" "$S" "$TMP/m_b21.md"
 
@@ -157,6 +158,7 @@ mutpage "$TMP/cip_mt.html" taste-recommended; expect_fail_exact "P-3 취향형(Q
 mutpage "$TMP/cip_mf.html" frame;          expect_fail_exact "P-15 frame 삭제" "P-15" "$TMP/cip_mf.md" $CIP --page "$TMP/cip_mf.html" "${CIPARGS[@]}" --out "$TMP/cip_mf.md"
 mutpage "$TMP/cip_m7.html" tile-elements;  expect_fail_subset "P-7 타일 요소 12개" "P-7" "$TMP/cip_m7.md" $CIP --page "$TMP/cip_m7.html" "${CIPARGS[@]}" --out "$TMP/cip_m7.md"
 mutpage "$TMP/cip_m9.html" contrast;       expect_fail_subset "P-9 대비 4.5:1 미만" "P-9" "$TMP/cip_m9.md" $CIP --page "$TMP/cip_m9.html" "${CIPARGS[@]}" --out "$TMP/cip_m9.md"
+mutpage "$TMP/cip_m20.html" always-drop;  expect_fail_exact "P-20 always 쌍(채도) 삭제" "P-20" "$TMP/cip_m20.md" $CIP --page "$TMP/cip_m20.html" "${CIPARGS[@]}" --out "$TMP/cip_m20.md"
 mutpage "$TMP/cip_m16.html" press;  expect_fail_exact "P-16 투어 press 삭제" "P-16" "$TMP/cip_m16.md" $CIP --page "$TMP/cip_m16.html" "${CIPARGS[@]}" --out "$TMP/cip_m16.md"
 expect_rc "없는 페이지 → 종료 2" 2 $CIP --page "$TMP/nope.html"
 
