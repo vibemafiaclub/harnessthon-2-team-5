@@ -1,4 +1,4 @@
-# 3단계 C 판정 종료조건 검사 (scripts/check-c-report.js, 2026-09-07T06:42:13.692Z)
+# 3단계 C 판정 종료조건 검사 (scripts/check-c-report.js, 2026-09-07T06:49:15.393Z)
 
 - report: design/verify/c_report.json · shots: design/verify/shots/index.md · state: design/state.json · brief: design/brief.md · mode: fast
 - 결과: **FAIL** (4/10)

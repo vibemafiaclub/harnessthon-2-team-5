@@ -95,3 +95,21 @@ radius 의 변수 바인딩 4개가 끊겼고, `#CDD1CE` 값 검색으로 `color
 활성 CTA 도 화면마다 규격이 다르다 — 06 `cta-button` 358×59/17px,
 07 `btn btn-primary` **390×56/15px**(좌우 여백 0), 03 `Button/Primary` 350×59/17px.
 07 의 폭 390 은 프레임 전폭이라 여백이 없다. C 판정은 비활성만 지적했다.
+
+## 2026-09-07 — 24장 재캡처 (D-44 해결)
+
+`exportAsync` 의 base64 는 use_figma 응답 한도에서 잘려 PNG 를 파일로 만들 수 없다
+(33KB PNG → base64 45KB, 15000자씩 3조각). **답은 `get_screenshot` 이었다** —
+이 툴은 기본적으로 `figma.com/api/mcp/asset/<uuid>.png` 단명 URL 과 curl 지시를 돌려주고,
+그 URL 은 인증 없이 `curl -L` 로 raw PNG 를 준다. 툴 설명이 "URL+curl 경로가 강력히 권장됨"
+이라고 적고 있는데 3-E 는 `exportAsync` 를 적어 두었다.
+
+24장 전부 이 경로로 재캡처했다. 검증된 부수 효과:
+
+- `04_contacts_normal` 390×**927**, `06_groupcompose_selecting` 390×**886**
+  → A-14 프레임 확장이 캡처에 그대로 나타난다
+- `07_datepropose_empty` sha 변경 → F-9 수정 반영
+- `06_groupcompose_none` sha 동일 → 이 화면은 원래 색이 정본과 같았고 바꾼 것이
+  변수 바인딩뿐이라 픽셀이 안 변하는 것이 맞다
+
+24장 중 13장의 sha 가 바뀌었다. CR-3 PASS(실측 mtime 24, 자기 신고 0).
