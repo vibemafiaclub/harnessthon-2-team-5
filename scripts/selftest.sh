@@ -275,7 +275,7 @@ expect_pass "F-11 처리 원장 있음(수정+커밋)" "$TMP/cf_f11b.md" node sc
 echo "## 8. audit-core 규칙 검출력 (fixtures/audit/cases.json)"
 if node scripts/fixtures/run-audit-cases.js > "$TMP/audit_cases.log" 2>&1; then ok "audit-core 케이스 $(tail -1 "$TMP/audit_cases.log")"; else ng "audit-core 케이스 — $(grep NG "$TMP/audit_cases.log" | head -3 | tr '\n' ' ')"; fi
 
-echo "## 9. 결함 변이 보강 — 보조 검사 61건 (scripts/fixtures/mut.js)"
+echo "## 9. 결함 변이 보강 — 보조 검사 60건 (scripts/fixtures/mut.js)"
 M="node scripts/fixtures/mut.js"; mkdir -p "$TMP/m9"
 $M "$FX/prd_analysis_golden.md" "$TMP/m9/z1.md" delete-lines "^## 4\. "
 expect_fail_exact "Z-1 §4 제목 삭제" "Z-1" "$TMP/m9/z1.md" $CPA --prd "$TMP/m9/z1.md" --state "$S" --out "$TMP/m9/z1.md"
