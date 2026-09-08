@@ -26,6 +26,7 @@ set -u
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 FX="scripts/fixtures"
+M="node scripts/fixtures/mut.js"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 VERBOSE=0; [ "${1:-}" = "-v" ] && VERBOSE=1
@@ -106,17 +107,20 @@ expect_rc "취향형 문장, --taste 없이 → 종료 0" 0 node scripts/lib/for
 expect_rc "취향형 문장, --taste → 종료 1" 1 node scripts/lib/forbidden-words.js --taste "$TMP/taste.txt"
 expect_rc "없는 파일 → 종료 2" 2 node scripts/lib/forbidden-words.js "$TMP/nope.txt"
 
+mkdir -p "$TMP/m9"
 echo "## 2. check-brief"
 CB="node scripts/check-brief.js"
 G="$FX/brief_golden.md"; R="$FX/raw_golden.md"; S="$FX/state_full.json"; PR="$FX/exit_interview_page_golden.md"; REFS="$FX/references_golden.md"
 expect_fail_subset "빈 템플릿(brief_empty.md)" "B-3 B-4 B-5 B-12 B-16 B-18" "$TMP/cb_empty.md" $CB --brief "$FX/brief_empty.md" --raw "$FX/raw_empty.md" --out "$TMP/cb_empty.md"
 expect_fail_subset "빈 템플릿(라이브 templates/brief.md)" "B-3 B-4 B-5 B-12 B-16 B-18" "$TMP/cb_live.md" $CB --brief templates/brief.md --raw "$FX/raw_empty.md" --out "$TMP/cb_live.md"
-AUD="$FX/audit_result_golden.json"
-expect_pass "골든(brief_golden.md, full)" "$TMP/cb_golden.md" $CB --brief "$G" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --out "$TMP/cb_golden.md"
-expect_fail_exact "B-14 0-G 감사 미실행(--audit 없음)" "B-14" "$TMP/cb_noaudit.md" $CB --brief "$G" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --out "$TMP/cb_noaudit.md"
+AUD="$FX/audit_result_golden.json"; ACK="$FX/ack_screen_golden.md"
+expect_pass "골든(brief_golden.md, full)" "$TMP/cb_golden.md" $CB --brief "$G" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --ack "$ACK" --out "$TMP/cb_golden.md"
+$M "$ACK" "$TMP/m9/ack_bad.md" replace "약을 고를 때 이름 옆에 누구 약인지 같이 보인다" "레이아웃 위계를 미니멀하게"; expect_fail_exact "B-28 확인 화면 금지어" "B-28" "$TMP/m9/ack1.md" $CB --brief "$G" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --ack "$TMP/m9/ack_bad.md" --out "$TMP/m9/ack1.md"
+expect_fail_exact "B-28 확인 화면 파일 없음" "B-28" "$TMP/m9/ack2.md" $CB --brief "$G" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --ack "$TMP/nope_ack.md" --out "$TMP/m9/ack2.md"
+expect_fail_exact "B-14 0-G 감사 미실행(--audit 없음)" "B-14" "$TMP/cb_noaudit.md" $CB --brief "$G" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --ack "$ACK" --out "$TMP/cb_noaudit.md"
 expect_rc "--state 가 없는 경로 → 종료 2" 2 $CB --brief "$G" --raw "$R" --state "$TMP/nope.json"
 # 변이: 골든에서 결함 하나씩 심는다 → 심은 항목만 FAIL
-mut() { local name="$1" want="$2" brief="$3" raw="$4" state="$5" pr="$6"; expect_fail_exact "변이 $name" "$want" "$TMP/cb_$name.md" $CB --brief "$brief" --raw "$raw" --state "$state" --refs "$REFS" --page-report "$pr" --audit "$AUD" --out "$TMP/cb_$name.md"; }
+mut() { local name="$1" want="$2" brief="$3" raw="$4" state="$5" pr="$6"; expect_fail_exact "변이 $name" "$want" "$TMP/cb_$name.md" $CB --brief "$brief" --raw "$raw" --state "$state" --refs "$REFS" --page-report "$pr" --audit "$AUD" --ack "$ACK" --out "$TMP/cb_$name.md"; }
 sed -E 's/^\| 4 \| 돌봄 공유 링크 \| R-1 \| 약 등록 완료 직후 \| 공유 링크 \|/| 4 | 돌봄 공유 링크 | R-1 | 약 등록 완료 직후 |  |/' "$G" > "$TMP/m_b3b.md";  mut "B-3b 1등 정보 공백"            "B-3b" "$TMP/m_b3b.md" "$R" "$S" "$PR"
 sed -E 's/R-2 돌봄 대리인\(가족·펫시터\)$/R-2 돌봄 대리인(가족·펫시터) · R-3 수의사/' "$G" > "$TMP/m_b3c.md";           mut "B-3c §11 역할이 §2 에 없음"     "B-3c" "$TMP/m_b3c.md" "$R" "$S" "$PR"
 sed -E 's/^- source_refs: \[A-05, R-G-03, W-1\]$/- source_refs: [A-05]/' "$G" > "$TMP/m_b7b.md";                       mut "B-7b confirmed 근거 1건"        "B-7b" "$TMP/m_b7b.md" "$R" "$S" "$PR"
@@ -140,7 +144,7 @@ sed -E 's/^\| P-3 \| PASS \|/| P-3 | FAIL |/' "$PR" > "$TMP/m_b21.md";          
 
 echo "## 3. check-interview-page"
 CIP="node scripts/check-interview-page.js"
-CIPARGS=(--template-ref templates/interview_page.html --index "$FX/gallery_index_golden.json" --state "$S" --refs "$REFS" --prd "$FX/prd_analysis_golden.md")
+CIPARGS=(--template-ref templates/interview_page.html --index "$FX/gallery_index_golden.json" --state "$S" --refs "$REFS" --prd "$FX/prd_analysis_golden.md" --qa "$FX/stimuli_qa_golden.md")
 expect_pass "골든(interview_golden.html)" "$TMP/cip_golden.md" $CIP --page "$FX/interview_golden.html" "${CIPARGS[@]}" --out "$TMP/cip_golden.md"
 grep -qE '^\| P-1 \| FAIL' "$TMP/cip_golden.md" 2>/dev/null && echo "      힌트: 템플릿 골격이 바뀌었다 — node scripts/fixtures/build-interview-fixtures.js 로 interview_golden/bad.html 재생성"
 expect_fail_exact "결함(interview_bad.html): unknown 누락·금지어 1건·타일 두 속성" "P-3 P-4 P-6" "$TMP/cip_bad.md" $CIP --page "$FX/interview_bad.html" "${CIPARGS[@]}" --out "$TMP/cip_bad.md"
@@ -160,6 +164,8 @@ mutpage "$TMP/cip_m7.html" tile-elements;  expect_fail_subset "P-7 타일 요소
 mutpage "$TMP/cip_m9.html" contrast;       expect_fail_subset "P-9 대비 4.5:1 미만" "P-9" "$TMP/cip_m9.md" $CIP --page "$TMP/cip_m9.html" "${CIPARGS[@]}" --out "$TMP/cip_m9.md"
 mutpage "$TMP/cip_m20.html" always-drop;  expect_fail_exact "P-20 always 쌍(채도) 삭제" "P-20" "$TMP/cip_m20.md" $CIP --page "$TMP/cip_m20.html" "${CIPARGS[@]}" --out "$TMP/cip_m20.md"
 mutpage "$TMP/cip_m16.html" press;  expect_fail_exact "P-16 투어 press 삭제" "P-16" "$TMP/cip_m16.md" $CIP --page "$TMP/cip_m16.html" "${CIPARGS[@]}" --out "$TMP/cip_m16.md"
+$M "$FX/stimuli_qa_golden.md" "$TMP/m9/qa_fail.md" replace "\| G-02 \| PASS \| PASS \|" "| G-02 | PASS | FAIL |"; expect_fail_exact "P-21 미감 QA FAIL 타일 잔존" "P-21" "$TMP/m9/qa1.md" $CIP --page "$FX/interview_golden.html" --template-ref templates/interview_page.html --index "$FX/gallery_index_golden.json" --state "$S" --refs "$REFS" --prd "$FX/prd_analysis_golden.md" --qa "$TMP/m9/qa_fail.md" --out "$TMP/m9/qa1.md"
+expect_fail_exact "P-21 미감 QA 리포트 없음(0-B ⑦ 미실행)" "P-21" "$TMP/m9/qa2.md" $CIP --page "$FX/interview_golden.html" --template-ref templates/interview_page.html --index "$FX/gallery_index_golden.json" --state "$S" --refs "$REFS" --prd "$FX/prd_analysis_golden.md" --qa "$TMP/nope_qa.md" --out "$TMP/m9/qa2.md"
 expect_rc "없는 페이지 → 종료 2" 2 $CIP --page "$TMP/nope.html"
 
 echo "## 3b. check-references (0-A2)"
@@ -295,27 +301,27 @@ $M "$FX/references_golden.md" "$TMP/refs/r1.md" delete-lines "^\| REF-[345] "; e
 $M "$FX/references_golden.md" "$TMP/refs/r2.md" replace "https://example.com/a" ""; expect_fail_exact "R-2 출처 공백" "R-2" "$TMP/m9/r2.md" $CRF --refs "$TMP/refs/r2.md" --state "$S" --out "$TMP/m9/r2.md"
 $M "$FX/references_golden.md" "$TMP/refs/r6.md" replace "빈 상태에 '첫 반려동물 등록' 하나만" "미니멀한 여백"; expect_fail_exact "R-6 처리 방식 금지어" "R-6" "$TMP/m9/r6.md" $CRF --refs "$TMP/refs/r6.md" --state "$S" --out "$TMP/m9/r6.md"
 $M "$G" "$TMP/m9/b1.md" append "- 메모 {i}" 400
-expect_fail_exact "B-1 브리프 줄 수 초과" "B-1" "$TMP/m9/b-1b.md" $CB --brief "$TMP/m9/b1.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --out "$TMP/m9/b-1b.md"
+expect_fail_exact "B-1 브리프 줄 수 초과" "B-1" "$TMP/m9/b-1b.md" $CB --brief "$TMP/m9/b1.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --ack "$ACK" --out "$TMP/m9/b-1b.md"
 $M "$G" "$TMP/m9/b2.md" delete-lines "^3\. \"시간이 지나면"
-expect_fail_subset "B-2 문제 진술 2개" "B-2" "$TMP/m9/b-2b.md" $CB --brief "$TMP/m9/b2.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --out "$TMP/m9/b-2b.md"
+expect_fail_subset "B-2 문제 진술 2개" "B-2" "$TMP/m9/b-2b.md" $CB --brief "$TMP/m9/b2.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --ack "$ACK" --out "$TMP/m9/b-2b.md"
 $M "$G" "$TMP/m9/b7.md" replace "- borrow_scope: element" "- borrow_scope: "
-expect_fail_subset "B-7 RULE 필드 공백" "B-7" "$TMP/m9/b-7b.md" $CB --brief "$TMP/m9/b7.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --out "$TMP/m9/b-7b.md"
+expect_fail_subset "B-7 RULE 필드 공백" "B-7" "$TMP/m9/b-7b.md" $CB --brief "$TMP/m9/b7.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --ack "$ACK" --out "$TMP/m9/b-7b.md"
 $M "$G" "$TMP/m9/b8.md" replace "- verdict_method: A" "- verdict_method: X"
-expect_fail_exact "B-8 verdict_method ∉ A|C" "B-8" "$TMP/m9/b-8b.md" $CB --brief "$TMP/m9/b8.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --out "$TMP/m9/b-8b.md"
+expect_fail_exact "B-8 verdict_method ∉ A|C" "B-8" "$TMP/m9/b-8b.md" $CB --brief "$TMP/m9/b8.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --ack "$ACK" --out "$TMP/m9/b-8b.md"
 $M "$G" "$TMP/m9/b9.md" replace "source_quote: \"아침에 먹였는지 기억이 안 나서 한 번 더 먹일 뻔했어요\"" "source_quote: \"raw 에 없는 문장\""
-expect_fail_subset "B-9 source_quote 가 raw 에 없음" "B-9" "$TMP/m9/b-9b.md" $CB --brief "$TMP/m9/b9.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --out "$TMP/m9/b-9b.md"
+expect_fail_subset "B-9 source_quote 가 raw 에 없음" "B-9" "$TMP/m9/b-9b.md" $CB --brief "$TMP/m9/b9.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --ack "$ACK" --out "$TMP/m9/b-9b.md"
 $M "$G" "$TMP/m9/b10.md" insert-after "^\| A-05 \|" "| A-9{i} | 가정 {i} | 근거 | 영향 |" 12
-expect_fail_exact "B-10 가정 로그 17개" "B-10" "$TMP/m9/b-10b.md" $CB --brief "$TMP/m9/b10.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --out "$TMP/m9/b-10b.md"
+expect_fail_exact "B-10 가정 로그 17개" "B-10" "$TMP/m9/b-10b.md" $CB --brief "$TMP/m9/b10.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --ack "$ACK" --out "$TMP/m9/b-10b.md"
 $M "$G" "$TMP/m9/b11.md" delete-lines "^\| 웜 중립 표면 \|"
-expect_fail_exact "B-11 토큰 자리 2개" "B-11" "$TMP/m9/b-11b.md" $CB --brief "$TMP/m9/b11.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --out "$TMP/m9/b-11b.md"
+expect_fail_exact "B-11 토큰 자리 2개" "B-11" "$TMP/m9/b-11b.md" $CB --brief "$TMP/m9/b11.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --ack "$ACK" --out "$TMP/m9/b-11b.md"
 $M "$G" "$TMP/m9/b13.md" insert-after "^- 범용 템플릿처럼" "- 추가 단서 {i}: 값" 5
-expect_fail_exact "B-13 적합성 단서 10줄" "B-13" "$TMP/m9/b-13b.md" $CB --brief "$TMP/m9/b13.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --out "$TMP/m9/b-13b.md"
+expect_fail_exact "B-13 적합성 단서 10줄" "B-13" "$TMP/m9/b-13b.md" $CB --brief "$TMP/m9/b13.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --ack "$ACK" --out "$TMP/m9/b-13b.md"
 $M "$R" "$TMP/m9/b15.md" insert-after "^Q-12:" "Q-1{i}9: 추가 질문 {i}" 4
-expect_fail_subset "B-15 답변 수 < 질문 수" "B-15" "$TMP/m9/b-15b.md" $CB --brief "$G" --raw "$TMP/m9/b15.md" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --out "$TMP/m9/b-15b.md"
+expect_fail_subset "B-15 답변 수 < 질문 수" "B-15" "$TMP/m9/b-15b.md" $CB --brief "$G" --raw "$TMP/m9/b15.md" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --ack "$ACK" --out "$TMP/m9/b-15b.md"
 $M "$R" "$TMP/m9/b20r.md" delete-lines "^(R-G-|W-)"; $M "$S" "$TMP/m9/b20s.json" json-set human_gates.delegations "[]"
-expect_fail_subset "B-20 반응 0건 + 위임 없음" "B-20" "$TMP/m9/b-20b.md" $CB --brief "$G" --raw "$TMP/m9/b20r.md" --state "$TMP/m9/b20s.json" --refs "$REFS" --page-report "$PR" --audit "$AUD" --out "$TMP/m9/b-20b.md"
+expect_fail_subset "B-20 반응 0건 + 위임 없음" "B-20" "$TMP/m9/b-20b.md" $CB --brief "$G" --raw "$TMP/m9/b20r.md" --state "$TMP/m9/b20s.json" --refs "$REFS" --page-report "$PR" --audit "$AUD" --ack "$ACK" --out "$TMP/m9/b-20b.md"
 node -e 'const fs=require("fs");let t=fs.readFileSync(process.argv[1],"utf8");const a=t.indexOf("### RULE-05");const b=t.indexOf("## 5. ");t=t.slice(0,a)+t.slice(b);fs.writeFileSync(process.argv[2],t);' "$G" "$TMP/m9/b6.md"
-expect_fail_subset "B-6 규칙 수 하한 미달" "B-6" "$TMP/m9/b-6b.md" $CB --brief "$TMP/m9/b6.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --out "$TMP/m9/b-6b.md"
+expect_fail_subset "B-6 규칙 수 하한 미달" "B-6" "$TMP/m9/b-6b.md" $CB --brief "$TMP/m9/b6.md" --raw "$R" --state "$S" --refs "$REFS" --page-report "$PR" --audit "$AUD" --ack "$ACK" --out "$TMP/m9/b-6b.md"
 $M "$TG/tokens.json" "$TMP/m9/k1.json" json-set color.rationale '""'
 expect_fail_exact "K-1 rationale 공백" "K-1" "$TMP/m9/k-1k.md" $CT --tokens "$TMP/m9/k1.json" --state "$S" --design "$TG/design.md" --brief "$FX/brief_golden.md" --wcag "$TG/verify/wcag_tokens.md" --raw "$TG/interview_raw.md" --rules-out "$TMP/tg_rules.json" --compare "$TG/stimuli/design_guide_compare.html" --sets "$TG/stimuli/token_sets.json" --out "$TMP/m9/k-1k.md"
 $M "$TG/tokens.json" "$TMP/m9/k2.json" json-set color.semantic.대기 '"#AABBCC"'

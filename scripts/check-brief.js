@@ -46,6 +46,7 @@
  *   B-24  사람 호출 원장 ^H-nn [<stage>/<kind>]: 4라벨(결정할 것·선택지·추천·안 정하면), kind ∈ 허용 집합, 건수 ≤ human_calls_max(9), state.human_gates.calls[] 있으면 건수 1:1
  *   B-25  답변 활용률: raw ^A-nn ID 가 brief §2·2b·2c·2d·3·4·5·6·9·10·11 어디든 등장 ≥2/3; [UNCLEAR] 수 / 본질문(^Q-nn) 수 < 1/2
  *   B-26  §11 '누가 쓰는가:'·'사용자 수준(익숙함·연령·기기):' 줄 공백 0
+ *   B-28  0-H 확인 화면(--ack, 기본 design/verify/ack_screen.md): 존재·비어 있지 않음 · '대신 정한 것' 블록 · RULE- 표 ≥1행 · 금지어 26 + 취향형 0 — 사용자에게 보인 문장이 실제로 쉬운 말이었다는 증거
  *   B-27  추천 수락 정합(I-4): raw `A-nn [ACCEPTED]` 수 == §6 '추천 수락' 행 수 == state delegations kind accepted 수 — 추천 수락은 답이 아니라 위임이라 세 곳에 같은 수로 남아야 한다
  */
 const fs = require('fs'); const path = require('path'); const cp = require('child_process');
@@ -380,6 +381,11 @@ const callsMismatch = calls != null && calls.length !== hBlocks.length;
 add('B-24', hBlocks.length <= hmax && hBad.length === 0 && !callsMismatch, `사람 호출 원장 H- ${hBlocks.length}건 (≤${hmax}), 4라벨·kind 위반 ${hBad.length}, state.calls[] ${calls == null ? '없음(대조 생략)' : calls.length + '건' + (callsMismatch ? ' ≠ H-' : ' 일치')}`,
   [...hBad, ...(callsMismatch ? [`state.human_gates.calls ${calls.length} ≠ raw H- ${hBlocks.length}`] : [])].join('; ') || (hBlocks.length ? hBlocks.map((b) => b.id).join(', ') : 'H- 없음'));
 
+/* B-28 0-H 확인 화면 파일 */
+{ const ackPath = A.ack || 'design/verify/ack_screen.md'; const ack = (fs.existsSync(ackPath) && fs.statSync(ackPath).isFile()) ? fs.readFileSync(ackPath, 'utf8') : null;
+  if (ack == null || !ack.trim()) add('B-28', false, `0-H 확인 화면 파일 없음/비어 있음 (${ackPath})`, '0-H 가 (a)(b)(c) 텍스트를 저장한 뒤에만 사용자에게 보인다');
+  else { const b28 = []; if (!/대신 정한/.test(ack)) b28.push("'대신 정한 것' 블록 없음"); if (!/RULE-\d+/.test(ack)) b28.push('RULE 표 없음'); const hits = scanForbidden(ack).map((h) => h.word); if (hits.length) b28.push('금지어 ' + [...new Set(hits)].join('/')); if (FW && FW.TASTE_PATTERN && FW.TASTE_PATTERN.test(ack)) b28.push('취향형 문장');
+    add('B-28', b28.length === 0, `확인 화면 위반 ${b28.length}건`, b28.join('; ') || ackPath); } }
 /* B-27 추천 수락 정합 — raw [ACCEPTED] == §6 '추천 수락' 행 == delegations kind accepted */
 {
   const acc = rawLines.filter((l) => /^A-\d+[a-z]?\s*\[ACCEPTED\]/.test(l)).length;

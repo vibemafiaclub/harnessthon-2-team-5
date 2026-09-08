@@ -35,6 +35,7 @@
  *   P-18 재검증 존재(I-3): verifies 가 붙은 질문 ≥1 이고 그 원 질문의 skeleton 이 Q5(fast) 또는 Q5·Q2(full) — §1-12. 없으면 FAIL
  *   P-19 서비스명 비노출(U-2/U-3): references.md '서비스' 열의 이름이 페이지 노출 텍스트(P-4 조각)에 0건
  *   P-20 always 대비쌍(I-3 두 번째 각도): 진술형 질문이 없는 축 — fast 는 밀도·형태·타이포·강조·채도 5축, full 은 타이포·채도 2축 — 마다 always:true 쌍 ≥1 (동의어: 밀도|정보량, 형태|모양, 타이포|서체|글자, 강조, 채도|진하기)
+ *   P-21 자극 미감 QA(0-B ⑦) 리포트(--qa, 기본 design/verify/stimuli_qa.md): 존재 · 첫 줄 RENDER: png|none · 표 `| 타일 | 정렬 | 간격 | 색 역할 | 대비 | 근거 |` 에 타일 id 전건(fast 는 ≥min(6, 타일 수)) · 4항 전부 PASS(FAIL 타일이 남아 있으면 maker 되돌림 미완) · 근거 공백 0
  *   P-17 kind:pattern 의 options 전건 html(≥40자, 자리표시자 0) — 패턴은 글이 아니라 폰 프레임 그림으로 보인다(U-3)
  *   P-16 flows[].steps: 마지막을 뺀 전 장면에 press(≥2자) + 강조할 곳(html 에 data-press 또는 press == 그 장면의 cta) · states[] 항목마다 label·html ("따라가 보기" 투어, 후보 5)
  */
@@ -368,6 +369,15 @@ if (!D) {
   { const SYN = { '밀도': /밀도|정보량/, '형태': /형태|모양/, '타이포': /타이포|서체|글자/, '강조': /강조/, '채도': /채도|진하기/ }; const need20 = mode === 'fast' ? ['밀도', '형태', '타이포', '강조', '채도'] : ['타이포', '채도'];
     const alwaysAxes = P.filter((p) => p && p.always === true).map((p) => String(p.axis || '')); const miss20 = need20.filter((k) => !alwaysAxes.some((a) => SYN[k].test(a)));
     add('P-20', miss20.length === 0, `always 쌍 ${alwaysAxes.length}개 (필요 축 ${need20.join('·')})`, miss20.length ? `always 쌍 없는 축: ${miss20.join(', ')}` : `always: ${alwaysAxes.join(', ')}`); }
+  { const qaPath = A.qa || 'design/verify/stimuli_qa.md'; const qa = read(qaPath); const tileIds = T.map((t) => t.id);
+    if (qa == null) add('P-21', false, `자극 미감 QA 리포트 없음 — 0-B ⑦ 미실행 (${qaPath})`, qaPath);
+    else { const p21 = []; if (!/^RENDER:\s*(png|none)\b/m.test(qa)) p21.push('첫 줄 RENDER: png|none 없음');
+      const rows = []; let hdr = null; for (const line of qa.split('\n')) { if (!/^\s*\|/.test(line)) continue; const cells = line.split('|').slice(1, -1).map((c) => c.trim()); if (cells.every((c) => /^:?-{2,}:?$/.test(c))) continue; if (!hdr) { hdr = cells; continue; } rows.push(cells); }
+      const ci = (re) => hdr ? hdr.findIndex((h) => re.test(h)) : -1; const iT = ci(/타일/), i4 = [ci(/정렬/), ci(/간격/), ci(/색/), ci(/대비/)], iW = ci(/근거/);
+      if (!hdr || iT < 0 || i4.some((i) => i < 0) || iW < 0) p21.push('표 헤더에 타일·정렬·간격·색 역할·대비·근거 열 필요');
+      else { const seen = new Set(rows.map((r) => r[iT])); const need = mode === 'fast' ? Math.min(6, tileIds.length) : tileIds.length; const covered = tileIds.filter((id) => seen.has(id)).length; if (covered < need) p21.push(`타일 ${covered}/${need} 만 판정`);
+        rows.forEach((r) => { const bad = i4.filter((i) => !/^PASS$/i.test(r[i] || '')); if (bad.length) p21.push(`${r[iT]}: ${bad.map((i) => hdr[i]).join('·')} FAIL/공백 — maker 되돌림 뒤 재판정`); if (!(r[iW] || '').trim()) p21.push(`${r[iT]}: 근거 없음`); }); }
+      add('P-21', p21.length === 0, `미감 QA 위반 ${p21.length}건 (표 ${rows.length}행, 타일 ${tileIds.length})`, short(p21) || `타일 전건 4항 PASS (${qaPath})`); } }
   { const p17 = []; Q.filter((q) => q.kind === 'pattern').forEach((q) => (q.options || []).forEach((o, i) => { const h = String((o && o.html) || ''); if (h.trim().length < 40) p17.push(`${q.id}.options[${i}] html ${h.trim().length}자 < 40`); else if (PLACEHOLDER.test(FW.stripTags(h))) p17.push(`${q.id}.options[${i}] 자리표시자`); }));
     add('P-17', p17.length === 0, `패턴 선택지 그림 위반 ${p17.length}건 (pattern 질문 ${Q.filter((q) => q.kind === 'pattern').length})`, short(p17) || '패턴 선택지 전건 html 있음'); }
   add('P-16', p16.length === 0, `투어 형식 위반 ${p16.length}건 (흐름 ${FL.length})`, short(p16) || (FL.length ? `전 장면 press·강조 위치 있음` : '흐름 없음'));
