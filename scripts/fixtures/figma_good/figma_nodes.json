@@ -39,17 +39,20 @@
     {
      "state": "normal",
      "id": "10:1",
-     "name": "01 홈 / normal"
+     "name": "01 홈 / normal",
+     "primary_action": "10:91"
     },
     {
      "state": "empty",
      "id": "10:2",
-     "name": "01 홈 / empty"
+     "name": "01 홈 / empty",
+     "primary_action": "10:92"
     },
     {
      "state": "long",
      "id": "10:3",
-     "name": "01 홈 / long"
+     "name": "01 홈 / long",
+     "primary_action": "10:93"
     }
    ]
   },
@@ -60,22 +63,26 @@
     {
      "state": "normal",
      "id": "20:1",
-     "name": "02 대리인 확인 / normal"
+     "name": "02 대리인 확인 / normal",
+     "primary_action": "20:91"
     },
     {
      "state": "empty",
      "id": "20:2",
-     "name": "02 대리인 확인 / empty"
+     "name": "02 대리인 확인 / empty",
+     "primary_action": "20:92"
     },
     {
      "state": "long",
      "id": "20:3",
-     "name": "02 대리인 확인 / long"
+     "name": "02 대리인 확인 / long",
+     "primary_action": "20:93"
     },
     {
      "state": "error",
      "id": "20:4",
-     "name": "02 대리인 확인 / error"
+     "name": "02 대리인 확인 / error",
+     "primary_action": "20:94"
     }
    ]
   }

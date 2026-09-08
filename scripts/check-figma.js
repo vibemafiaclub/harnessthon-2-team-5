@@ -203,7 +203,7 @@ add('F-5', reviewTxt != null && auditParts.length > 0 && bad5.length === 0, `req
 /* ---- F-6 스크린샷 확인 행 == PNG 수 ---- */
 const frFile = (() => { for (const c of [FA.final_review, HG.final_review, state.final_review]) { if (!c) continue; if (typeof c === 'string') return c; if (typeof c.file === 'string') return c.file; } return ''; })();
 const bad6 = [];
-for (const s of review.shots) { const m = []; if (pngs && !pngs.includes(s.file)) m.push('파일 없음'); if (!str(s.node)) m.push('노드 id 없음'); if (!str(s.seen)) m.push('본 것 없음'); if (!/^PASS$/i.test(s.result)) m.push(`결과 '${s.result || ''}'`); if (m.length) bad6.push(`${s.file}:${m.join('·')}`); }
+for (const s of review.shots) { const m = []; if (pngs && !pngs.includes(s.file)) m.push('파일 없음'); if (!str(s.node)) m.push('노드 id 없음'); if (!str(s.seen)) m.push('본 것 없음'); else if (!/아이콘|잘림|상태\s?칩|규격|겹침/.test(s.seen)) m.push(`본 것 '${s.seen.slice(0, 12)}' — 다섯 항목(아이콘/잘림/상태칩/규격/겹침) 중 확인한 것을 적는다`); if (!/^PASS$/i.test(s.result)) m.push(`결과 '${s.result || ''}'`); if (m.length) bad6.push(`${s.file}:${m.join('·')}`); }
 if (pngs) for (const f of pngs) if (!review.shots.some((s) => s.file === f)) bad6.push(`${f}:확인 행 없음`);
 const frOk = str(frFile) && path.basename(frFile) === path.basename(P('review'));
 add('F-6', reviewTxt != null && pngs != null && review.shots.length === pngs.length && pngs.length > 0 && bad6.length === 0 && frOk, `final_review 스크린샷 행 ${review.shots.length} (PNG ${pngs ? pngs.length : '-'}), 결함 행 ${bad6.length}, state final_ack.final_review.file ${frOk ? '기록됨' : '없음/불일치'}`, bad6.slice(0, 6).join('; ') + (bad6.length > 6 ? ` 외 ${bad6.length - 6}` : '') || `행 전건 파일·노드 id·본 것·PASS, file=${frFile}`);

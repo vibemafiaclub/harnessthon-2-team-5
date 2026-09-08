@@ -206,7 +206,8 @@ const rawNorm = raw.replace(/\s+/g, ' ');
 const missing = [], badQuote = [], badVerdict = [], confirmedBad = [], plainBad = []; let confirmedN = 0;
 for (const b of ruleBlocks) {
   const id = b.split('\n')[0].trim();
-  const f = {}; for (const F of FIELDS.concat('plain')) { const m = b.match(new RegExp('^-\\s*' + F + '\\s*:\\s*(.*)$', 'm')); f[F] = m ? m[1].trim() : ''; }
+  const f = {}; for (const F of FIELDS.concat('plain')) { /* [ \t]* — \s* 는 줄바꿈까지 먹어 빈 값이 다음 줄 텍스트를 가져오는 결함(변이 보강에서 실측) */
+    const m = b.match(new RegExp('^-[ \\t]*' + F + '[ \\t]*:[ \\t]*(.*)$', 'm')); f[F] = m ? m[1].trim() : ''; }
   const empty = FIELDS.filter((F) => !f[F] || /^\[\]$/.test(f[F])); if (empty.length) missing.push(id + '(' + empty.join(',') + ')');
   if (f.verdict_method && !/^(A|C)(\+C|\+A)?\b/.test(f.verdict_method)) badVerdict.push(id);
   const quotes = [...(f.source_quote || '').matchAll(/"([^"]{6,})"/g)].map((m) => m[1].replace(/\s+/g, ' '));

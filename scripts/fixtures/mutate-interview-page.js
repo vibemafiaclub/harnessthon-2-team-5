@@ -19,5 +19,11 @@ if (mode === 'frame') delete d.frame;
 if (mode === 'tile-elements') d.tiles[0].html = '<div><b>a</b><i>b</i><u>c</u><s>d</s><em>e</em><span>f</span><small>g</small><div>h</div><p>i</p><b>j</b><i>k</i><u>l</u></div>';
 if (mode === 'contrast') d.tiles[0].html = d.tiles[0].html.replace(/color:#[0-9A-Fa-f]{6}/, 'color:#DDDDDD').replace('<b', "<b style='color:#EEEEEE'");
 if (mode === 'always-drop') d.pairs.forEach((p) => { if (/채도/.test(p.axis)) delete p.always; });
+if (mode === 'q-order') { const q0 = d.questions[0]; d.questions[0] = d.questions[1]; d.questions[1] = q0; }
+if (mode === 'axis-same') { const same = d.tiles.filter((t) => t.axis === d.tiles[0].axis); same[1].html = same[0].html; }
+if (mode === 'placeholder') d.tiles[0].html = d.tiles[0].html.replace('<b>', '<b>Lorem ipsum ');
+if (mode === 'payload-bad') { const q = d.questions.find((q) => q.skeleton === 'Q6'); q.payload = 'nonsense_axis'; }
+if (mode === 'skeleton-bad') { const q = d.questions.find((q) => q.skeleton === 'Q6'); q.skeleton = 'Q99'; }
+if (mode === 'size') d.banner = d.banner + ' ' + 'ㄱ'.repeat(230000);
 if (mode === 'service-name') d.intro = d.intro + ' 서비스A 처럼 만들어요.';
 fs.writeFileSync(out, tpl.replace(RE, () => '<script id="harness-data" type="application/json">\n' + JSON.stringify(d, null, 1) + '\n</script>'));
